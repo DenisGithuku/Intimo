@@ -8,6 +8,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -19,8 +21,11 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.githukudenis.designsystem.theme.QwitcherGrypen
 import com.githukudenis.intimo.R
 import kotlinx.coroutines.delay
 
@@ -38,7 +43,6 @@ fun SplashScreenRoute(
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
     ) {
 
         val scale = remember {
@@ -62,7 +66,18 @@ fun SplashScreenRoute(
         Image(
             painter = painterResource(id = R.drawable.intimologo),
             contentDescription = stringResource(R.string.app_logo),
-            modifier = Modifier.scale(scale = scale.value)
+            modifier = Modifier
+                .scale(scale = scale.value)
+                .align(Alignment.Center)
+        )
+
+        Text(
+            text = stringResource(id = R.string.app_name),
+            fontFamily = QwitcherGrypen,
+            fontSize = 48.sp,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 24.dp)
         )
     }
 }

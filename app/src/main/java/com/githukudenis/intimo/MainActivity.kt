@@ -22,6 +22,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.githukudenis.datastore.PreferenceKeys.shouldHideOnBoarding
 import com.githukudenis.designsystem.theme.IntimoTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -50,6 +51,7 @@ class MainActivity : ComponentActivity() {
         }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
             IntimoTheme {
                 IntimoApp(shouldHideOnBoarding = shouldHideOnBoarding(uiState), onPopupFailed = { finish() })

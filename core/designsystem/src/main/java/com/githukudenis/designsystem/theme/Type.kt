@@ -19,6 +19,10 @@ val Inter = FontFamily(
     Font(R.font.inter_medium, FontWeight.Medium),
 )
 
+val QwitcherGrypen = FontFamily(
+    Font(R.font.qwitcher_grypen_bold, FontWeight.Bold)
+)
+
 
 val Typography = Typography(
     bodyLarge = TextStyle(

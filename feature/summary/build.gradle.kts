@@ -59,14 +59,15 @@ dependencies {
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
+    implementation(libs.ui.tooling)
     implementation(libs.material3)
     implementation(libs.navigation)
+
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.accompanist.permissions)
     implementation(libs.accompanist.drawable.painter)
     implementation(libs.kotlinx.datetime)
-    implementation(libs.horizontal.calendar.view)
     implementation(libs.material.extended.icons)
 
     // hilt

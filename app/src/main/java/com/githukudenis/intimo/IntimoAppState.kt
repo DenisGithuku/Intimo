@@ -33,13 +33,16 @@ data class IntimoAppState(
     val currentDestination: NavDestination?
         @Composable get() = navController.currentBackStackEntryAsState().value?.destination
 
-    fun navigate(route: String, popUpTo: String? = null, navOptions: NavOptions? = null, extras: Navigator.Extras? = null) {
+    fun navigate(
+        route: String,
+        popUpTo: String? = null,
+        navOptions: NavOptions? = null,
+        extras: Navigator.Extras? = null
+    ) {
         navController.navigate(route) {
             launchSingleTop = true
-            if (popUpTo != null) {
-                popUpTo(popUpTo) {
-                    inclusive = true
-                }
+            popUpTo(popUpTo ?: route) {
+                inclusive = true
             }
         }
     }

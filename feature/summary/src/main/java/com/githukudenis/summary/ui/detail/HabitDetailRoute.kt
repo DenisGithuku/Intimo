@@ -11,13 +11,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowForwardIos
@@ -46,7 +51,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HabitDetailRoute(
     habitDetailViewModel: HabitDetailViewModel = hiltViewModel()
@@ -64,7 +68,6 @@ fun HabitDetailRoute(
     )
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun HabitDetailScreen(
     uiState: HabitDetailUiState,
@@ -72,9 +75,14 @@ private fun HabitDetailScreen(
     onChangeDate: (Long) -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
         val dateUiState = rememberDateUiState(LocalDate.now())
+
+        Spacer(modifier = Modifier.windowInsetsTopHeight(WindowInsets.safeDrawing))
+
 
         HorizontalDateView(
             selectedDate = dateUiState.currentSelectedDate,
@@ -100,7 +108,6 @@ private fun HabitDetailScreen(
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HorizontalDateView(
     selectedDate: LocalDate,
@@ -165,7 +172,6 @@ fun HabitContents(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun DatePill(
     dateItem: Date,
@@ -214,14 +220,12 @@ fun DatePill(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
 fun SelectedPillPrev() {
     DatePill(dateItem = Date(isToday = true), selected = true, onChangeDate = {})
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
 fun UnselectedPillPrev() {
