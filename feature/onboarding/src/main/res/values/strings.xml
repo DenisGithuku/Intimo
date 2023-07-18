@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="woman_holding_phone">A woman is checking off an item on her to-do list. The text on the screen indicates that she has a meeting with someone.</string>
+    <string name="reminder_title">Organize your workday</string>
+    <string name="onboarding_reminder_text">Create reminders for anything, from meetings to deadlines to personal tasks, so you\'ll never have to worry about missing something important</string>
+    <string name="usage_stats_image_description">A man is holding a smartphone in his hand. The screen of the smartphone shows a graph with two lines, one of which is rising and the other of which is falling</string>
+    <string name="usage_stats">Track device usage</string>
+    <string name="usage_stats_description">Understand how you use your device and identify areas where you can improve your productivity. </string>
+    <string name="journaling_image_description">A person\'s hand is writing on a piece of paper</string>
+    <string name="journaling_title">Journal your thoughts, track your growth</string>
+    <string name="journaling_description">Jot down your thoughts and feelings in a private and secure space. Capture your deepest thoughts and feelings</string>
+    <string name="get_started_button">Get Started</string>
+
+</resources>

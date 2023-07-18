@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1099226911766",
+    "project_id": "chat-5a70a",
+    "storage_bucket": "chat-5a70a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1099226911766:android:963f921a46d170a5f25137",
+        "android_client_info": {
+          "package_name": "com.githukudenis.intimo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1099226911766-ul0tb6bv0n473rgbktho6t2evghg2u9g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.githukudenis.intimo",
+            "certificate_hash": "3c956de20f890565b97dba13edc2631eaab931df"
+          }
+        },
+        {
+          "client_id": "1099226911766-2fdn1v5cj64slf158r4438gsb538r16d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLS0nXNhYQh3eHGv0FLsqy1-OKZK2uiFc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1099226911766-2fdn1v5cj64slf158r4438gsb538r16d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
