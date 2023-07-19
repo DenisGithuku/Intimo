@@ -39,7 +39,7 @@ fun PageContent(
         Image(
             painter = painterResource(id = pageInfo.image),
             modifier = Modifier
-                .size(300.dp),
+                .size(250.dp),
             contentScale = ContentScale.Crop,
             contentDescription = pageInfo.imageDescription
         )

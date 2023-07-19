@@ -1,6 +1,8 @@
 package com.githukudenis.onboarding.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.githukudenis.onboarding.R
 import com.githukudenis.onboarding.ui.components.PageContent
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -68,18 +72,21 @@ private fun OnBoardingContent(
     )
 
     val pagerState = rememberPagerState(initialPage = 0)
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(pagerState.currentPage) {
         delay(3000)
         if (pagerState.currentPage < pageInfoList.size) {
-            pagerState.animateScrollToPage(pagerState.currentPage + 1)
+            coroutineScope.launch {
+                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+            }
         }
     }
 
 
     Column(
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 32.dp)
+            .padding(start = 16.dp, end = 16.dp, top = 32.dp)
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -106,9 +113,13 @@ private fun OnBoardingContent(
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        AnimatedVisibility(visible = pagerState.currentPage == pageInfoList.size - 1) {
+        AnimatedVisibility(
+            visible = pagerState.currentPage == pageInfoList.size - 1,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
             Button(modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.medium,
+                shape = MaterialTheme.shapes.small,
                 onClick = {}) {
                 Text(
                     text = context.getString(R.string.get_started_button),
