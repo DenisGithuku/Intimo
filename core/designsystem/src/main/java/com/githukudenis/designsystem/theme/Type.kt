@@ -1,4 +1,4 @@
-package com.githukudenis.intimo.ui.theme
+package com.githukudenis.designsystem.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
