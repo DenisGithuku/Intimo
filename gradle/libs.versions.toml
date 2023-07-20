@@ -14,6 +14,9 @@ firebase-bom = "32.2.0"
 appcompat = "1.6.1"
 material = "1.8.0"
 navigation = "2.6.0"
+datastore-prefs = "1.0.0"
+hilt = "2.44"
+ksp = "1.9.0-1.0.11"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -36,6 +39,9 @@ firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashly
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+datastore-prefs = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore-prefs" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt"}
+hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "hilt" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -43,4 +49,6 @@ kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "google-services" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
+daggerHilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt"}
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
 

@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 fun OnBoardingScreen(
     onFinishedOnBoarding: () -> Unit
 ) {
-    OnBoardingContent { onFinishedOnBoarding }
+    OnBoardingContent(onNext = onFinishedOnBoarding)
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -120,7 +120,7 @@ private fun OnBoardingContent(
         ) {
             Button(modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.small,
-                onClick = {}) {
+                onClick = { onNext() }) {
                 Text(
                     text = context.getString(R.string.get_started_button),
                     style = MaterialTheme.typography.bodyLarge
