@@ -17,6 +17,7 @@
             <option value="$PROJECT_DIR$/core/model" />
             <option value="$PROJECT_DIR$/feature" />
             <option value="$PROJECT_DIR$/feature/onboarding" />
+            <option value="$PROJECT_DIR$/feature/summary" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

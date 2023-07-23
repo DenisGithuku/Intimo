@@ -2,12 +2,12 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinAndroid)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.daggerHilt)
+    alias(libs.plugins.kotlinKapt)
 }
 
 android {
-    namespace = "com.githukudenis.datastore"
+    namespace = "com.githukudenis.intimo.core.datastore"
     compileSdk = 33
 
     defaultConfig {
@@ -35,13 +35,16 @@ android {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
 dependencies {
     implementation(project(":core:model"))
-    implementation(project(":core:data"))
     implementation(libs.datastore.prefs)
 
     implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
+    kapt(libs.hilt.compiler)
 
     implementation(libs.core.ktx)
     implementation(libs.appcompat)

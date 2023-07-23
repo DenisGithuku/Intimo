@@ -2,10 +2,11 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.kotlinKapt)
 }
 
 android {
-    namespace = "com.githukudenis.intimo.core.designsystem"
+    namespace = "com.githukudenis.intimo.feature.summary"
     compileSdk = 33
 
     defaultConfig {
@@ -39,7 +40,17 @@ android {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
 dependencies {
+    implementation(project(":core:data"))
+
+    implementation(libs.core.ktx)
+    implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.lifecycle.runtime.compose)
+    implementation(libs.activity.compose)
     implementation(platform(libs.compose.bom))
     implementation(libs.ui)
     implementation(libs.ui.graphics)
@@ -47,9 +58,6 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.navigation)
 
-    implementation(libs.core.ktx)
-    implementation(libs.appcompat)
-    implementation(libs.material)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)

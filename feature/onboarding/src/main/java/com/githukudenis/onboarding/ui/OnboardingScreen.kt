@@ -30,17 +30,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.githukudenis.onboarding.R
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.githukudenis.intimo.feature.onboarding.R
 import com.githukudenis.onboarding.ui.components.PageContent
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun OnBoardingScreen(
-    onFinishedOnBoarding: () -> Unit
+fun OnBoardingRoute(
+    onFinishedOnBoarding: () -> Unit,
+    onBoardingViewModel: OnBoardingViewModel = hiltViewModel()
 ) {
-    OnBoardingContent(onNext = onFinishedOnBoarding)
+
+    OnBoardingContent(onNext = {
+        onFinishedOnBoarding()
+        onBoardingViewModel.setShouldHideOnBoarding()
+    })
 }
 
 @OptIn(ExperimentalFoundationApi::class)

@@ -4,8 +4,8 @@ plugins {
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.crashlytics)
     alias(libs.plugins.googleServices)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.daggerHilt)
+    alias(libs.plugins.kotlinKapt)
 }
 
 android {
@@ -45,13 +45,16 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.0"
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+kapt {
+    correctErrorTypes = true
 }
 
 dependencies {
@@ -61,9 +64,11 @@ dependencies {
     implementation(project(":core:datastore"))
     implementation(project(":core:data"))
     implementation(project(":feature:onboarding"))
+    implementation(project(":feature:summary"))
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.lifecycle.runtime.compose)
     implementation(libs.activity.compose)
     implementation(platform(libs.compose.bom))
     implementation(libs.ui)
@@ -74,7 +79,7 @@ dependencies {
 
     //hilt
     implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
+    kapt(libs.hilt.compiler)
 
     //firebase
     implementation(platform(libs.firebase.bom))

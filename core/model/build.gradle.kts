@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.githukudenis.model"
+    namespace = "com.githukudenis.intimo.core.model"
     compileSdk = 33
 
     defaultConfig {
