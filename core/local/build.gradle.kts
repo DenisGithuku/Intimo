@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.githukudenis.intimo.feature.summary"
+    namespace = "com.githukudenis.intimo.core.local"
     compileSdk = 33
 
     defaultConfig {
@@ -33,12 +33,6 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-    buildFeatures {
-        compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.0"
-    }
 }
 
 kapt {
@@ -46,27 +40,12 @@ kapt {
 }
 
 dependencies {
-    implementation(project(":core:data"))
-    implementation(project(":core:designsystem"))
 
-    implementation(libs.core.ktx)
-    implementation(libs.lifecycle.runtime.ktx)
-    implementation(libs.lifecycle.runtime.compose)
-    implementation(libs.activity.compose)
-    implementation(platform(libs.compose.bom))
-    implementation(libs.ui)
-    implementation(libs.ui.graphics)
-    implementation(libs.ui.tooling.preview)
-    implementation(libs.material3)
-    implementation(libs.navigation)
-    implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.hilt.navigation.compose)
-    implementation(libs.accompanist.permissions)
-
-    // hilt
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
 
+    implementation(libs.core.ktx)
+    implementation(libs.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)

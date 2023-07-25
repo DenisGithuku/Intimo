@@ -2,6 +2,7 @@ package com.githukudenis.intimo
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -20,9 +21,11 @@ fun IntimoApp(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val startDestination = if (shouldHideOnBoarding) summaryNavigationRoute else onBoardingNavigationRoute
-   Scaffold { padding ->
+   Scaffold { paddingValues ->
        Column(
-           modifier = Modifier.fillMaxSize()
+           modifier = Modifier
+               .padding(paddingValues)
+               .fillMaxSize()
        ) {
            IntimoNavHost(
                appState = appState,
@@ -32,7 +35,7 @@ fun IntimoApp(
                    actionLabel = action
                )
            },
-               startDestination = startDestination)
+               startDestination = summaryNavigationRoute)
        }
    }
 }

@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.githukudenis.intimo.feature.onboarding.R
 import com.githukudenis.onboarding.ui.components.PageContent
 import kotlinx.coroutines.delay
@@ -57,26 +57,28 @@ private fun OnBoardingContent(
 ) {
     val context = LocalContext.current
 
-    val pageInfoList = listOf(
-        PageInfo(
-            image = R.drawable.hands_holding_phone,
-            imageDescription = context.getString(R.string.woman_holding_phone),
-            title = context.getString(R.string.reminder_title),
-            description = context.getString(R.string.onboarding_reminder_text)
-        ),
-        PageInfo(
-            image = R.drawable.usage_stats,
-            imageDescription = context.getString(R.string.usage_stats_image_description),
-            title = context.getString(R.string.usage_stats),
-            description = context.getString(R.string.usage_stats_description)
-        ),
-        PageInfo(
-            image = R.drawable.journaling,
-            imageDescription = context.getString(R.string.journaling_image_description),
-            title = context.getString(R.string.journaling_title),
-            description = context.getString(R.string.journaling_description)
+    val pageInfoList = rememberSaveable {
+        listOf(
+            PageInfo(
+                image = R.drawable.hands_holding_phone,
+                imageDescription = context.getString(R.string.woman_holding_phone),
+                title = context.getString(R.string.reminder_title),
+                description = context.getString(R.string.onboarding_reminder_text)
+            ),
+            PageInfo(
+                image = R.drawable.usage_stats,
+                imageDescription = context.getString(R.string.usage_stats_image_description),
+                title = context.getString(R.string.usage_stats),
+                description = context.getString(R.string.usage_stats_description)
+            ),
+            PageInfo(
+                image = R.drawable.journaling,
+                imageDescription = context.getString(R.string.journaling_image_description),
+                title = context.getString(R.string.journaling_title),
+                description = context.getString(R.string.journaling_description)
+            )
         )
-    )
+    }
 
     val pagerState = rememberPagerState(initialPage = 0)
     val coroutineScope = rememberCoroutineScope()

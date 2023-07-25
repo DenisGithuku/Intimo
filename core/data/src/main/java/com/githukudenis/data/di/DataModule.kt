@@ -1,6 +1,8 @@
 package com.githukudenis.data.di
 
+import com.githukudenis.data.repository.IntimoUsageStatsRepository
 import com.githukudenis.data.repository.IntimoUserDataRepository
+import com.githukudenis.data.repository.UsageStatsRepository
 import com.githukudenis.data.repository.UserDataRepository
 import dagger.Binds
 import dagger.Module
@@ -16,4 +18,9 @@ interface DataModule {
     fun bindsUserDataRepository(
         userDataRepository: IntimoUserDataRepository
     ): UserDataRepository
+
+    @Binds
+    fun bindsUsageStatsRepository(
+        usageStatsRepository: IntimoUsageStatsRepository
+    ): UsageStatsRepository
 }

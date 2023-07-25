@@ -47,7 +47,6 @@ class MainActivity : ComponentActivity() {
         }
 
 
-
         setContent {
             val activity = LocalView.current.context as Activity
             val backgroundArgb = MaterialTheme.colorScheme.background.toArgb()

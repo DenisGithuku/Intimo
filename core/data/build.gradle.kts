@@ -41,6 +41,7 @@ kapt {
 
 dependencies {
     implementation(project(":core:model"))
+    implementation(project(":core:local"))
     implementation(project(":core:datastore"))
 
     implementation(libs.hilt.android)
