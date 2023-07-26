@@ -4,6 +4,7 @@ import android.app.usage.UsageStats
 import com.githukudenis.data.di.IntimoCoroutineDispatcher
 import com.githukudenis.intimo.core.local.IntimoUsageStatsDataSource
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
