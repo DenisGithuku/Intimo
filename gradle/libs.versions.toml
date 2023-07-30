@@ -50,6 +50,7 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose"}
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist"}
+accompanist-drawable-painter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "accompanist"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

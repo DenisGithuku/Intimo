@@ -47,6 +47,7 @@ kapt {
 
 dependencies {
     implementation(project(":core:data"))
+    implementation(project(":core:model"))
     implementation(project(":core:designsystem"))
 
     implementation(libs.core.ktx)
@@ -62,6 +63,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.hilt.navigation.compose)
     implementation(libs.accompanist.permissions)
+    implementation(libs.accompanist.drawable.painter)
 
     // hilt
     implementation(libs.hilt.android)

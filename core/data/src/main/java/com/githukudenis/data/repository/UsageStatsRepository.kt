@@ -1,12 +1,19 @@
 package com.githukudenis.data.repository
 
-import android.app.usage.UsageStats
+import com.githukudenis.model.ApplicationInfoData
+import com.githukudenis.model.DataUsageStats
 import kotlinx.coroutines.flow.Flow
 
 interface UsageStatsRepository {
 
     suspend fun queryAndAggregateUsageStats(
-        beginTime: Long = System.currentTimeMillis() - 24 * 60 * 60 * 1000,
-        endTime: Long = System.currentTimeMillis()
-    ): Flow<Map<String, UsageStats>>
+        beginTime: Long,
+        endTime: Long,
+    ): Flow<DataUsageStats>
+
+    suspend fun getIndividualAppUsage(
+        startTimeMillis: Long,
+        endTimeMillis: Long,
+        packageName: String
+    ): Flow<ApplicationInfoData>
 }
