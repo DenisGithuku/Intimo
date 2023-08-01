@@ -1,10 +1,12 @@
 package com.githukudenis.designsystem.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.LocalAbsoluteTonalElevation
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 
 
 private val LightColors = lightColorScheme(
@@ -82,9 +84,13 @@ fun IntimoTheme(
   } else {
     DarkColors
   }
-
-  MaterialTheme(
-    colorScheme = colors,
-    content = content
-  )
+    val elevation = Elevation()
+    CompositionLocalProvider(
+        LocalTonalElevation provides elevation
+    ) {
+        MaterialTheme(
+            colorScheme = colors,
+            content = content
+        )
+    }
 }

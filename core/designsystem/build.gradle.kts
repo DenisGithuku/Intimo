@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.githukudenis.designsystem"
+    namespace = "com.githukudenis.intimo.core.designsystem"
     compileSdk = 33
 
     defaultConfig {
@@ -35,7 +35,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.0"
     }
 }
 
