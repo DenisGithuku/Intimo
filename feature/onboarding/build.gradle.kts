@@ -57,6 +57,7 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.navigation)
     implementation(libs.lifecycle.viewmodel.compose)
+    implementation(libs.lifecycle.runtime.compose)
     implementation(libs.hilt.navigation.compose)
 
     // hilt
