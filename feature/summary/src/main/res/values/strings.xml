@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="permission_dialog_title">Usage Access Settings Required</string>
+    <string name="permission_dialog_description">Intimo uses your usage data to track how you use your device and to improve your experience with the app.</string>
+    <string name="permission_dialog_positive_button">Allow</string>
+    <string name="permission_dialog_negative_button">Deny</string>
+</resources>
