@@ -17,15 +17,15 @@ fun IntimoNavHost(
     val navController = appState.navController
 
     NavHost(navController = navController, startDestination = startDestination) {
-//        onBoardingScreen(
-//            onFinishedOnBoarding = {
-//                navController.navigate(summaryNavigationRoute) {
-//                    popUpTo(onBoardingNavigationRoute){
-//                        inclusive = true
-//                    }
-//                }
-//            }
-//        )
+        onBoardingScreen(
+            onFinishedOnBoarding = {
+                navController.navigate(summaryNavigationRoute) {
+                    popUpTo(onBoardingNavigationRoute){
+                        inclusive = true
+                    }
+                }
+            }
+        )
         summaryScreen()
     }
 }

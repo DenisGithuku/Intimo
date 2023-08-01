@@ -1,6 +1,7 @@
 package com.githukudenis.intimo
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -9,6 +10,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.githukudenis.intimo.navigation.IntimoNavHost
 import com.githukudenis.onboarding.navigation.onBoardingNavigationRoute
 import com.githukudenis.summary.navigation.summaryNavigationRoute
@@ -25,6 +27,7 @@ fun IntimoApp(
        Column(
            modifier = Modifier
                .padding(paddingValues)
+               .padding(16.dp)
                .fillMaxSize()
        ) {
            IntimoNavHost(
@@ -35,7 +38,7 @@ fun IntimoApp(
                    actionLabel = action
                )
            },
-               startDestination = summaryNavigationRoute)
+               startDestination = startDestination)
        }
    }
 }
