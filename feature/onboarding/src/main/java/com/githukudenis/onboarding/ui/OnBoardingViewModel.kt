@@ -48,8 +48,8 @@ class OnBoardingViewModel @Inject constructor(
                 description = "Nutrition",
             ),
             Habit(
-                emoji = "\uD83D\uDCF1",
-                description = "Screen Time",
+                emoji = "\uD83E\uDD38",
+                description = "Stretching",
             )
 
             )
