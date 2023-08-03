@@ -26,4 +26,10 @@ object DatabaseModule {
             .fallbackToDestructiveMigration()
             .build()
     }
+
+    @Provides
+    @Singleton
+    fun provideHabitDao(
+        intimoDatabase: IntimoDatabase
+    ): HabitDao = intimoDatabase.habitDao()
 }

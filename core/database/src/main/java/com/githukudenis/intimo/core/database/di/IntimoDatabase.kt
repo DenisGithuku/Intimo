@@ -14,14 +14,14 @@ import com.githukudenis.intimo.core.database.HabitTypeConverter
 @Database(entities = [], version = 1, exportSchema = false)
 @TypeConverters(value = [HabitTypeConverter::class])
 abstract class IntimoDatabase: RoomDatabase() {
-    abstract fun habitsDao(): HabitsDao
+    abstract fun habitDao(): HabitDao
 }
 
 
 @Dao
-interface HabitsDao {
+interface HabitDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertHabits(vararg habitDBO: HabitDBO)
+    fun insertHabits(habits: List<HabitDBO>)
 
     @Query("SELECT * FROM HabitTable")
     fun getHabitList(): List<HabitDBO>
@@ -31,4 +31,7 @@ interface HabitsDao {
 
     @Update
     fun updateHabit(habitDBO: HabitDBO)
+
+    @Query("SELECT * FROM HabitTable WHERE id LIKE :habitId")
+    fun getHabitById(habitId: Int): HabitDBO
 }

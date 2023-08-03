@@ -43,6 +43,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:local"))
     implementation(project(":core:datastore"))
+    implementation(project(":core:database"))
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

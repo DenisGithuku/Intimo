@@ -1,9 +1,9 @@
 package com.githukudenis.intimo.core.database
 
-import android.util.Log
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
+import com.githukudenis.model.HabitData
 import com.githukudenis.model.HabitType
 
 @Entity(tableName = "HabitTable")
@@ -14,6 +14,15 @@ data class HabitDBO(
     val habitType: HabitType,
     val habitPoints: Int = 0,
 )
+
+fun HabitDBO.toHabitData(): HabitData {
+    return HabitData(
+        id = id,
+        habitIcon = habitIcon,
+        habitType = habitType,
+        habitPoints = habitPoints
+    )
+}
 
 
 class HabitTypeConverter {
