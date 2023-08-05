@@ -10,3 +10,7 @@ enum class HabitType {
     STRETCHING,
     NUTRITION
 }
+
+fun HabitType.nameToString(): String {
+    return name.lowercase().replaceFirstChar { it.uppercase() }
+}
