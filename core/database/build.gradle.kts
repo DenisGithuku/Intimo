@@ -2,12 +2,12 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinAndroid)
-    alias(libs.plugins.daggerHilt)
     alias(libs.plugins.kotlinKapt)
+    alias(libs.plugins.daggerHilt)
 }
 
 android {
-    namespace = "com.githukudenis.intimo.core.data"
+    namespace = "com.githukudenis.intimo.core.database"
     compileSdk = 33
 
     defaultConfig {
@@ -35,15 +35,12 @@ android {
     }
 }
 
-kapt {
-    correctErrorTypes = true
-}
-
 dependencies {
     implementation(project(":core:model"))
-    implementation(project(":core:local"))
-    implementation(project(":core:datastore"))
-    implementation(project(":core:database"))
+
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    kapt(libs.room.compiler)
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
@@ -52,6 +49,7 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.material)
     testImplementation(libs.junit)
+    testImplementation(libs.room.testing)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }

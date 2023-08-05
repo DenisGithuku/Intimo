@@ -2,16 +2,23 @@ package com.githukudenis.onboarding.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.githukudenis.data.repository.HabitsRepository
 import com.githukudenis.data.repository.UserDataRepository
+import com.githukudenis.model.DailyData
+import com.githukudenis.model.DailyDataWithHabits
+import com.githukudenis.model.HabitData
+import com.githukudenis.model.HabitType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
 class OnBoardingViewModel @Inject constructor(
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val habitsRepository: HabitsRepository
 ) : ViewModel() {
 
     var onBoardingUiState = MutableStateFlow(OnBoardingUiState())
@@ -20,36 +27,36 @@ class OnBoardingViewModel @Inject constructor(
     init {
         val habitList = listOf(
             Habit(
-                emoji = "\uD83D\uDCDA",
-                description = "Reading",
+                icon = "\uD83D\uDCDA",
+                habitType = HabitType.READING,
             ),
             Habit(
-                emoji = "\uD83E\uDDD8",
-                description = "Meditation",
+                icon = "\uD83E\uDDD8",
+                habitType = HabitType.MEDITATION,
             ),
             Habit(
-                emoji = "\uD83D\uDECC",
-                description = "Sleep",
+                icon = "\uD83D\uDECC",
+                habitType = HabitType.SLEEP,
             ),
             Habit(
-                emoji = "✍️",
-                description = "Journaling",
+                icon = "✍️",
+                habitType = HabitType.JOURNALING,
             ),
             Habit(
-                emoji = "\uD83C\uDFC3",
-                description = "Exercise",
+                icon = "\uD83C\uDFC3",
+                habitType = HabitType.EXERCISE,
             ),
             Habit(
-                emoji = "\uD83E\uDD14",
-                description = "Reflect",
+                icon = "\uD83E\uDD14",
+                habitType = HabitType.REFLECTION,
             ),
             Habit(
-                emoji = "\uD83C\uDF4E",
-                description = "Nutrition",
+                icon = "\uD83C\uDF4E",
+                habitType = HabitType.NUTRITION,
             ),
             Habit(
-                emoji = "\uD83D\uDCF1",
-                description = "Screen Time",
+                icon = "\uD83E\uDD38",
+                habitType = HabitType.STRETCHING,
             )
 
             )
@@ -71,8 +78,8 @@ class OnBoardingViewModel @Inject constructor(
                 addHabit(onBoardingEvent.habit)
             }
 
-            OnBoardingEvent.HideOnBoarding -> {
-                setShouldHideOnBoarding()
+            OnBoardingEvent.GetStarted -> {
+                storeHabits()
             }
         }
     }
@@ -90,22 +97,41 @@ class OnBoardingViewModel @Inject constructor(
             )
         }
     }
-}
 
-data class OnBoardingUiState(
-    val availableHabits: List<Habit> = emptyList(),
-    val selectedHabits: List<Habit> = emptyList()
-) {
-    val uiIsValid: Boolean get() = selectedHabits.isNotEmpty()
+    private fun storeHabits() {
+        onBoardingUiState.update {
+            it.copy(
+                isLoading = true
+            )
+        }
+        val habits = onBoardingUiState.value.selectedHabits
+        viewModelScope.launch {
+            val calendar = Calendar.getInstance()
+            val today = calendar.timeInMillis
+            val dailyData = DailyData(dailyId = today)
+            val habitDataList = habits
+                .map { it.toHabitData() }
+                .map { it.copy(dailyDataId = dailyData.dailyId) }
+
+            habitsRepository.insertHabits(dailyData, habitDataList)
+        }
+        onBoardingUiState.update {
+            it.copy(isLoading = false)
+        }
+        setShouldHideOnBoarding()
+    }
 }
 
 data class Habit(
-    val emoji: String,
-    val description: String,
+    val icon: String,
+    val habitType: HabitType,
     val selected: Boolean = false
 )
 
-sealed class OnBoardingEvent {
-    data class AddHabit(val habit: Habit) : OnBoardingEvent()
-    object HideOnBoarding : OnBoardingEvent()
+fun Habit.toHabitData(): HabitData {
+    return HabitData(
+        habitIcon = icon,
+        habitType = habitType,
+    )
 }
+
