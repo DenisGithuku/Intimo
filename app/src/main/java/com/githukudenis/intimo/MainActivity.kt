@@ -55,10 +55,9 @@ class MainActivity : ComponentActivity() {
             val wic = WindowCompat.getInsetsController(window, window.decorView)
             wic.isAppearanceLightStatusBars = !isSystemInDarkTheme()
 
-            val shouldHideOnBoarding = shouldHideOnBoarding(uiState)
 
             IntimoTheme {
-                IntimoApp(shouldHideOnBoarding = shouldHideOnBoarding)
+                IntimoApp(shouldHideOnBoarding = shouldHideOnBoarding(uiState))
             }
         }
     }

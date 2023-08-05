@@ -22,6 +22,7 @@ ksp = "1.9.0-1.0.11"
 hilt-navigation-compose = "1.0.0"
 accompanist = "0.31.5-beta"
 room-version = "2.5.2"
+lottie-version = "5.2.0"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -55,7 +56,8 @@ accompanist-drawable-painter = { group = "com.google.accompanist", name = "accom
 room-runtime = { group="androidx.room", name = "room-runtime", version.ref = "room-version" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room-version"}
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room-version" }
-room-testing = {group = "androidx.room", name = "room-testing", version.ref = "room-version"}
+room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room-version"}
+lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie-version" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
