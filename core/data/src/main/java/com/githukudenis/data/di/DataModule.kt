@@ -1,5 +1,7 @@
 package com.githukudenis.data.di
 
+import com.githukudenis.data.repository.HabitsRepository
+import com.githukudenis.data.repository.IntimoHabitsRepository
 import com.githukudenis.data.repository.IntimoUsageStatsRepository
 import com.githukudenis.data.repository.IntimoUserDataRepository
 import com.githukudenis.data.repository.UsageStatsRepository
@@ -23,4 +25,9 @@ interface DataModule {
     fun bindsUsageStatsRepository(
         usageStatsRepository: IntimoUsageStatsRepository
     ): UsageStatsRepository
+
+    @Binds
+    fun bindsHabitsRepository(
+        habitsRepository: IntimoHabitsRepository
+    ): HabitsRepository
 }

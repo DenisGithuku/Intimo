@@ -11,14 +11,14 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.githukudenis.model.nameToString
 import com.githukudenis.onboarding.ui.components.GetStartedBtn
 import com.githukudenis.onboarding.ui.components.HabitItem
 import com.githukudenis.onboarding.ui.components.OnBoardingTitle
@@ -33,6 +33,7 @@ fun OnBoardingRoute(
     val uiState by onBoardingViewModel.onBoardingUiState.collectAsStateWithLifecycle()
 
     OnBoardingContent(
+        isLoading = uiState.isLoading,
         habitList = uiState.availableHabits,
         selectedHabits = uiState.selectedHabits,
         uiIsValid = uiState.uiIsValid,
@@ -40,14 +41,14 @@ fun OnBoardingRoute(
             onBoardingViewModel.handleOnBoardingEvent(OnBoardingEvent.AddHabit(habit))
         },
         onGetStarted = {
-            onBoardingViewModel.handleOnBoardingEvent(OnBoardingEvent.HideOnBoarding)
+            onBoardingViewModel.handleOnBoardingEvent(OnBoardingEvent.GetStarted)
             onFinishedOnBoarding()
         })
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun OnBoardingContent(
+    isLoading: Boolean,
     habitList: List<Habit>,
     selectedHabits: List<Habit>,
     uiIsValid: Boolean,
@@ -60,6 +61,9 @@ private fun OnBoardingContent(
             .fillMaxSize()
     ) {
         OnBoardingTitle()
+        if (isLoading) {
+            LinearProgressIndicator()
+        }
         Spacer(modifier = Modifier.height(16.dp))
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -84,8 +88,8 @@ private fun LazyGridScope.habitItemList(
 ) {
     items(items = habitList) { habit ->
         HabitItem(
-            emoji = habit.emoji,
-            description = habit.description,
+            emoji = habit.icon,
+            description = habit.habitType.nameToString(),
             selected = habit in selectedHabits,
             onToggle = {
                 onToggleHabit(habit)
