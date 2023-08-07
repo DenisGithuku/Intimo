@@ -1,17 +1,20 @@
 package com.githukudenis.summary.ui
 
-import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
-import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.githukudenis.data.repository.HabitsRepository
 import com.githukudenis.data.repository.IntimoUsageStatsRepository
-import com.githukudenis.model.ApplicationInfoData
+import com.githukudenis.data.repository.IntimoUserDataRepository
 import com.githukudenis.model.DataUsageStats
+import com.githukudenis.model.HabitData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -19,10 +22,12 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
-    private val intimoUsageStatsRepository: IntimoUsageStatsRepository
+    private val intimoUserDataRepository: IntimoUserDataRepository,
+    private val intimoUsageStatsRepository: IntimoUsageStatsRepository,
+    private val habitsRepository: HabitsRepository
 ) : ViewModel() {
 
-    var uiState: MutableStateFlow<SummaryUiState> = MutableStateFlow(SummaryUiState.Loading)
+    var uiState: MutableStateFlow<SummaryUiState> = MutableStateFlow(SummaryUiState())
         private set
 
     var queryDetails = MutableStateFlow(QueryTime())
@@ -45,6 +50,7 @@ class SummaryViewModel @Inject constructor(
             )
         }
         getUsageStats()
+        getHabitData()
     }
 
     fun onEvent(event: SummaryUiEvent) {
@@ -54,24 +60,12 @@ class SummaryViewModel @Inject constructor(
             }
 
             is SummaryUiEvent.ShowError -> {
-                when(val currentState = uiState.value) {
-                    is SummaryUiState.Error -> {
-                        val userErrorList = mutableListOf<UserError>()
-                        userErrorList.add(event.error)
-                        val newCurrentState = currentState.copy(userErrorList = userErrorList)
-                        uiState.update {
-                           newCurrentState
-                        }
-                    }
-                    is SummaryUiState.Success -> {
-                        val userErrorList = mutableListOf<UserError>()
-                        userErrorList.add(event.error)
-                        val newCurrentState = currentState.copy(userErrorList = userErrorList)
-                        uiState.update {
-                            newCurrentState
-                        }
-                    }
-                    else -> Unit
+
+                val userErrorList = mutableListOf<UserError>()
+                userErrorList.add(event.error)
+                val newCurrentState = uiState.value.copy(userErrorList = userErrorList)
+                uiState.update {
+                    newCurrentState
                 }
             }
         }
@@ -79,43 +73,52 @@ class SummaryViewModel @Inject constructor(
 
     private fun getUsageStats() {
         viewModelScope.launch {
-
-            intimoUsageStatsRepository.queryAndAggregateUsageStats(
+            val usageStats = intimoUsageStatsRepository.queryAndAggregateUsageStats(
                 beginTime = System.currentTimeMillis() - 24 * 60 * 60 * 1000,
                 endTime = System.currentTimeMillis()
             )
-                .map { usageStats ->
-                    Log.d("usage", usageStats.appUsageList.toString())
-                    SummaryUiState.Success(
-                        SummaryData(usageStats = usageStats)
+            val userData = intimoUserDataRepository.userData
+            combine(usageStats, userData) { stats, data ->
+                uiState.update { currentState ->
+                    currentState.copy(
+                        summaryData = SummaryData(
+                            usageStats = stats,
+                            unlockCount = stats.unlockCount
+                        ),
+                        notificationCount = data.notificationCount
                     )
                 }
-                .collect { summaryUiState ->
-                    uiState.value = summaryUiState
+            }.collect()
+        }
+    }
+
+    private fun getHabitData() {
+        viewModelScope.launch {
+            habitsRepository.getHabitList()
+                .onEach { habitDataList ->
+                    uiState.update { currentState ->
+                        currentState.copy(
+                            habitDataList = habitDataList.flatMap { it.habitData }
+                        )
+                    }
                 }
+                .collect()
         }
     }
 
 }
 
-sealed interface SummaryUiEvent {
-    object Refresh : SummaryUiEvent
-    data class ShowError(val error: UserError) : SummaryUiEvent
-}
-
-sealed interface SummaryUiState {
-    object Loading : SummaryUiState
-    data class Success(
-        val summaryData: SummaryData,
-        val userErrorList: List<UserError> = emptyList()
-    ) : SummaryUiState
-
-    data class Error(val userErrorList: List<UserError> = emptyList()) : SummaryUiState
-
-}
+data class SummaryUiState(
+    val isLoading: Boolean = false,
+    val summaryData: SummaryData? = null,
+    val notificationCount: Long = 0L,
+    val habitDataList: List<HabitData> = emptyList(),
+    val userErrorList: List<UserError> = emptyList()
+)
 
 data class SummaryData(
-    val usageStats: DataUsageStats
+    val usageStats: DataUsageStats,
+    val unlockCount: Int,
 )
 
 data class QueryTime(

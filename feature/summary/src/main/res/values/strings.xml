@@ -4,4 +4,6 @@
     <string name="permission_dialog_description">Intimo uses your usage data to track how you use your device and to improve your experience with the app.</string>
     <string name="permission_dialog_positive_button">Allow</string>
     <string name="permission_dialog_negative_button">Deny</string>
+    <string name="welcome_back">Welcome back</string>
+    <string name="settings">Settings</string>
 </resources>

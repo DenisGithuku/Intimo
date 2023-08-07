@@ -53,7 +53,6 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 }
 
 
-
                 if (currentEvent.eventType == UsageEvents.Event.KEYGUARD_HIDDEN) {
                     unlockCount++
                 }
@@ -86,7 +85,7 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 }
 
                 /* calculate app launch count */
-                if (currEvent.eventType != nextEvent.eventType &&
+                if (currEvent.packageName != nextEvent.packageName &&
                     nextEvent.eventType == UsageEvents.Event.ACTIVITY_RESUMED
                 ) {
                     /* Different app was launched and activity is in resumed state */

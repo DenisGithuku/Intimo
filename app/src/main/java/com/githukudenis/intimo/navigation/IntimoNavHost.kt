@@ -37,6 +37,6 @@ fun IntimoNavHost(
                 }
             }
         )
-        summaryScreen()
+        summaryScreen(onOpenHabitDetails = {})
     }
 }

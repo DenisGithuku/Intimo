@@ -26,7 +26,7 @@ object DataStoreModule {
 
     @Provides
     @Singleton
-    fun provideUserPrefsDataSource(
+    fun provideUserPrefs(
         @ApplicationContext context: Context,
     ): DataStore<Preferences> {
         return PreferenceDataStoreFactory.create(
@@ -42,4 +42,10 @@ object DataStoreModule {
             produceFile = { context.preferencesDataStoreFile(USER_PREFERENCES) }
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideUserDataSource(
+       userPrefs: DataStore<Preferences>
+    ): IntimoPrefsDataSource  = IntimoPrefsDataSource(userPrefs)
 }
