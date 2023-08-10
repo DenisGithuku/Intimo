@@ -68,6 +68,10 @@ class SummaryViewModel @Inject constructor(
                     newCurrentState
                 }
             }
+
+            is SummaryUiEvent.CheckHabit -> {
+                checkHabit(event.habitId)
+            }
         }
     }
 
@@ -89,6 +93,15 @@ class SummaryViewModel @Inject constructor(
                     )
                 }
             }.collect()
+        }
+    }
+
+    private fun checkHabit(habitId: Int) {
+        viewModelScope.launch {
+            var habit = uiState.value.habitDataList.find { habit -> habit.habitDataId == habitId } ?: return@launch
+            habit = habit.copy(habitPoints = 1)
+            habitsRepository.updateHabit(habit)
+            getHabitData()
         }
     }
 
