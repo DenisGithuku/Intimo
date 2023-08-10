@@ -41,7 +41,6 @@ fun HabitItem(
     )
     Box(
         modifier = Modifier
-
             .border(
                 border = BorderStroke(width = 1.dp, color = borderColor),
                 shape = MaterialTheme.shapes.large

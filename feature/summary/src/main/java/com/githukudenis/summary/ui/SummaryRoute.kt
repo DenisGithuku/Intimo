@@ -13,6 +13,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -160,6 +162,9 @@ internal fun SummaryRoute(
         unlockCount = uiState.summaryData?.unlockCount ?: 0,
         notificationCount = uiState.notificationCount,
         habitDataList = uiState.habitDataList,
+        onCheckHabit = { habitId ->
+                       summaryViewModel.onEvent(SummaryUiEvent.CheckHabit(habitId))
+        },
         onOpenHabit = { habitId -> onOpenHabitDetails(habitId) }
     )
 }
@@ -170,6 +175,7 @@ internal fun SummaryScreen(
     habitDataList: List<HabitData>,
     unlockCount: Int,
     notificationCount: Long,
+    onCheckHabit: (Int) -> Unit,
     onOpenHabit: (Int) -> Unit
 ) {
 
@@ -187,7 +193,8 @@ internal fun SummaryScreen(
         )
         item {
             Row(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(vertical = 12.dp),
             ) {
                 Text(
@@ -197,7 +204,8 @@ internal fun SummaryScreen(
         }
         habitList(
             habitDataList = habitDataList,
-            onOpenHabit = onOpenHabit
+            onOpenHabit = onOpenHabit,
+            onCheckHabit = onCheckHabit,
         )
     }
 }
@@ -311,6 +319,7 @@ fun LazyListScope.appUsageData(
                     Column {
                         usageWithColors.forEach { appUsage ->
                             Row(
+                                modifier = Modifier.padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 verticalAlignment = CenterVertically
                             ) {
@@ -359,14 +368,31 @@ fun LazyListScope.appUsageData(
 }
 
 
+@OptIn(ExperimentalLayoutApi::class)
 fun LazyListScope.habitList(
     habitDataList: List<HabitData>,
+    onCheckHabit: (Int) -> Unit,
     onOpenHabit: (Int) -> Unit
 ) {
-    items(items = habitDataList) { habitData ->
-        HabitCard(habitData = habitData, onOpenHabitDetails = { habitId ->
-            onOpenHabit(habitId)
-        })
+    item {
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            maxItemsInEachRow = 2
+        ) {
+            habitDataList.forEachIndexed { index, habitData ->
+                HabitCard(
+                    modifier = Modifier.weight(1f),
+                    habitData = habitData,
+                    checked = habitData.habitPoints > 0,
+                    onCheckHabit = onCheckHabit,
+                    onOpenHabitDetails = { habitId ->
+                        onOpenHabit(habitId)
+                    }
+                )
+            }
+        }
     }
 }
 
@@ -385,6 +411,7 @@ fun SummaryScreenPrev() {
         unlockCount = 100,
         notificationCount = 230,
         habitDataList = emptyList(),
+        onCheckHabit = {},
         onOpenHabit = {}
     )
 }

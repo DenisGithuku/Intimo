@@ -6,4 +6,5 @@
     <string name="permission_dialog_negative_button">Deny</string>
     <string name="welcome_back">Welcome back</string>
     <string name="settings">Settings</string>
+    <string name="check_habit">Check Habit</string>
 </resources>
