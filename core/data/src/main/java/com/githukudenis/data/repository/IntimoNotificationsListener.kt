@@ -4,15 +4,14 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.githukudenis.data.di.IntimoCoroutineDispatcher
 import com.githukudenis.datastore.IntimoPrefsDataSource
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class IntimoNotificationsListener: NotificationListenerService() {
+@AndroidEntryPoint
+class IntimoNotificationsListener : NotificationListenerService() {
 
     @Inject
     lateinit var intimoPrefsDataSource: IntimoPrefsDataSource
@@ -21,12 +20,9 @@ class IntimoNotificationsListener: NotificationListenerService() {
     lateinit var intimoCoroutineDispatcher: IntimoCoroutineDispatcher
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
-        val scope = CoroutineScope(SupervisorJob() + intimoCoroutineDispatcher.ioDispatcher)
+        val scope = CoroutineScope(Job() + intimoCoroutineDispatcher.ioDispatcher)
         scope.launch {
-            intimoPrefsDataSource.userData.map { it.notificationCount }.distinctUntilChanged()
-                .collectLatest { notificationCount ->
-                    intimoPrefsDataSource.storeNotificationCount(notificationCount + 1)
-                }
+            intimoPrefsDataSource.storeNotificationCount()
         }
     }
 }

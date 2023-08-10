@@ -9,7 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,7 +24,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
@@ -44,10 +42,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -60,6 +62,7 @@ import com.githukudenis.model.ApplicationInfoData
 import com.githukudenis.model.HabitData
 import com.githukudenis.summary.ui.components.CardInfo
 import com.githukudenis.summary.ui.components.HabitCard
+import com.githukudenis.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.summary.util.hasUsageAccessPermissions
 
 
@@ -71,7 +74,11 @@ internal fun SummaryRoute(
 
     val context = LocalContext.current
 
-    var shouldShowPermissionDialog by rememberSaveable {
+    var shouldShowUsagePermissionsDialog by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var shouldShowNotificationPermissionsDialog by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -90,15 +97,33 @@ internal fun SummaryRoute(
         }
     )
 
-    val permissionsAllowed = context.hasUsageAccessPermissions()
+    val notificationAccessPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult(),
+        onResult = {
+            if (context.hasNotificationAccessPermissions()) {
+                summaryViewModel.onEvent(SummaryUiEvent.Refresh)
+            } else {
+                val userError = UserError(
+                    message = "Notification access permissions required",
+                    errorType = ErrorType.CRITICAL
+                )
+                summaryViewModel.onEvent(SummaryUiEvent.ShowError(userError))
+            }
+        }
+    )
+
+    val usagePermissionsAllowed = context.hasUsageAccessPermissions()
+    val notificationAccessPermissionsAllowed = context.hasNotificationAccessPermissions()
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
 
-    DisposableEffect(lifecycle, permissionsAllowed) {
+    DisposableEffect(lifecycle, usagePermissionsAllowed, notificationAccessPermissionsAllowed) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> {
-                    shouldShowPermissionDialog = !context.hasUsageAccessPermissions()
+                    shouldShowUsagePermissionsDialog = !context.hasUsageAccessPermissions()
+                    shouldShowNotificationPermissionsDialog =
+                        !context.hasNotificationAccessPermissions()
                 }
 
                 else -> Unit
@@ -112,11 +137,11 @@ internal fun SummaryRoute(
         }
     }
 
-    if (shouldShowPermissionDialog) {
+    if (shouldShowUsagePermissionsDialog) {
         AlertDialog(
             title = {
                 Text(
-                    text = context.getString(R.string.permission_dialog_title)
+                    text = context.getString(R.string.usage_permission_dialog_title)
                 )
             },
             confirmButton = {
@@ -134,7 +159,7 @@ internal fun SummaryRoute(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        shouldShowPermissionDialog = false
+                        shouldShowUsagePermissionsDialog = false
                     }
                 ) {
                     Text(
@@ -144,13 +169,56 @@ internal fun SummaryRoute(
             },
             text = {
                 Text(
-                    text = context.getString(R.string.permission_dialog_description)
+                    text = context.getString(R.string.usage_permission_dialog_description)
                 )
             },
             shape = MaterialTheme.shapes.extraLarge,
             tonalElevation = LocalTonalElevation.current.large,
             onDismissRequest = {
-                shouldShowPermissionDialog = false
+                shouldShowUsagePermissionsDialog = false
+            }
+        )
+    }
+    if (shouldShowNotificationPermissionsDialog) {
+        AlertDialog(
+            title = {
+                Text(
+                    text = context.getString(R.string.notification_access_permission_dialog_title)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val intent =
+                            Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                        usageAccessPermissionLauncher.launch(intent)
+                    }
+                ) {
+                    Text(
+                        text = context.getString(R.string.permission_dialog_positive_button)
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        shouldShowUsagePermissionsDialog = false
+                    }
+                ) {
+                    Text(
+                        text = context.getString(R.string.permission_dialog_negative_button)
+                    )
+                }
+            },
+            text = {
+                Text(
+                    text = context.getString(R.string.notification_access_permission_dialog_description)
+                )
+            },
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = LocalTonalElevation.current.large,
+            onDismissRequest = {
+                shouldShowNotificationPermissionsDialog = false
             }
         )
     }
@@ -163,7 +231,7 @@ internal fun SummaryRoute(
         notificationCount = uiState.notificationCount,
         habitDataList = uiState.habitDataList,
         onCheckHabit = { habitId ->
-                       summaryViewModel.onEvent(SummaryUiEvent.CheckHabit(habitId))
+            summaryViewModel.onEvent(SummaryUiEvent.CheckHabit(habitId))
         },
         onOpenHabit = { habitId -> onOpenHabitDetails(habitId) }
     )
@@ -299,25 +367,55 @@ fun LazyListScope.appUsageData(
                         it * 360f / 100
                     }
 
-                    Canvas(
-                        modifier = Modifier.size(120.dp)
-                    ) {
-                        var startAngle = -90f
+                    val textMeasurer = rememberTextMeasurer()
+                    val totalAppTime = usageStats.sumOf { it.usageDuration }
+                    val totalAppTimeText = getTimeFromMillis(totalAppTime)
 
-                        for (i in angles.indices) {
-                            drawArc(
-                                color = usageWithColors.map { it.second }[i],
-                                startAngle = startAngle * animateArchValue.value,
-                                sweepAngle = angles[i],
-                                useCenter = false,
-                                style = Stroke(width = 16.dp.value)
-                            )
-                            startAngle += angles[i]
-                        }
+
+                    val textLayoutResult = remember(totalAppTimeText) {
+                        textMeasurer.measure(totalAppTimeText)
                     }
+                    Spacer(
+                        modifier = Modifier
+                            .size(120.dp)
+                            .drawWithCache {
+                                var startAngle = -90f
+
+                                onDrawBehind {
+                                    for (i in angles.indices) {
+                                        drawArc(
+                                            color = usageWithColors.map { it.second }[i],
+                                            startAngle = startAngle * animateArchValue.value,
+                                            sweepAngle = angles[i],
+                                            useCenter = false,
+                                            style = Stroke(width = 16.dp.value)
+                                        )
+                                        startAngle += angles[i]
+                                    }
+                                    drawText(
+                                        textMeasurer = textMeasurer,
+                                        text = totalAppTimeText,
+                                        topLeft = Offset(
+                                            x = center.x - textLayoutResult.size.width / 2,
+                                            y = center.y - textLayoutResult.size.height / 2
+                                        )
+                                    )
+                                }
+                            })
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         usageWithColors.forEach { appUsage ->
+                            val appName = usageStats
+                                .find { it.usageDuration.toFloat() == appUsage.first }?.packageName?.let {
+                                    getApplicationLabel(
+                                        it,
+                                        context
+                                    )
+                                } ?: "Other"
+                            val upTime =
+                                usageStats.find { it.usageDuration.toFloat() == appUsage.first }?.usageDuration
+                                    ?: 0
+                            val formattedTime = getTimeFromMillis(upTime)
                             Row(
                                 modifier = Modifier.padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -330,13 +428,10 @@ fun LazyListScope.appUsageData(
                                         .background(appUsage.second)
                                 )
                                 Text(
-                                    text = usageStats
-                                        .find { it.usageDuration.toFloat() == appUsage.first }?.packageName?.let {
-                                            getApplicationLabel(
-                                                it,
-                                                context
-                                            )
-                                        } ?: "Other",
+                                    text = buildString {
+                                        append("${appName} ")
+                                        append(formattedTime)
+                                    },
                                     style = MaterialTheme.typography.labelSmall
                                 )
                             }
@@ -364,6 +459,18 @@ fun LazyListScope.appUsageData(
                 }
             }
         }
+    }
+}
+
+fun getTimeFromMillis(timeInMillis: Long): String {
+    return if (timeInMillis / 1000 / 60 / 60 >= 1) {
+        "${timeInMillis / 1000 / 60 / 60}hr ${timeInMillis / 1000 / 60 % 60}min"
+    } else if (timeInMillis / 1000 / 60 >= 1) {
+        "${timeInMillis / 1000 / 60}min"
+    } else if (timeInMillis / 1000 >= 1) {
+        "Less than a minute"
+    } else {
+        "0 min"
     }
 }
 

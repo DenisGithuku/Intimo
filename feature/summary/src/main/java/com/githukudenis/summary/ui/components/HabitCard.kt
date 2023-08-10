@@ -30,7 +30,6 @@ import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.model.HabitData
 import com.githukudenis.model.nameToString
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCard(
     modifier: Modifier = Modifier,

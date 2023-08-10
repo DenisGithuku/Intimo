@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="permission_dialog_title">Usage Access Settings Required</string>
-    <string name="permission_dialog_description">Intimo uses your usage data to track how you use your device and to improve your experience with the app.</string>
+    <string name="usage_permission_dialog_title">Usage Access Settings Required</string>
+    <string name="usage_permission_dialog_description">Intimo uses your usage data to track how you use your device and to improve your experience with the app.</string>
     <string name="permission_dialog_positive_button">Allow</string>
     <string name="permission_dialog_negative_button">Deny</string>
     <string name="welcome_back">Welcome back</string>
     <string name="settings">Settings</string>
     <string name="check_habit">Check Habit</string>
+    <string name="notification_access_permission_dialog_title">Notification Access Required</string>
+    <string name="notification_access_permission_dialog_description">Intimo uses your usage data to track how you use your device and to improve your experience with the app.</string>
+
 </resources>

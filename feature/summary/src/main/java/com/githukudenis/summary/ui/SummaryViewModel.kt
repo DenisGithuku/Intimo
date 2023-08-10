@@ -78,8 +78,8 @@ class SummaryViewModel @Inject constructor(
     private fun getUsageStats() {
         viewModelScope.launch {
             val usageStats = intimoUsageStatsRepository.queryAndAggregateUsageStats(
-                beginTime = System.currentTimeMillis() - 24 * 60 * 60 * 1000,
-                endTime = System.currentTimeMillis()
+                beginTime = queryDetails.value.beginTime,
+                endTime = queryDetails.value.endTime
             )
             val userData = intimoUserDataRepository.userData
             combine(usageStats, userData) { stats, data ->
