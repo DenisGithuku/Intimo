@@ -7,7 +7,6 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.githukudenis.model.UserData
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -27,12 +26,9 @@ class IntimoPrefsDataSource @Inject constructor(
         }
     }
 
-    suspend fun storeNotificationCount() {
-        val notificationCount = userPreferences.data.first()[PreferenceKeys.notificationCount]
-        notificationCount?.run {
-            userPreferences.edit { preferences ->
-                preferences[PreferenceKeys.notificationCount] = this + 1
-            }
+    suspend fun storeNotificationCount(notificationCount: Long) {
+        userPreferences.edit { preferences ->
+            preferences[PreferenceKeys.notificationCount] = notificationCount + 1
         }
     }
 }

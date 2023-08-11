@@ -7,6 +7,7 @@ import com.githukudenis.datastore.IntimoPrefsDataSource
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -22,7 +23,8 @@ class IntimoNotificationsListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         val scope = CoroutineScope(Job() + intimoCoroutineDispatcher.ioDispatcher)
         scope.launch {
-            intimoPrefsDataSource.storeNotificationCount()
+            val notificationCount = intimoPrefsDataSource.userData.first().notificationCount
+            intimoPrefsDataSource.storeNotificationCount(notificationCount + 1)
         }
     }
 }
