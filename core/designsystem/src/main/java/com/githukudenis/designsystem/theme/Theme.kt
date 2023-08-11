@@ -90,6 +90,7 @@ fun IntimoTheme(
     ) {
         MaterialTheme(
             colorScheme = colors,
+            typography = Typography,
             content = content
         )
     }

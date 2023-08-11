@@ -67,11 +67,10 @@ fun HabitCard(
             ) {
                 Text(
                     text = habitData.habitType.nameToString(),
-                    style = MaterialTheme.typography.headlineSmall
+                    style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
                     text = habitData.habitPoints.toString(),
-                    fontWeight = FontWeight.Bold
                 )
             }
         }
