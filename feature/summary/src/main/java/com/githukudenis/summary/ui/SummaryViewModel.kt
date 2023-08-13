@@ -1,20 +1,20 @@
 package com.githukudenis.summary.ui
 
 import android.app.usage.UsageStatsManager
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.githukudenis.data.di.IntimoCoroutineDispatcher
 import com.githukudenis.data.repository.HabitsRepository
 import com.githukudenis.data.repository.IntimoUsageStatsRepository
 import com.githukudenis.data.repository.IntimoUserDataRepository
 import com.githukudenis.model.DataUsageStats
-import com.githukudenis.model.HabitData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -24,7 +24,8 @@ import javax.inject.Inject
 class SummaryViewModel @Inject constructor(
     private val intimoUserDataRepository: IntimoUserDataRepository,
     private val intimoUsageStatsRepository: IntimoUsageStatsRepository,
-    private val habitsRepository: HabitsRepository
+    private val habitsRepository: HabitsRepository,
+    private val intimoCoroutineDispatcher: IntimoCoroutineDispatcher
 ) : ViewModel() {
 
     var uiState: MutableStateFlow<SummaryUiState> = MutableStateFlow(SummaryUiState())
@@ -36,19 +37,14 @@ class SummaryViewModel @Inject constructor(
     init {
         val calendar = Calendar.getInstance()
         val endTime = calendar.timeInMillis
-        calendar.set(Calendar.HOUR, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        calendar.set(Calendar.SECOND, 0)
-        calendar.set(Calendar.MILLISECOND, 0)
-        val startTime = calendar.timeInMillis
+        val beginTime = calendar.apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
 
-        queryDetails.update {
-            it.copy(
-                beginTime = startTime,
-                endTime = endTime,
-                interval = UsageStatsManager.INTERVAL_BEST
-            )
-        }
+        setUsageStatsDuration(beginTime, endTime, UsageStatsManager.INTERVAL_BEST)
         getUsageStats()
         getHabitData()
     }
@@ -70,8 +66,18 @@ class SummaryViewModel @Inject constructor(
             }
 
             is SummaryUiEvent.CheckHabit -> {
-                checkHabit(event.habitId)
+                completeHabit(event.habitId)
             }
+        }
+    }
+
+    private fun setUsageStatsDuration(beginTime: Long, endTime: Long, interval: Int) {
+        queryDetails.update {
+            it.copy(
+                beginTime = beginTime,
+                endTime = endTime,
+                interval = interval
+            )
         }
     }
 
@@ -92,42 +98,64 @@ class SummaryViewModel @Inject constructor(
                         notificationCount = data.notificationCount
                     )
                 }
-            }.collect()
+            }
+                .flowOn(intimoCoroutineDispatcher.ioDispatcher)
+                .collect()
         }
     }
 
-    private fun checkHabit(habitId: Int) {
+    private fun completeHabit(habitId: Long) {
         viewModelScope.launch {
-            var habit = uiState.value.habitDataList.find { habit -> habit.habitDataId == habitId } ?: return@launch
-            habit = habit.copy(habitPoints = 1)
-            habitsRepository.updateHabit(habit)
+            val habit =
+                uiState.value.habitDataList.find { habit -> habit.habitId == habitId }
+                    ?: return@launch
+            if (habit.habitId in uiState.value.completedHabits.map { it.habitId }) {
+                return@launch
+            }
+            val dayId = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            habitsRepository.completeHabit(
+                dayId = dayId,
+                habitId = habit.habitId
+            )
             getHabitData()
         }
     }
 
     private fun getHabitData() {
         viewModelScope.launch {
-            habitsRepository.getHabitList()
-                .onEach { habitDataList ->
-                    uiState.update { currentState ->
-                        currentState.copy(
-                            habitDataList = habitDataList.flatMap { it.habitData }
-                        )
-                    }
+            val completedHabits = habitsRepository.completedHabitList
+            val activeHabits = habitsRepository.activeHabitList
+
+            combine(completedHabits, activeHabits) { completed, active ->
+                uiState.update { currentState ->
+                    currentState.copy(
+                        habitDataList = active.map { habitData ->
+                            Log.d("completed", completed.toString())
+                            HabitUiModel(
+                                completed = habitData.habitId in completed.flatMap { it.habits }
+                                    .map { it.habitId },
+                                habitId = habitData.habitId,
+                                habitIcon = habitData.habitIcon,
+                                habitType = habitData.habitType,
+                                startTime = habitData.startTime,
+                                duration = habitData.duration
+                            )
+                        },
+                        days = completed.map { it.day },
+                        completedHabits = completed.flatMap { it.habits }
+                    )
                 }
+            }
                 .collect()
         }
     }
 
 }
-
-data class SummaryUiState(
-    val isLoading: Boolean = false,
-    val summaryData: SummaryData? = null,
-    val notificationCount: Long = 0L,
-    val habitDataList: List<HabitData> = emptyList(),
-    val userErrorList: List<UserError> = emptyList()
-)
 
 data class SummaryData(
     val usageStats: DataUsageStats,

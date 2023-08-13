@@ -22,8 +22,9 @@ fun CardInfo(
     ) {
         Text(
             text = value,
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground.copy(
+                0.7f
             ),
             textAlign = TextAlign.Center
         )

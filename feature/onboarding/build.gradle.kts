@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.kotlinx.datetime)
 
     // hilt
     implementation(libs.hilt.android)

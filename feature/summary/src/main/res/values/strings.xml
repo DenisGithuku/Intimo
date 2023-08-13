@@ -9,5 +9,6 @@
     <string name="check_habit">Check Habit</string>
     <string name="notification_access_permission_dialog_title">Notification Access Required</string>
     <string name="notification_access_permission_dialog_description">Intimo uses your usage data to track how you use your device and to improve your experience with the app.</string>
+    <string name="screen_time">Screen time</string>
 
 </resources>

@@ -4,13 +4,13 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 
-@Entity(tableName = "HabitTable")
+@Entity
 data class HabitData(
     @PrimaryKey(autoGenerate = true)
-    var habitDataId: Int = 0,
-    var dailyDataId: Long = 0L,
+    var habitId: Long = 0,
     val habitIcon: String,
     val habitType: HabitType,
-    val habitPoints: Int = 0,
+    val startTime: Long = 0,
+    val duration: Long = 0,
 )
 

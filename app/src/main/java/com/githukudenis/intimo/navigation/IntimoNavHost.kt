@@ -1,5 +1,7 @@
 package com.githukudenis.intimo.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
@@ -12,6 +14,7 @@ import com.githukudenis.onboarding.navigation.onBoardingScreen
 import com.githukudenis.summary.navigation.summaryNavigationRoute
 import com.githukudenis.summary.navigation.summaryScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun IntimoNavHost(
     appState: IntimoAppState,

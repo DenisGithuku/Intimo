@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.accompanist.permissions)
     implementation(libs.accompanist.drawable.painter)
+    implementation(libs.kotlinx.datetime)
 
     // hilt
     implementation(libs.hilt.android)

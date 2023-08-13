@@ -52,13 +52,13 @@ val Typography = Typography(
         fontFamily = Inter,
         fontWeight = FontWeight.Bold,
         fontSize = 20.sp,
-        lineHeight = 26.sp
+        lineHeight = 24.sp
     ),
     headlineSmall = TextStyle(
         fontFamily = Inter,
         fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp
+        fontSize = 16.sp,
+        lineHeight = 20.sp
     ),
     bodyMedium = TextStyle(
         fontWeight = FontWeight.Normal,

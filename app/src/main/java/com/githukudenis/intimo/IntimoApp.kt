@@ -1,5 +1,7 @@
 package com.githukudenis.intimo
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,6 +17,7 @@ import com.githukudenis.intimo.navigation.IntimoNavHost
 import com.githukudenis.onboarding.navigation.onBoardingNavigationRoute
 import com.githukudenis.summary.navigation.summaryNavigationRoute
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IntimoApp(

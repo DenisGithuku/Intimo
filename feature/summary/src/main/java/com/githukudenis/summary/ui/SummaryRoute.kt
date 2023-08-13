@@ -3,9 +3,12 @@ package com.githukudenis.summary.ui
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
@@ -16,7 +19,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,6 +30,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
@@ -59,17 +63,17 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.designsystem.theme.LocalTonalElevation
 import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.model.ApplicationInfoData
-import com.githukudenis.model.HabitData
 import com.githukudenis.summary.ui.components.CardInfo
 import com.githukudenis.summary.ui.components.HabitCard
 import com.githukudenis.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.summary.util.hasUsageAccessPermissions
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 internal fun SummaryRoute(
     summaryViewModel: SummaryViewModel = hiltViewModel(),
-    onOpenHabitDetails: (Int) -> Unit
+    onOpenHabitDetails: (Long) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -237,14 +241,15 @@ internal fun SummaryRoute(
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 internal fun SummaryScreen(
     usageStats: List<ApplicationInfoData>,
-    habitDataList: List<HabitData>,
+    habitDataList: List<HabitUiModel>,
     unlockCount: Int,
     notificationCount: Long,
-    onCheckHabit: (Int) -> Unit,
-    onOpenHabit: (Int) -> Unit
+    onCheckHabit: (Long) -> Unit,
+    onOpenHabit: (Long) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -253,6 +258,12 @@ internal fun SummaryScreen(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        item {
+            Text(
+                text = stringResource(R.string.screen_time),
+                style = MaterialTheme.typography.headlineSmall
+            )
+        }
         appUsageData(
             usageStats = usageStats,
             unlockCount = unlockCount,
@@ -266,7 +277,8 @@ internal fun SummaryScreen(
                     .padding(vertical = 12.dp),
             ) {
                 Text(
-                    text = "Your habits"
+                    text = "Your habits",
+                    style = MaterialTheme.typography.headlineSmall
                 )
             }
         }
@@ -285,11 +297,12 @@ fun LazyListScope.appUsageData(
     context: Context
 ) {
     item {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Text(
-                text = "Digital wellbeing",
-                style = MaterialTheme.typography.headlineSmall
-            )
+        Surface(
+            onClick = {
+                Toast.makeText(context, "Open usage", Toast.LENGTH_SHORT).show()
+            },
+            shape = MaterialTheme.shapes.large
+        ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -302,30 +315,30 @@ fun LazyListScope.appUsageData(
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     /*
-                    Get total app usage
-                     */
+                        Get total app usage
+                         */
                     val totalAppUsage = usageStats.sumOf { it.usageDuration.toInt() }.toFloat()
 
                     /*
-                    splice most four used apps
-                     */
+                        splice most four used apps
+                         */
                     val fourMostUsedApps =
                         usageStats.take(4).map { it.usageDuration.toFloat() }.toMutableList()
 
                     /*
-                    get sum of remaining values
-                     */
+                        get sum of remaining values
+                         */
                     val remainingTotalUsage =
                         usageStats.drop(4).sumOf { it.usageDuration.toInt() }.toFloat()
 
                     /*
-                    add remaining usage to first four apps
-                     */
+                        add remaining usage to first four apps
+                         */
                     fourMostUsedApps.add(remainingTotalUsage)
 
                     /*
-                    Create colors to map to usage duration
-                     */
+                        Create colors to map to usage duration
+                         */
                     val colors = listOf(
                         Color.Blue.copy(green = .7f),
                         Color.Green.copy(),
@@ -335,13 +348,13 @@ fun LazyListScope.appUsageData(
                     )
 
                     /*
-                    create a combination of usage duration and color
-                     */
+                        create a combination of usage duration and color
+                         */
                     val usageWithColors = fourMostUsedApps zip colors
 
                     /*
-                    values to be plotted on canvas
-                     */
+                        values to be plotted on canvas
+                         */
                     val plotValues = usageWithColors.map { usageStats ->
                         usageStats.first * 100 / totalAppUsage
                     }
@@ -354,15 +367,15 @@ fun LazyListScope.appUsageData(
                         animateArchValue.animateTo(
                             targetValue = 1f,
                             animationSpec = tween(
-                                durationMillis = 1000,
+                                durationMillis = 2000,
                                 easing = EaseOut
                             )
                         )
                     }
 
                     /*
-                    derive plot angles
-                     */
+                        derive plot angles
+                         */
                     val angles = plotValues.map {
                         it * 360f / 100
                     }
@@ -412,9 +425,13 @@ fun LazyListScope.appUsageData(
                                         context
                                     )
                                 } ?: "Other"
+                            /*
+                            Generate total use time for each
+                            Use the value of other summed apps
+                             */
                             val upTime =
                                 usageStats.find { it.usageDuration.toFloat() == appUsage.first }?.usageDuration
-                                    ?: 0
+                                    ?: fourMostUsedApps.last().toLong()
                             val formattedTime = getTimeFromMillis(upTime)
                             Row(
                                 modifier = Modifier.padding(vertical = 4.dp),
@@ -429,7 +446,7 @@ fun LazyListScope.appUsageData(
                                 )
                                 Text(
                                     text = buildString {
-                                        append("${appName} ")
+                                        append("$appName ")
                                         append(formattedTime)
                                     },
                                     style = MaterialTheme.typography.labelSmall
@@ -445,7 +462,9 @@ fun LazyListScope.appUsageData(
                 )
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     CardInfo(
@@ -462,6 +481,7 @@ fun LazyListScope.appUsageData(
     }
 }
 
+
 fun getTimeFromMillis(timeInMillis: Long): String {
     return if (timeInMillis / 1000 / 60 / 60 >= 1) {
         "${timeInMillis / 1000 / 60 / 60}hr ${timeInMillis / 1000 / 60 % 60}min"
@@ -475,11 +495,12 @@ fun getTimeFromMillis(timeInMillis: Long): String {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalLayoutApi::class)
 fun LazyListScope.habitList(
-    habitDataList: List<HabitData>,
-    onCheckHabit: (Int) -> Unit,
-    onOpenHabit: (Int) -> Unit
+    habitDataList: List<HabitUiModel>,
+    onCheckHabit: (Long) -> Unit,
+    onOpenHabit: (Long) -> Unit
 ) {
     item {
         FlowRow(
@@ -491,8 +512,7 @@ fun LazyListScope.habitList(
             habitDataList.forEachIndexed { index, habitData ->
                 HabitCard(
                     modifier = Modifier.weight(1f),
-                    habitData = habitData,
-                    checked = habitData.habitPoints > 0,
+                    habitUiModel = habitData,
                     onCheckHabit = onCheckHabit,
                     onOpenHabitDetails = { habitId ->
                         onOpenHabit(habitId)
@@ -510,6 +530,7 @@ fun getApplicationLabel(packageName: String, context: Context): String {
 }
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showSystemUi = true, showBackground = true)
 @Composable
 fun SummaryScreenPrev() {
