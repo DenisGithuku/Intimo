@@ -33,15 +33,14 @@ fun HabitItem(
 ) {
     val backgroundColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.background,
-        label = "Habit Background"
+        label = "DefaultHabit Background"
     )
     val borderColor by animateColorAsState(
         targetValue = if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
-        label = "Habit border"
+        label = "DefaultHabit border"
     )
     Box(
         modifier = Modifier
-
             .border(
                 border = BorderStroke(width = 1.dp, color = borderColor),
                 shape = MaterialTheme.shapes.large
@@ -70,13 +69,13 @@ fun HabitItem(
     }
 }
 
-@Preview(name = "Habit Item Selected Prev")
+@Preview(name = "DefaultHabit Item Selected Prev")
 @Composable
 fun HabitItemPrev() {
     HabitItem(emoji = "\uD83D\uDCDA", description = "Reading", selected = true, onToggle = {})
 }
 
-@Preview(name = "Habit Item Unselected Prev")
+@Preview(name = "DefaultHabit Item Unselected Prev")
 @Composable
 fun HabitItemUnSelectedPrev() {
     HabitItem(emoji = "\uD83D\uDCDA", description = "Reading", selected = false, onToggle = {})

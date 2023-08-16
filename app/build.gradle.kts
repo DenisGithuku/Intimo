@@ -10,12 +10,12 @@ plugins {
 
 android {
     namespace = "com.githukudenis.intimo"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.githukudenis.intimo"
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -76,6 +76,7 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
     implementation(libs.navigation)
+    implementation(libs.material.extended.icons)
 
     //hilt
     implementation(libs.hilt.android)

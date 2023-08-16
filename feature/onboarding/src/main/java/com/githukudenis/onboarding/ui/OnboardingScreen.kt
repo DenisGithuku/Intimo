@@ -1,6 +1,5 @@
 package com.githukudenis.onboarding.ui
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.githukudenis.model.DefaultHabit
 import com.githukudenis.model.nameToString
 import com.githukudenis.onboarding.ui.components.GetStartedBtn
 import com.githukudenis.onboarding.ui.components.HabitItem
@@ -34,8 +34,8 @@ fun OnBoardingRoute(
 
     OnBoardingContent(
         isLoading = uiState.isLoading,
-        habitList = uiState.availableHabits,
-        selectedHabits = uiState.selectedHabits,
+        defaultHabitList = uiState.availableDefaultHabits,
+        selectedDefaultHabits = uiState.selectedDefaultHabits,
         uiIsValid = uiState.uiIsValid,
         onToggleHabit = { habit ->
             onBoardingViewModel.handleOnBoardingEvent(OnBoardingEvent.AddHabit(habit))
@@ -49,10 +49,10 @@ fun OnBoardingRoute(
 @Composable
 private fun OnBoardingContent(
     isLoading: Boolean,
-    habitList: List<Habit>,
-    selectedHabits: List<Habit>,
+    defaultHabitList: List<DefaultHabit>,
+    selectedDefaultHabits: List<DefaultHabit>,
     uiIsValid: Boolean,
-    onToggleHabit: (Habit) -> Unit,
+    onToggleHabit: (DefaultHabit) -> Unit,
     onGetStarted: () -> Unit
 ) {
     Column(
@@ -71,8 +71,8 @@ private fun OnBoardingContent(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             habitItemList(
-                habitList = habitList,
-                selectedHabits = selectedHabits,
+                defaultHabitList = defaultHabitList,
+                selectedDefaultHabits = selectedDefaultHabits,
                 onToggleHabit = onToggleHabit
             )
         }
@@ -82,15 +82,15 @@ private fun OnBoardingContent(
 }
 
 private fun LazyGridScope.habitItemList(
-    habitList: List<Habit>,
-    selectedHabits: List<Habit>,
-    onToggleHabit: (Habit) -> Unit
+    defaultHabitList: List<DefaultHabit>,
+    selectedDefaultHabits: List<DefaultHabit>,
+    onToggleHabit: (DefaultHabit) -> Unit
 ) {
-    items(items = habitList) { habit ->
+    items(items = defaultHabitList) { habit ->
         HabitItem(
             emoji = habit.icon,
             description = habit.habitType.nameToString(),
-            selected = habit in selectedHabits,
+            selected = habit in selectedDefaultHabits,
             onToggle = {
                 onToggleHabit(habit)
             }

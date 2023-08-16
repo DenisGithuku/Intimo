@@ -3,13 +3,19 @@ package com.githukudenis.summary.util
 import android.app.AppOpsManager
 import android.content.Context
 import android.os.Process
+import androidx.core.app.NotificationManagerCompat
 
 fun Context.hasUsageAccessPermissions(): Boolean {
     val appOpsManager = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-    val permissionAllowed = appOpsManager.checkOpNoThrow(
+    return appOpsManager.checkOpNoThrow(
         "android:get_usage_stats",
         Process.myUid(),
         packageName
     ) == AppOpsManager.MODE_ALLOWED
-    return permissionAllowed
+}
+
+fun Context.hasNotificationAccessPermissions(): Boolean {
+    val packageName: String = this.packageName
+    val enabledPackages = NotificationManagerCompat.getEnabledListenerPackages(this)
+    return enabledPackages.contains(packageName)
 }

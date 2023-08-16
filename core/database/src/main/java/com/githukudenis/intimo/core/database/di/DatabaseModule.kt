@@ -2,6 +2,8 @@ package com.githukudenis.intimo.core.database.di
 
 import android.content.Context
 import androidx.room.Room
+import com.githukudenis.intimo.core.database.DayAndHabitsDao
+import com.githukudenis.intimo.core.database.DayDao
 import com.githukudenis.intimo.core.database.HabitDao
 import com.githukudenis.intimo.core.database.IntimoDatabase
 import com.githukudenis.intimo.core.database.IntimoHabitsDataSource
@@ -38,9 +40,29 @@ object DatabaseModule {
 
     @Provides
     @Singleton
+    fun provideDayDao(
+        intimoDatabase: IntimoDatabase
+    ): DayDao = intimoDatabase.dayDao()
+
+    @Provides
+    @Singleton
+    fun provideDayAndHabitsDao(
+        intimoDatabase: IntimoDatabase
+    ): DayAndHabitsDao = intimoDatabase.dayAndHabitsDao()
+
+    @Provides
+    @Singleton
     fun provideHabitsDataSource(
-        habitDao: HabitDao
+        habitDao: HabitDao,
+        dayDao: DayDao,
+        dayAndHabitsDao: DayAndHabitsDao,
+        @ApplicationContext context: Context
     ): IntimoHabitsDataSource {
-        return IntimoHabitsDataSource(habitDao)
+        return IntimoHabitsDataSource(
+            habitDao = habitDao,
+            dayDao = dayDao,
+            dayAndHabitsDao = dayAndHabitsDao,
+            context = context
+        )
     }
 }

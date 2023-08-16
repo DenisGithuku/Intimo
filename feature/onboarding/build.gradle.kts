@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.githukudenis.intimo.feature.onboarding"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 24
@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.kotlinx.datetime)
 
     // hilt
     implementation(libs.hilt.android)

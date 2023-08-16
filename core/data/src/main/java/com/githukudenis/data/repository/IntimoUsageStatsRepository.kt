@@ -9,29 +9,24 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class IntimoUsageStatsRepository @Inject constructor(
-    private val intimoUsageStatsDataSource: IntimoUsageStatsDataSource,
-    private val intimoCoroutineDispatcher: IntimoCoroutineDispatcher
+    private val intimoUsageStatsDataSource: IntimoUsageStatsDataSource
 ) : UsageStatsRepository {
-    override suspend fun queryAndAggregateUsageStats(
+    override fun queryAndAggregateUsageStats(
         beginTime: Long,
         endTime: Long,
     ): Flow<DataUsageStats> {
-        return withContext(intimoCoroutineDispatcher.ioDispatcher) {
-            intimoUsageStatsDataSource.queryAndAggregateUsageStats(beginTime, endTime)
-        }
+            return intimoUsageStatsDataSource.queryAndAggregateUsageStats(beginTime, endTime)
     }
 
-    override suspend fun getIndividualAppUsage(
+    override fun getIndividualAppUsage(
         startTimeMillis: Long,
         endTimeMillis: Long,
         packageName: String
     ): Flow<ApplicationInfoData> {
-        return withContext(intimoCoroutineDispatcher.ioDispatcher) {
-            intimoUsageStatsDataSource.getIndividualAppUsage(
+            return intimoUsageStatsDataSource.getIndividualAppUsage(
                 startTimeMillis,
                 endTimeMillis,
                 packageName
             )
-        }
     }
 }

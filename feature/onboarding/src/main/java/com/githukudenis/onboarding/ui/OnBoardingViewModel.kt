@@ -4,10 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.data.repository.HabitsRepository
 import com.githukudenis.data.repository.UserDataRepository
-import com.githukudenis.model.DailyData
-import com.githukudenis.model.DailyDataWithHabits
+import com.githukudenis.model.Day
+import com.githukudenis.model.DefaultHabit
 import com.githukudenis.model.HabitData
-import com.githukudenis.model.HabitType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -25,43 +24,8 @@ class OnBoardingViewModel @Inject constructor(
         private set
 
     init {
-        val habitList = listOf(
-            Habit(
-                icon = "\uD83D\uDCDA",
-                habitType = HabitType.READING,
-            ),
-            Habit(
-                icon = "\uD83E\uDDD8",
-                habitType = HabitType.MEDITATION,
-            ),
-            Habit(
-                icon = "\uD83D\uDECC",
-                habitType = HabitType.SLEEP,
-            ),
-            Habit(
-                icon = "✍️",
-                habitType = HabitType.JOURNALING,
-            ),
-            Habit(
-                icon = "\uD83C\uDFC3",
-                habitType = HabitType.EXERCISE,
-            ),
-            Habit(
-                icon = "\uD83E\uDD14",
-                habitType = HabitType.REFLECTION,
-            ),
-            Habit(
-                icon = "\uD83C\uDF4E",
-                habitType = HabitType.NUTRITION,
-            ),
-            Habit(
-                icon = "\uD83E\uDD38",
-                habitType = HabitType.STRETCHING,
-            )
-
-            )
         onBoardingUiState.update { currentState ->
-            currentState.copy(availableHabits = habitList)
+            currentState.copy(availableDefaultHabits = habitsRepository.availableHabitList)
         }
     }
 
@@ -75,7 +39,7 @@ class OnBoardingViewModel @Inject constructor(
     fun handleOnBoardingEvent(onBoardingEvent: OnBoardingEvent) {
         when (onBoardingEvent) {
             is OnBoardingEvent.AddHabit -> {
-                addHabit(onBoardingEvent.habit)
+                addHabit(onBoardingEvent.defaultHabit)
             }
 
             OnBoardingEvent.GetStarted -> {
@@ -84,16 +48,16 @@ class OnBoardingViewModel @Inject constructor(
         }
     }
 
-    private fun addHabit(habit: Habit) {
-        val selectedHabits = onBoardingUiState.value.selectedHabits.toMutableList()
-        if (selectedHabits.contains(habit)) {
-            selectedHabits.remove(habit)
+    private fun addHabit(defaultHabit: DefaultHabit) {
+        val selectedHabits = onBoardingUiState.value.selectedDefaultHabits.toMutableList()
+        if (selectedHabits.contains(defaultHabit)) {
+            selectedHabits.remove(defaultHabit)
         } else {
-            selectedHabits.add(habit)
+            selectedHabits.add(defaultHabit)
         }
         onBoardingUiState.update { currentState ->
             currentState.copy(
-                selectedHabits = selectedHabits
+                selectedDefaultHabits = selectedHabits
             )
         }
     }
@@ -104,16 +68,26 @@ class OnBoardingViewModel @Inject constructor(
                 isLoading = true
             )
         }
-        val habits = onBoardingUiState.value.selectedHabits
-        viewModelScope.launch {
-            val calendar = Calendar.getInstance()
-            val today = calendar.timeInMillis
-            val dailyData = DailyData(dailyId = today)
-            val habitDataList = habits
-                .map { it.toHabitData() }
-                .map { it.copy(dailyDataId = dailyData.dailyId) }
 
-            habitsRepository.insertHabits(dailyData, habitDataList)
+        viewModelScope.launch {
+            val date = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
+            habitsRepository.insertDay(day = Day(date))
+            val habits = onBoardingUiState.value.selectedDefaultHabits
+                .map { habit ->
+                    HabitData(
+                        habitIcon = habit.icon,
+                        habitType = habit.habitType,
+                        startTime = habit.startTime,
+                        duration = habit.duration
+                    )
+                }
+            habitsRepository.insertHabit(*habits.toTypedArray())
+
         }
         onBoardingUiState.update {
             it.copy(isLoading = false)
@@ -122,16 +96,5 @@ class OnBoardingViewModel @Inject constructor(
     }
 }
 
-data class Habit(
-    val icon: String,
-    val habitType: HabitType,
-    val selected: Boolean = false
-)
 
-fun Habit.toHabitData(): HabitData {
-    return HabitData(
-        habitIcon = icon,
-        habitType = habitType,
-    )
-}
 

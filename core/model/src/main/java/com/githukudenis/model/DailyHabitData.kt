@@ -2,23 +2,42 @@ package com.githukudenis.model
 
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 
-@Entity(tableName = "DailyDataTable")
-data class DailyData(
-    @PrimaryKey(autoGenerate = true)
-    var dailyId: Long
+@Entity
+data class Day(
+    @PrimaryKey
+    val dayId: Long,
 )
 
-data class DailyDataWithHabits(
-    @Embedded
-    val dailyData: DailyData,
+@Entity(primaryKeys = ["dayId", "habitId"])
+data class DayAndHabitCrossRef(
+    val dayId: Long,
+    val habitId: Long
+)
+
+data class DayAndHabits(
+    @Embedded val day: Day,
     @Relation(
-        parentColumn = "dailyId",
-        entityColumn = "dailyDataId"
+        parentColumn = "dayId",
+        entityColumn = "habitId",
+        associateBy = Junction(
+            DayAndHabitCrossRef::class
+        )
     )
-    val habitData: List<HabitData>
+    val habits: List<HabitData>
 )
 
-
+data class HabitAndDay(
+    @Embedded val habit: HabitData,
+    @Relation(
+        parentColumn = "habitId",
+        entityColumn = "dayId",
+        associateBy = Junction(
+            value = DayAndHabitCrossRef::class
+        )
+    )
+    val days: List<Day>
+)

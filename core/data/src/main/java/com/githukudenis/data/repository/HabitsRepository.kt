@@ -1,17 +1,22 @@
 package com.githukudenis.data.repository
 
-import com.githukudenis.model.DailyData
-import com.githukudenis.model.DailyDataWithHabits
+import com.githukudenis.model.Day
+import com.githukudenis.model.DayAndHabits
+import com.githukudenis.model.DefaultHabit
 import com.githukudenis.model.HabitData
 import kotlinx.coroutines.flow.Flow
 
 interface HabitsRepository {
 
-    suspend fun insertHabits(dailyData: DailyData, habitDataList: List<HabitData>)
+    val completedHabitList: Flow<List<DayAndHabits>>
 
-    suspend fun getHabitList(): Flow<List<DailyDataWithHabits>>
+    val activeHabitList: Flow<List<HabitData>>
 
-    suspend fun getHabitById(habitId: Int): Flow<HabitData>
-
+    val availableHabitList: List<DefaultHabit>
+    suspend fun getHabitById(habitId: Long): HabitData
+    suspend fun insertDay(day: Day)
+    suspend fun insertHabit(vararg habitData: HabitData)
     suspend fun updateHabit(habitData: HabitData)
+
+    suspend fun completeHabit(dayId: Long, habitId: Long)
 }

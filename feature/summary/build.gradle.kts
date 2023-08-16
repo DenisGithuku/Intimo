@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.githukudenis.intimo.feature.summary"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 24
@@ -48,6 +48,7 @@ kapt {
 dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:model"))
+    implementation(project(":core:ui"))
     implementation(project(":core:designsystem"))
 
     implementation(libs.core.ktx)
@@ -64,6 +65,9 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.accompanist.permissions)
     implementation(libs.accompanist.drawable.painter)
+    implementation(libs.kotlinx.datetime)
+    implementation(libs.horizontal.calendar.view)
+    implementation(libs.material.extended.icons)
 
     // hilt
     implementation(libs.hilt.android)
