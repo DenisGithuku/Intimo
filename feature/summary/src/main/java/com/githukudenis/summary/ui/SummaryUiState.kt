@@ -22,3 +22,14 @@ data class HabitUiModel(
     val startTime: Long = 0,
     val duration: Long = 0
 )
+
+fun HabitData.toHabitUiModel(completed: Boolean): HabitUiModel {
+    return HabitUiModel(
+        completed = completed,
+        habitId = habitId,
+        habitIcon = habitIcon,
+        habitType = habitType,
+        startTime = startTime,
+        duration = duration
+    )
+}

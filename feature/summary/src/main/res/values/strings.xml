@@ -10,5 +10,9 @@
     <string name="notification_access_permission_dialog_title">Notification Access Required</string>
     <string name="notification_access_permission_dialog_description">Intimo uses your usage data to track how you use your device and to improve your experience with the app.</string>
     <string name="screen_time">Screen time</string>
+    <string name="open_habit">Open Habit</string>
+    <string name="habit_status">Habit status</string>
+    <string name="prev_week">Previous week\n</string>
+    <string name="next_week">Next Week\n</string>
 
 </resources>

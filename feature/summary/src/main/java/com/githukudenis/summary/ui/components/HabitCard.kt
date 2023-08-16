@@ -5,20 +5,26 @@ import android.os.Build
 import android.text.format.DateFormat
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Timelapse
+import androidx.compose.material.icons.outlined.TimerOff
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,12 +38,14 @@ import androidx.compose.ui.unit.dp
 import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.model.nameToString
 import com.githukudenis.summary.ui.HabitUiModel
+import kotlinx.datetime.Clock
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HabitCard(
@@ -47,71 +55,108 @@ fun HabitCard(
     onOpenHabitDetails: (Long) -> Unit
 ) {
     val context = LocalContext.current
-    val checkmarkColor = animateColorAsState(
-        targetValue = if (habitUiModel.completed) Color.Yellow.copy(green = 0.7f) else Color.LightGray,
-        label = "Check mark color"
-    )
     Box(
         modifier = modifier
             .clip(MaterialTheme.shapes.large)
+            .border(
+                shape = MaterialTheme.shapes.large,
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Color.Black.copy(
+                        alpha = 0.1f
+                    )
+                )
+            )
             .background(
                 MaterialTheme.colorScheme.surface,
             )
+
             .clickable {
                 onOpenHabitDetails(habitUiModel.habitId)
             }
     )
     {
-        Column(
+        Row(
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth(),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = habitUiModel.habitIcon,
-                style = MaterialTheme.typography.headlineMedium
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(
-                horizontalAlignment = Alignment.Start
+            Row(
+                modifier = modifier,
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = habitUiModel.habitType.nameToString(),
-                    style = MaterialTheme.typography.bodyLarge
+                    text = habitUiModel.habitIcon,
+                    style = MaterialTheme.typography.headlineMedium
                 )
-                Text(
-                    text = buildString {
-                        append(getTimeString(
-                            context = context,
-                            timeInMillis = habitUiModel.startTime
-                        ))
-                        append(" - ")
-                        append(getTimeString(
-                            context = context,
-                            timeInMillis = habitUiModel.startTime + habitUiModel.duration
-                        ))
-                    }
+                Column(
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = habitUiModel.habitType.nameToString(),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    Text(
+                        text = buildString {
+                            append(
+                                getTimeString(
+                                    context = context,
+                                    timeInMillis = habitUiModel.startTime
+                                )
+                            )
+                            append(" - ")
+                            append(
+                                getTimeString(
+                                    context = context,
+                                    timeInMillis = habitUiModel.startTime + habitUiModel.duration
+                                )
+                            )
+                        },
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            color = Color.Black.copy(alpha = 0.8f)
+                        )
+                    )
+                    FilterChip(
+                        trailingIcon = {
+                            Icon(
+                                imageVector = if (habitUiModel.startTime >= Clock.System.now()
+                                        .toEpochMilliseconds()
+                                ) {
+                                    Icons.Outlined.Timelapse
+                                } else if (habitUiModel.completed) {
+                                    Icons.Outlined.Check
+                                } else {
+                                    Icons.Outlined.TimerOff
+                                },
+                                contentDescription = stringResource(R.string.habit_status)
+                            )
+                        },
+                        selected = habitUiModel.completed,
+                        onClick = {
+                            onCheckHabit(habitUiModel.habitId)
+                        },
+                        label = {
+                            Text(
+                                text = if (habitUiModel.startTime >= Clock.System.now()
+                                        .toEpochMilliseconds()
+                                ) "Upcoming" else if (habitUiModel.completed) "Complete" else "Incomplete"
+                            )
+                        }
+                    )
+                }
+            }
+            IconButton(onClick = {
+                onOpenHabitDetails(habitUiModel.habitId)
+            }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowForwardIos,
+                    contentDescription = stringResource(id = R.string.open_habit)
                 )
             }
-        }
-
-        IconButton(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.medium)
-                .align(Alignment.TopEnd)
-                .padding(4.dp),
-            colors = IconButtonDefaults.filledTonalIconButtonColors(
-                containerColor = Color.White,
-            ),
-            onClick = { onCheckHabit(habitUiModel.habitId) },
-        ) {
-            Icon(
-                tint = checkmarkColor.value,
-                imageVector = Icons.Default.Check,
-                contentDescription = stringResource(R.string.check_habit)
-            )
         }
     }
 }

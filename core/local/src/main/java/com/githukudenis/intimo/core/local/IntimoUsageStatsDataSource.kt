@@ -7,6 +7,7 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.text.format.DateFormat
 import com.githukudenis.model.ApplicationInfoData
 import com.githukudenis.model.DataUsageStats
 import kotlinx.coroutines.flow.Flow
@@ -18,7 +19,7 @@ class IntimoUsageStatsDataSource @Inject constructor(
     private val usageStatsManager: UsageStatsManager,
     private val context: Context
 ) {
-    suspend fun queryAndAggregateUsageStats(
+    fun queryAndAggregateUsageStats(
         beginTime: Long,
         endTime: Long
     ): Flow<DataUsageStats> {
@@ -28,9 +29,11 @@ class IntimoUsageStatsDataSource @Inject constructor(
             /* Map with app package name as the key */
             val appUsageInfoMap = hashMapOf<String, ApplicationInfoData>()
 
+            val isIn24HourSystem = DateFormat.is24HourFormat(context)
+            val startTime = if (isIn24HourSystem) beginTime - 12 else beginTime
             val usageStats = usageStatsManager.queryUsageStats(
                 UsageStatsManager.INTERVAL_BEST,
-                beginTime, endTime
+                startTime, endTime
             )
 
             /* Query installed apps */
@@ -100,7 +103,7 @@ class IntimoUsageStatsDataSource @Inject constructor(
         }
     }
 
-    suspend fun getIndividualAppUsage(
+    fun getIndividualAppUsage(
         startTimeMillis: Long,
         endTimeMillis: Long,
         packageName: String

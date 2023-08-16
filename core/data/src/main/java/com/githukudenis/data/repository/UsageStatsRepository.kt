@@ -6,12 +6,12 @@ import kotlinx.coroutines.flow.Flow
 
 interface UsageStatsRepository {
 
-    suspend fun queryAndAggregateUsageStats(
+    fun queryAndAggregateUsageStats(
         beginTime: Long,
         endTime: Long,
     ): Flow<DataUsageStats>
 
-    suspend fun getIndividualAppUsage(
+    fun getIndividualAppUsage(
         startTimeMillis: Long,
         endTimeMillis: Long,
         packageName: String

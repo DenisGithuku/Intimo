@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
@@ -502,24 +503,14 @@ fun LazyListScope.habitList(
     onCheckHabit: (Long) -> Unit,
     onOpenHabit: (Long) -> Unit
 ) {
-    item {
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            maxItemsInEachRow = 2
-        ) {
-            habitDataList.forEachIndexed { index, habitData ->
-                HabitCard(
-                    modifier = Modifier.weight(1f),
-                    habitUiModel = habitData,
-                    onCheckHabit = onCheckHabit,
-                    onOpenHabitDetails = { habitId ->
-                        onOpenHabit(habitId)
-                    }
-                )
+    items(items = habitDataList) { habitUiModel ->
+        HabitCard(
+            habitUiModel = habitUiModel,
+            onCheckHabit = onCheckHabit,
+            onOpenHabitDetails = { habitId ->
+                onOpenHabit(habitId)
             }
-        }
+        )
     }
 }
 

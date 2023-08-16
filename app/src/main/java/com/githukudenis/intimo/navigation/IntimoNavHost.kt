@@ -13,6 +13,8 @@ import com.githukudenis.onboarding.navigation.onBoardingNavigationRoute
 import com.githukudenis.onboarding.navigation.onBoardingScreen
 import com.githukudenis.summary.navigation.summaryNavigationRoute
 import com.githukudenis.summary.navigation.summaryScreen
+import com.githukudenis.summary.ui.detail.detailScreen
+import com.githukudenis.summary.ui.detail.habitDetailRoute
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -40,6 +42,10 @@ fun IntimoNavHost(
                 }
             }
         )
-        summaryScreen(onOpenHabitDetails = {})
+        summaryScreen(onOpenHabitDetails = { habitId ->
+            navController.navigate("$habitDetailRoute/$habitId")
+        })
+
+        detailScreen()
     }
 }
