@@ -1,7 +1,9 @@
 package com.githukudenis.summary.ui
 
 import android.app.usage.UsageStatsManager
+import android.os.Build.VERSION_CODES
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.data.di.IntimoCoroutineDispatcher
@@ -18,9 +20,10 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.util.Calendar
 import javax.inject.Inject
-
+@RequiresApi(VERSION_CODES.O)
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
     private val intimoUserDataRepository: IntimoUserDataRepository,
@@ -29,24 +32,13 @@ class SummaryViewModel @Inject constructor(
     private val intimoCoroutineDispatcher: IntimoCoroutineDispatcher
 ) : ViewModel() {
 
-    val calendar = Calendar.getInstance()
-    val endTime = calendar.timeInMillis
-    val beginTime = calendar.apply {
-        set(Calendar.HOUR_OF_DAY, 0)
-        set(Calendar.MINUTE, 0)
-        set(Calendar.SECOND, 0)
-        set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
 
     private var queryDetails =
-        MutableStateFlow(QueryTime(beginTime, endTime, UsageStatsManager.INTERVAL_DAILY))
+        MutableStateFlow(QueryTime(date = LocalDate.now()))
 
 
     var uiState: StateFlow<SummaryUiState> = combine(
-        intimoUsageStatsRepository.queryAndAggregateUsageStats(
-            beginTime = queryDetails.value.beginTime,
-            endTime = queryDetails.value.endTime
-        ),
+        intimoUsageStatsRepository.queryAndAggregateUsageStats(date = queryDetails.value.date ?: LocalDate.now()),
         intimoUserDataRepository.userData,
         habitsRepository.activeHabitList,
         habitsRepository.completedHabitList
@@ -154,7 +146,5 @@ data class SummaryData(
 )
 
 data class QueryTime(
-    val beginTime: Long = 0L,
-    val endTime: Long = 0L,
-    val interval: Int = 0
+    val date: LocalDate?
 )

@@ -2,117 +2,157 @@ package com.githukudenis.intimo.core.local
 
 import android.app.KeyguardManager
 import android.app.usage.UsageEvents
-import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
-import android.text.format.DateFormat
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import com.githukudenis.model.ApplicationInfoData
 import com.githukudenis.model.DataUsageStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import javax.inject.Inject
 
 class IntimoUsageStatsDataSource @Inject constructor(
     private val usageStatsManager: UsageStatsManager,
     private val context: Context
 ) {
+    @RequiresApi(Build.VERSION_CODES.O)
     fun queryAndAggregateUsageStats(
-        beginTime: Long,
-        endTime: Long
+        date: LocalDate = LocalDate.now()
     ): Flow<DataUsageStats> {
         return flow {
-            val allEvents = mutableListOf<UsageEvents.Event>()
+            // set id to utc - api works with utc
+            val utc = ZoneId.of("UTC")
+            val defaultZone = ZoneId.systemDefault()
 
-            /* Map with app package name as the key */
-            val appUsageInfoMap = hashMapOf<String, ApplicationInfoData>()
-
-            val isIn24HourSystem = DateFormat.is24HourFormat(context)
-            val startTime = if (isIn24HourSystem) beginTime - 12 else beginTime
-            val usageStats = usageStatsManager.queryUsageStats(
-                UsageStatsManager.INTERVAL_BEST,
-                startTime, endTime
-            )
-
-            /* Query installed apps */
-            val installedApps =
-                context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
-
-            /*
-            * Transform list to sequence for minimal operation
-            * filter out apps that are not installed and non system apps
-            *  */
-            val usageList = usageStats
-                .asSequence()
-                .filter { appUsageStats ->
-                    appUsageStats.packageName in installedApps.map { app -> app.packageName } &&
-                            isNonSystemApp(appUsageStats.packageName)
-                }
-                .map { appUsageStats ->
-                    ApplicationInfoData(
-                        packageName = appUsageStats.packageName,
-                        usageDuration = appUsageStats.totalTimeInForeground,
-                        usagePercentage = getAppUsagePercentage(appUsageStats.packageName, usageStats),
-                        icon = getApplicationIcon(appUsageStats.packageName)
-                    )
-                }
-                .sortedByDescending { applicationInfoData ->
-                    applicationInfoData.usageDuration
-                }
-                .toList()
+            // set the and end time to utc midnight time
+            val startTime = date.atStartOfDay(defaultZone).withZoneSameInstant(utc)
+            val start = startTime.toInstant().toEpochMilli()
+            val end = startTime.plusDays(1).toInstant().toEpochMilli()
 
             var unlockCount = 0
+            var allAppsUsageTime = 0L
+
+            // sorted events
+            val sortedEvents = mutableMapOf<String, MutableList<UsageEvents.Event>>()
+
+
             val keyguardManager =
                 context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
 
-
+            //query events only if device is unlocked
             val systemEvents = if (!keyguardManager.isKeyguardLocked) {
-                usageStatsManager.queryEvents(beginTime, endTime)
+                usageStatsManager.queryEvents(start, end)
             } else {
                 null
             }
 
             while (systemEvents?.hasNextEvent() == true) {
-                val currentEvent = UsageEvents.Event()
-                systemEvents.getNextEvent(currentEvent)
+                val event = UsageEvents.Event()
+                systemEvents.getNextEvent(event)
 
-                if (currentEvent.eventType == UsageEvents.Event.KEYGUARD_HIDDEN) {
+                // get unclock count
+                if (event.eventType == UsageEvents.Event.KEYGUARD_HIDDEN) {
                     unlockCount++
                 }
+
+                // get event list - create one if none exists
+                val packageEvents = sortedEvents[event.packageName] ?: mutableListOf()
+                packageEvents.add(event)
+                sortedEvents[event.packageName] = packageEvents
             }
 
-            for (i in 0 until allEvents.lastIndex) {
-                val currEvent = allEvents[i]
-                val nextEvent = allEvents[i + 1]
+            Log.d("events", sortedEvents.map { it.value }.toString())
 
-                /* calculate app launch count */
-                if (currEvent.packageName != nextEvent.packageName &&
-                    nextEvent.eventType == UsageEvents.Event.ACTIVITY_RESUMED
-                ) {
-                    /* Different app was launched and activity is in resumed state */
-                    appUsageInfoMap[nextEvent.packageName] =
-                        appUsageInfoMap[nextEvent.packageName]!!.copy(
-                            appLaunchCount = appUsageInfoMap[nextEvent.packageName]!!.appLaunchCount + 1
+            var usageList = mutableListOf<ApplicationInfoData>()
+
+
+            sortedEvents.forEach { (packageName, events) ->
+                //keep track of current event start time and end times
+                var eventStartTime = 0L
+                var eventEndTime = 0L
+                var totalTime = 0L
+                var appLaunchCount = 0
+
+                // all start times for a particular app
+                var eventStartTimeList = mutableListOf<ZonedDateTime>()
+
+                events.forEach { event ->
+                    // register time when first shown
+                    if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                        eventStartTime = event.timeStamp
+                        appLaunchCount += 1
+                        eventStartTimeList.add(
+                            Instant.ofEpochMilli(eventStartTime).atZone(defaultZone)
+                                .withZoneSameInstant(defaultZone)
                         )
+                    } else if (event.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                        eventEndTime = event.timeStamp
+                    }
+
+                    /* if there's an end time and no start time
+                    then the app was started the previous day
+                    register midnight as the start time
+                     */
+                    if (eventStartTime == 0L && eventEndTime != 0L) {
+                        eventStartTime = start
+                    }
+
+                    /*
+                    Both start and end times are defined - this
+                    means we have a session
+                     */
+                    if (eventStartTime != 0L && eventEndTime != 0L) {
+                        // add session to total time
+                        totalTime += eventEndTime - eventStartTime
+                        allAppsUsageTime += totalTime
+                        // reset start and end times
+                        eventStartTime = 0L
+                        eventEndTime = 0L
+                        appLaunchCount = 0
+                    }
                 }
+
+                usageList.add(
+                    ApplicationInfoData(
+                        packageName = packageName,
+                        icon = getApplicationIcon(packageName),
+                        usageDuration = totalTime,
+                        appLaunchCount = appLaunchCount
+                    )
+                )
             }
+
+            usageList = usageList.asSequence()
+                .filter {
+                    isNonSystemApp(packageName = it.packageName) &&
+                            isInstalled(packageName = it.packageName)
+                }
+                .sortedByDescending {
+                    it.usageDuration
+                }
+                .toMutableList()
 
             emit(DataUsageStats(appUsageList = usageList, unlockCount = unlockCount))
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getIndividualAppUsage(
         startTimeMillis: Long,
         endTimeMillis: Long,
         packageName: String
     ): Flow<ApplicationInfoData> {
 
-        val appUsageList = queryAndAggregateUsageStats(
-            beginTime = startTimeMillis,
-            endTime = endTimeMillis
-        )
+        val appUsageList = queryAndAggregateUsageStats()
 
         return appUsageList.map { usageStats ->
             usageStats.appUsageList.firstOrNull { app -> app.packageName == packageName }
@@ -121,16 +161,10 @@ class IntimoUsageStatsDataSource @Inject constructor(
     }
 
     private fun getAppUsagePercentage(
-        packageName: String,
-        appUsageList: List<UsageStats>
+        individualUsage: Long,
+        totalTime: Long
     ): Float {
-        val totalDuration = appUsageList.map {
-            it.totalTimeInForeground.toFloat()
-        }.sum()
-
-        val individualAppUsage = appUsageList.find { it.packageName == packageName }?.totalTimeInForeground ?: 0L
-
-        return (individualAppUsage * 100) / totalDuration
+        return ((individualUsage / totalTime) * 100).toFloat()
     }
 
     private fun getApplicationIcon(packageName: String): Drawable {
@@ -140,5 +174,13 @@ class IntimoUsageStatsDataSource @Inject constructor(
     private fun isNonSystemApp(packageName: String): Boolean {
         val packageManager = context.packageManager
         return packageManager.getLaunchIntentForPackage(packageName) != null
+    }
+
+    private fun isInstalled(packageName: String): Boolean {
+        val installedApps =
+            context.packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+        return installedApps.any {
+            it.packageName == packageName
+        }
     }
 }
