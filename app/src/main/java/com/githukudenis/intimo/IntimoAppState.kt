@@ -30,6 +30,7 @@ data class IntimoAppState(
 
     fun navigate(route: String, navOptions: NavOptions? = null, extras: Navigator.Extras? = null) {
         navController.navigate(route) {
+            launchSingleTop = true
             popUpTo(route)
         }
     }
