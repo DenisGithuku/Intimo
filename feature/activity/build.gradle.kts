@@ -2,12 +2,12 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinAndroid)
-    alias(libs.plugins.kotlinKapt)
     alias(libs.plugins.daggerHilt)
+    alias(libs.plugins.kotlinKapt)
 }
 
 android {
-    namespace = "com.githukudenis.intimo.settings"
+    namespace = "com.githukudenis.intimo.feature.activity"
     compileSdk = 34
 
     defaultConfig {
@@ -46,7 +46,6 @@ kapt {
 }
 
 dependencies {
-
     implementation(project(":core:data"))
     implementation(project(":core:model"))
     implementation(project(":core:ui"))
@@ -67,6 +66,7 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.accompanist.drawable.painter)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.horizontal.calendar.view)
     implementation(libs.material.extended.icons)
 
     // hilt

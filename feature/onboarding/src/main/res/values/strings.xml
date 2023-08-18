@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="get_started_btn_txt">Get started</string>
-    <string name="onboarding_header">Choose defaultHabit</string>
+    <string name="onboarding_header">Choose Habit</string>
     <string name="onboarding_description">Choose your daily habits. You can choose more than one.</string>
 
 </resources>

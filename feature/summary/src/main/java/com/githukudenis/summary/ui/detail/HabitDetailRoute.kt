@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -32,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -164,12 +166,12 @@ fun DatePill(
         Spacer(modifier = Modifier.height(4.dp))
         Box(
             modifier = Modifier
-                .padding(8.dp)
+                .size(42.dp)
                 .clip(CircleShape)
                 .border(
                     shape = CircleShape,
                     border = if (dateItem.isToday) BorderStroke(
-                        width = 1.dp,
+                        width = 2.dp,
                         color = Color.Black.copy(alpha = 0.07f)
                     ) else BorderStroke(width = 0.dp, color = Color.Transparent)
                 )
@@ -180,8 +182,22 @@ fun DatePill(
         ) {
             Text(
                 text = "${dateItem.date.dayOfMonth}",
-                style = MaterialTheme.typography.labelMedium
+                style = MaterialTheme.typography.labelMedium,
             )
         }
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview
+@Composable
+fun SelectedPillPrev() {
+    DatePill(dateItem = Date(isToday = true), selected = true, onChangeDate = {})
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Preview
+@Composable
+fun UnselectedPillPrev() {
+    DatePill(dateItem = Date(isToday = true), selected = false, onChangeDate = {})
 }

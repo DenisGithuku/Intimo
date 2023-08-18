@@ -30,10 +30,22 @@ val Typography = Typography(
     ),
     titleLarge = TextStyle(
         fontFamily = Inter,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Normal,
         fontSize = 22.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp
+    ),
+    titleMedium = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Normal,
+        fontSize = 18.sp,
+        lineHeight = 24.sp
+    ),
+    titleSmall = TextStyle(
+        fontFamily = Inter,
+        fontWeight = FontWeight.Normal,
+        fontSize = 16.sp,
+        lineHeight = 20.sp
     ),
     labelSmall = TextStyle(
         fontFamily = Inter,
@@ -50,13 +62,13 @@ val Typography = Typography(
     ),
     headlineMedium = TextStyle(
         fontFamily = Inter,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 20.sp,
         lineHeight = 24.sp
     ),
     headlineSmall = TextStyle(
         fontFamily = Inter,
-        fontWeight = FontWeight.Bold,
+        fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 20.sp
     ),

@@ -65,6 +65,8 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:summary"))
+    implementation(project(":feature:settings"))
+    implementation(project(":feature:activity"))
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)

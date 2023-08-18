@@ -7,6 +7,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.githukudenis.intimo.IntimoAppState
+import com.githukudenis.intimo.feature.activity.navigation.activityScreen
+import com.githukudenis.intimo.settings.navigation.settingsScreen
 import com.githukudenis.intimo.splash_screen.splashScreen
 import com.githukudenis.intimo.splash_screen.splashScreenRoute
 import com.githukudenis.onboarding.navigation.onBoardingNavigationRoute
@@ -47,5 +49,9 @@ fun IntimoNavHost(
         })
 
         detailScreen()
+
+        settingsScreen()
+
+        activityScreen()
     }
 }
