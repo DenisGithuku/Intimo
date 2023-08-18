@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -302,7 +303,13 @@ fun LazyListScope.appUsageData(
             onClick = {
                 Toast.makeText(context, "Open usage", Toast.LENGTH_SHORT).show()
             },
-            shape = MaterialTheme.shapes.large
+            shape = MaterialTheme.shapes.large,
+            border = BorderStroke(
+                width = 1.dp,
+                color = Color.Black.copy(
+                    alpha = 0.1f
+                )
+            )
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -368,7 +375,7 @@ fun LazyListScope.appUsageData(
                         animateArchValue.animateTo(
                             targetValue = 1f,
                             animationSpec = tween(
-                                durationMillis = 2000,
+                                durationMillis = 4000,
                                 easing = EaseOut
                             )
                         )
@@ -459,7 +466,7 @@ fun LazyListScope.appUsageData(
                 Divider(
                     modifier = Modifier
                         .height(1.dp)
-                        .background(color = Color.Black.copy(alpha = 0.06f))
+                        .background(color = Color.Black.copy(alpha = 0.1f))
                 )
 
                 Row(
@@ -503,7 +510,7 @@ fun LazyListScope.habitList(
     onCheckHabit: (Long) -> Unit,
     onOpenHabit: (Long) -> Unit
 ) {
-    items(items = habitDataList) { habitUiModel ->
+    items(items = habitDataList, key = { it.habitId }) { habitUiModel ->
         HabitCard(
             habitUiModel = habitUiModel,
             onCheckHabit = onCheckHabit,

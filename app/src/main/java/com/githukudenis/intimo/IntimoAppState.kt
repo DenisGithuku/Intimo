@@ -33,4 +33,6 @@ data class IntimoAppState(
             popUpTo(route)
         }
     }
+
+    fun popBackStack() = navController.navigateUp()
 }

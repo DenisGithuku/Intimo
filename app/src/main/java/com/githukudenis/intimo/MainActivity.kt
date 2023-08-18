@@ -49,16 +49,8 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
-            val activity = LocalView.current.context as Activity
-            val backgroundArgb = MaterialTheme.colorScheme.background.toArgb()
-            activity.window.statusBarColor = backgroundArgb
-
-            val wic = WindowCompat.getInsetsController(window, window.decorView)
-            wic.isAppearanceLightStatusBars = !isSystemInDarkTheme()
-
-
             IntimoTheme {
                 IntimoApp(shouldHideOnBoarding = shouldHideOnBoarding(uiState))
             }

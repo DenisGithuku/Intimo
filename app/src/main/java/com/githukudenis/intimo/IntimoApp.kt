@@ -1,38 +1,49 @@
 package com.githukudenis.intimo
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.SsidChart
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.SettingsSuggest
 import androidx.compose.material.icons.outlined.SsidChart
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.githukudenis.intimo.feature.activity.navigation.activityRoute
 import com.githukudenis.intimo.navigation.IntimoNavHost
+import com.githukudenis.intimo.settings.navigation.settingsRoute
 import com.githukudenis.intimo.splash_screen.splashScreenRoute
 import com.githukudenis.onboarding.navigation.onBoardingNavigationRoute
 import com.githukudenis.summary.navigation.summaryNavigationRoute
-import com.githukudenis.summary.ui.detail.habitDetailRoute
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,7 +67,7 @@ fun IntimoApp(
         ),
         BottomNavigationItem(
             title = "Activity",
-            route = "",
+            route = activityRoute,
             selectedIcon = Icons.Filled.SsidChart,
             unselectedIcon = Icons.Outlined.SsidChart,
             hasNews = false,
@@ -64,7 +75,7 @@ fun IntimoApp(
         ),
         BottomNavigationItem(
             title = "Settings",
-            route = "",
+            route = settingsRoute,
             selectedIcon = Icons.Filled.Settings,
             unselectedIcon = Icons.Outlined.Settings,
             hasNews = false,
@@ -72,16 +83,44 @@ fun IntimoApp(
         ),
     )
 
-    Scaffold(
-        topBar = {
+    val scrollBehaviour = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        rememberTopAppBarState()
+    )
 
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehaviour.nestedScrollConnection),
+        topBar = {
+            if (currentDestination != null && currentDestination != onBoardingNavigationRoute && currentDestination != splashScreenRoute) {
+                MediumTopAppBar(
+                    navigationIcon = {
+                        if (currentDestination != summaryNavigationRoute) {
+                            IconButton(onClick = {
+                                appState.popBackStack()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = stringResource(R.string.navigate_back)
+                                )
+                            }
+                        }
+                    },
+                    title = {
+                        Text(
+                            text = currentDestination.substringBefore("/").replaceFirstChar { it.uppercase() }
+                        )
+                    },
+                    scrollBehavior = scrollBehaviour,
+
+                )
+            }
         },
         bottomBar = {
-            Log.d("dest", currentDestination.toString())
             AnimatedVisibility(
-                visible = currentDestination != splashScreenRoute &&
-                        currentDestination != onBoardingNavigationRoute &&
-                currentDestination != habitDetailRoute
+                enter = fadeIn() + slideInVertically(initialOffsetY = { 5 }),
+                exit = fadeOut() + slideOutVertically(targetOffsetY = { 5 }),
+                visible = currentDestination != null &&
+                        currentDestination != splashScreenRoute &&
+                        currentDestination != onBoardingNavigationRoute && !currentDestination.startsWith("detail")
 
             ) {
                 NavigationBar {
@@ -111,7 +150,7 @@ fun IntimoApp(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .fillMaxSize()
         ) {
             IntimoNavHost(
