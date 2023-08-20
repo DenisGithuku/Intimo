@@ -1,6 +1,5 @@
 package com.githukudenis.data.repository
 
-import android.app.Notification
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.githukudenis.datastore.IntimoPrefsDataSource
@@ -23,8 +22,8 @@ class IntimoNotificationsListener : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         sbn?.let { statusBarNotification ->
-            // Filter out unclearable and group notifications
-            if ((statusBarNotification.notification?.flags?.and(Notification.FLAG_GROUP_SUMMARY)) != 0 || statusBarNotification.isClearable || statusBarNotification.isOngoing) {
+            // Filter out unclearable and ongoing notifications
+            if (statusBarNotification.isClearable || statusBarNotification.isOngoing) {
                 return
             }
             scope.launch {
