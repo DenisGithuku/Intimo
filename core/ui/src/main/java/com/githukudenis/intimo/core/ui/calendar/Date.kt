@@ -44,20 +44,19 @@ class DateUiState(
 
 
     fun setData(startDate: LocalDate = today) {
-        val firstDayOfWeek = startDate.with(DayOfWeek.MONDAY)
-        val lastDayOfWeek = firstDayOfWeek.plusDays(7)
+        val lastSevenDays = startDate.minusDays(4)
         dateUiModel = dateUiModel.copy(
             selectedDate = Date(
                 date = currentSelectedDate,
                 isSelected = true,
                 isToday = currentSelectedDate == today
             ),
-            availableDates = getDates(firstDayOfWeek, lastDayOfWeek)
+            availableDates = getDates(lastSevenDays, startDate)
         )
     }
 
     private fun getDates(startDate: LocalDate, endDate: LocalDate): List<Date> {
-        val numOfDays = ChronoUnit.DAYS.between(startDate, endDate)
+        val numOfDays = ChronoUnit.DAYS.between(startDate, endDate.plusDays(1))
 
         return generateSequence(startDate) { date ->
             date.plusDays(1)

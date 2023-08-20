@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <application
         android:name=".IntimoApplication"
         android:allowBackup="true"
@@ -27,11 +28,18 @@
         <service android:name="com.githukudenis.data.repository.IntimoNotificationsListener"
             android:label="Notification Count Listener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.service.notification.NotificationListenerService"/>
             </intent-filter>
         </service>
+        <receiver android:name="com.githukudenis.data.util.DataSyncManager" />
+        <receiver android:name="com.githukudenis.data.util.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

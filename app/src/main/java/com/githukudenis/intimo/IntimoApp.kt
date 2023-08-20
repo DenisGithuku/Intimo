@@ -27,9 +27,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -44,6 +42,9 @@ import com.githukudenis.intimo.settings.navigation.settingsRoute
 import com.githukudenis.intimo.splash_screen.splashScreenRoute
 import com.githukudenis.onboarding.navigation.onBoardingNavigationRoute
 import com.githukudenis.summary.navigation.summaryNavigationRoute
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,12 +107,14 @@ fun IntimoApp(
                     },
                     title = {
                         Text(
-                            text = currentDestination.substringBefore("/").replaceFirstChar { it.uppercase() }
+                            text = if (currentDestination == summaryNavigationRoute) getCurrentDate() else
+                                currentDestination.substringBefore("/")
+                                    .replaceFirstChar { it.uppercase() }
                         )
                     },
                     scrollBehavior = scrollBehaviour,
 
-                )
+                    )
             }
         },
         bottomBar = {
@@ -120,7 +123,9 @@ fun IntimoApp(
                 exit = fadeOut() + slideOutVertically(targetOffsetY = { 5 }),
                 visible = currentDestination != null &&
                         currentDestination != splashScreenRoute &&
-                        currentDestination != onBoardingNavigationRoute && !currentDestination.startsWith("detail")
+                        currentDestination != onBoardingNavigationRoute && !currentDestination.startsWith(
+                    "detail"
+                )
 
             ) {
                 NavigationBar {
@@ -165,6 +170,12 @@ fun IntimoApp(
             )
         }
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+private fun getCurrentDate(): String {
+    val today = LocalDate.now()
+    return today.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL))
 }
 
 

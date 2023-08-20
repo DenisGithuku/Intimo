@@ -17,7 +17,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -96,21 +95,6 @@ internal fun SummaryRoute(
             } else {
                 val userError = UserError(
                     message = "Usage access permissions required",
-                    errorType = ErrorType.CRITICAL
-                )
-                summaryViewModel.onEvent(SummaryUiEvent.ShowError(userError))
-            }
-        }
-    )
-
-    val notificationAccessPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = {
-            if (context.hasNotificationAccessPermissions()) {
-                summaryViewModel.onEvent(SummaryUiEvent.Refresh)
-            } else {
-                val userError = UserError(
-                    message = "Notification access permissions required",
                     errorType = ErrorType.CRITICAL
                 )
                 summaryViewModel.onEvent(SummaryUiEvent.ShowError(userError))
@@ -375,7 +359,7 @@ fun LazyListScope.appUsageData(
                         animateArchValue.animateTo(
                             targetValue = 1f,
                             animationSpec = tween(
-                                durationMillis = 4000,
+                                durationMillis = 1000,
                                 easing = EaseOut
                             )
                         )
@@ -409,7 +393,7 @@ fun LazyListScope.appUsageData(
                                             startAngle = startAngle * animateArchValue.value,
                                             sweepAngle = angles[i],
                                             useCenter = false,
-                                            style = Stroke(width = 16.dp.value)
+                                            style = Stroke(width = 16.dp.value),
                                         )
                                         startAngle += angles[i]
                                     }
