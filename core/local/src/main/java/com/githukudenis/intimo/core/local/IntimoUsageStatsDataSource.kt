@@ -6,8 +6,10 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import android.hardware.display.DisplayManager
 import android.os.Build
 import android.util.Log
+import android.view.Display
 import androidx.annotation.RequiresApi
 import com.githukudenis.model.ApplicationInfoData
 import com.githukudenis.model.DataUsageStats
@@ -87,13 +89,17 @@ class IntimoUsageStatsDataSource @Inject constructor(
 
                 events.forEach { event ->
                     // register time when first shown
-                    if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                    if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND && isScreenOn()) {
+
+
                         eventStartTime = event.timeStamp
                         appLaunchCount += 1
                         eventStartTimeList.add(
                             Instant.ofEpochMilli(eventStartTime).atZone(defaultZone)
                                 .withZoneSameInstant(defaultZone)
                         )
+
+
                     } else if (event.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND) {
                         eventEndTime = event.timeStamp
                     }
@@ -182,5 +188,10 @@ class IntimoUsageStatsDataSource @Inject constructor(
         return installedApps.any {
             it.packageName == packageName
         }
+    }
+
+    private fun isScreenOn(): Boolean {
+        val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        return displayManager.getDisplay(Display.DEFAULT_DISPLAY).state == Display.STATE_ON
     }
 }

@@ -78,12 +78,16 @@ private fun HabitDetailsScreen(
             selectedDate = dateUiState.currentSelectedDate,
             dates = dateUiState.dateUiModel.availableDates,
             onNextWeekListener = { localDate ->
-                dateUiState.setData(
-                    localDate.plusDays(2)
-                )
+                if (dateUiState.currentSelectedDate < LocalDate.now()) {
+                    dateUiState.setData(
+                        localDate.plusDays(1)
+                    )
+                    dateUiState.updateDate(localDate.plusDays(1))
+                }
             },
             onPrevWeekListener = { localDate ->
                 dateUiState.setData(localDate.minusDays(2))
+                dateUiState.updateDate(localDate.minusDays(2))
             },
             onChangeDate = {
                 dateUiState.updateDate(it)
@@ -123,13 +127,12 @@ fun HorizontalDateView(
                 text = selectedDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)),
                 style = MaterialTheme.typography.labelMedium
             )
-            IconButton(onClick = { onNextWeekListener(selectedDate) }) {
+            IconButton(enabled = selectedDate < LocalDate.now(), onClick = { onNextWeekListener(selectedDate) }) {
                 Icon(
                     imageVector = Icons.Default.ArrowForwardIos,
                     contentDescription = stringResource(id = R.string.next_week),
                 )
             }
-
         }
         LazyRow(
             modifier = Modifier,

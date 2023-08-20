@@ -1,7 +1,5 @@
 package com.githukudenis.intimo.core.database
 
-import android.content.Context
-import android.text.format.DateFormat
 import com.githukudenis.model.Day
 import com.githukudenis.model.DayAndHabitCrossRef
 import com.githukudenis.model.DayAndHabits
@@ -17,7 +15,6 @@ class IntimoHabitsDataSource @Inject constructor(
     private val habitDao: HabitDao,
     private val dayDao: DayDao,
     private val dayAndHabitsDao: DayAndHabitsDao,
-    private val context: Context
 ) {
 
     fun insertDay(day: Day) {
@@ -89,7 +86,7 @@ class IntimoHabitsDataSource @Inject constructor(
             DefaultHabit(
                 icon = "\uD83E\uDD14",
                 habitType = HabitType.REFLECTION,
-                startTime = generateHabitTime(2),
+                startTime = generateHabitTime(14),
                 duration = generateDuration(15, DurationType.MINUTE)
             ),
             DefaultHabit(
@@ -109,13 +106,8 @@ class IntimoHabitsDataSource @Inject constructor(
     private fun generateHabitTime(hour: Int): Long {
         val calendar = Calendar.getInstance()
 
-        val isIn24HourFormat = DateFormat.is24HourFormat(context)
         calendar.apply {
-            if (isIn24HourFormat) {
-                set(Calendar.HOUR_OF_DAY, hour)
-            } else {
-                set(Calendar.HOUR, hour - 12)
-            }
+            set(Calendar.HOUR_OF_DAY, hour)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)

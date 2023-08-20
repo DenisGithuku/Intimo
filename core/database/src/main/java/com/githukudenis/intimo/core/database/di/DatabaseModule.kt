@@ -56,13 +56,11 @@ object DatabaseModule {
         habitDao: HabitDao,
         dayDao: DayDao,
         dayAndHabitsDao: DayAndHabitsDao,
-        @ApplicationContext context: Context
     ): IntimoHabitsDataSource {
         return IntimoHabitsDataSource(
             habitDao = habitDao,
             dayDao = dayDao,
             dayAndHabitsDao = dayAndHabitsDao,
-            context = context
         )
     }
 }
