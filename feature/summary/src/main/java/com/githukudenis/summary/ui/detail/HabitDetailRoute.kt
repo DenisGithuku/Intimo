@@ -18,10 +18,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +40,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.intimo.core.ui.calendar.Date
 import com.githukudenis.intimo.core.ui.calendar.rememberDateUiState
 import com.githukudenis.intimo.feature.summary.R
+import com.githukudenis.model.HabitType
+import com.githukudenis.summary.ui.home.HabitUiModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -51,7 +53,7 @@ fun HabitDetailRoute(
 ) {
     val uiState by habitDetailViewModel.uiState.collectAsStateWithLifecycle()
 
-    HabitDetailsScreen(
+    HabitDetailScreen(
         uiState = uiState,
         onCompleted = {
             habitDetailViewModel.onHabitComplete(it)
@@ -64,7 +66,7 @@ fun HabitDetailRoute(
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun HabitDetailsScreen(
+private fun HabitDetailScreen(
     uiState: HabitDetailUiState,
     onCompleted: (Long) -> Unit,
     onChangeDate: (Long) -> Unit
@@ -91,7 +93,8 @@ private fun HabitDetailsScreen(
             },
             onChangeDate = {
                 dateUiState.updateDate(it)
-            }
+            },
+            completedDates = uiState.completedDayList
         )
     }
 }
@@ -102,9 +105,10 @@ private fun HabitDetailsScreen(
 fun HorizontalDateView(
     selectedDate: LocalDate,
     dates: List<Date>,
+    completedDates: List<LocalDate>,
     onPrevWeekListener: (LocalDate) -> Unit,
     onNextWeekListener: (LocalDate) -> Unit,
-    onChangeDate: (LocalDate) -> Unit
+    onChangeDate: (LocalDate) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -127,7 +131,9 @@ fun HorizontalDateView(
                 text = selectedDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)),
                 style = MaterialTheme.typography.labelMedium
             )
-            IconButton(enabled = selectedDate < LocalDate.now(), onClick = { onNextWeekListener(selectedDate) }) {
+            IconButton(
+                enabled = selectedDate < LocalDate.now(),
+                onClick = { onNextWeekListener(selectedDate) }) {
                 Icon(
                     imageVector = Icons.Default.ArrowForwardIos,
                     contentDescription = stringResource(id = R.string.next_week),
@@ -135,17 +141,27 @@ fun HorizontalDateView(
             }
         }
         LazyRow(
-            modifier = Modifier,
+            modifier = Modifier.padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(items = dates, key = { it.date }) { dateItem ->
                 DatePill(
                     dateItem = dateItem,
                     selected = dateItem.date == selectedDate,
-                    onChangeDate = onChangeDate
+                    onChangeDate = onChangeDate,
+                    completed = dateItem.date in completedDates
                 )
             }
         }
+    }
+}
+
+@Composable
+fun HabitContents(
+    habitDetail: HabitUiModel
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+
     }
 }
 
@@ -154,39 +170,46 @@ fun HorizontalDateView(
 fun DatePill(
     dateItem: Date,
     selected: Boolean,
+    completed: Boolean = false,
     onChangeDate: (LocalDate) -> Unit
 ) {
-    Column(
-        modifier = Modifier.padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = dateItem.date.dayOfWeek.name.take(3).lowercase()
-                .replaceFirstChar { it.uppercase() },
-            style = MaterialTheme.typography.labelMedium
-        )
 
-        Spacer(modifier = Modifier.height(4.dp))
-        Box(
-            modifier = Modifier
-                .size(42.dp)
-                .clip(CircleShape)
-                .border(
-                    shape = CircleShape,
-                    border = if (dateItem.isToday) BorderStroke(
-                        width = 2.dp,
-                        color = Color.Black.copy(alpha = 0.07f)
-                    ) else BorderStroke(width = 0.dp, color = Color.Transparent)
-                )
-                .background(
-                    if (selected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.background
-                )
-                .clickable { onChangeDate(dateItem.date) }, contentAlignment = Alignment.Center
+    Box(
+        modifier = Modifier
+            .size(60.dp, 80.dp)
+            .clip(MaterialTheme.shapes.large)
+            .border(
+                shape = MaterialTheme.shapes.large,
+                border = if (dateItem.isToday) BorderStroke(
+                    width = 1.dp,
+                    color = Color.Black.copy(alpha = 0.07f)
+                ) else BorderStroke(width = 0.dp, color = Color.Transparent)
+            )
+            .background(
+                color = if (selected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.background
+            )
+            .clickable { onChangeDate(dateItem.date) }, contentAlignment = Alignment.TopCenter
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Text(
+                text = dateItem.date.dayOfWeek.name.take(3).lowercase()
+                    .replaceFirstChar { it.uppercase() },
+                style = MaterialTheme.typography.labelMedium
+            )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "${dateItem.date.dayOfMonth}",
                 style = MaterialTheme.typography.labelMedium,
             )
+            if (completed) {
+                Icon(
+                    imageVector = Icons.Filled.CheckCircleOutline,
+                    contentDescription = "Habit completed"
+                )
+            }
         }
     }
 }
@@ -203,4 +226,10 @@ fun SelectedPillPrev() {
 @Composable
 fun UnselectedPillPrev() {
     DatePill(dateItem = Date(isToday = true), selected = false, onChangeDate = {})
+}
+
+@Preview(name = "Habit contents preview")
+@Composable
+fun HabitContentsPrev() {
+    HabitContents(habitDetail = HabitUiModel(habitIcon = "", habitType = HabitType.EXERCISE))
 }

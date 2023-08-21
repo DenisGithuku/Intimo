@@ -1,19 +1,23 @@
 package com.githukudenis.summary.ui.detail
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.data.repository.HabitsRepository
-import com.githukudenis.summary.ui.toHabitUiModel
+import com.githukudenis.summary.ui.home.toHabitUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.ZoneId
 import java.util.Calendar
 import javax.inject.Inject
 
+@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class HabitDetailViewModel @Inject constructor(
     private val habitsRepository: HabitsRepository,
@@ -23,12 +27,23 @@ class HabitDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HabitDetailUiState())
     val uiState: StateFlow<HabitDetailUiState> get() = _uiState.asStateFlow()
 
+    private val today = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
+
     init {
         savedStateHandle.get<Long>("habitId")?.let { habitId ->
+            _uiState.update {
+                it.copy(habitId = habitId, selectedDate = today)
+            }
             getHabitDetails(habitId)
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     private fun getHabitDetails(habitId: Long) {
         viewModelScope.launch {
             val completedHabits = habitsRepository.completedHabitList
@@ -40,13 +55,21 @@ class HabitDetailViewModel @Inject constructor(
                             completed = habitId in completed.flatMap { it.habits }
                                 .map { it.habitId },
                         ),
-                        completedHabitList = completed.flatMap { it.habits }
+                        completedDayList = completed.flatMap { it.habits }
+                            .filter { it.habitId == habitId }.map {
+                                Calendar.getInstance().apply { timeInMillis = it.startTime }
+                                    .toInstant()
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                            }
+
                     )
                 }
             }
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun onHabitComplete(habitId: Long) {
         viewModelScope.launch {
             val dayId = Calendar.getInstance().apply {
@@ -64,6 +87,12 @@ class HabitDetailViewModel @Inject constructor(
 
     fun onChangeDate(date: Long) {
         viewModelScope.launch {
+            _uiState.update {
+                it.copy(selectedDate = date)
+            }
+            _uiState.value.habitId?.let {
+                getHabitDetails(it)
+            }
         }
     }
 }
