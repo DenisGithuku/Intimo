@@ -1,17 +1,22 @@
-package com.githukudenis.summary.ui
+package com.githukudenis.summary.ui.home
 
 import com.githukudenis.model.Day
 import com.githukudenis.model.HabitData
 import com.githukudenis.model.HabitType
+import com.githukudenis.summary.ui.UserMessage
 
 data class SummaryUiState(
     val isLoading: Boolean = false,
     val summaryData: SummaryData? = null,
     val notificationCount: Long = 0L,
     val days: List<Day> = emptyList(),
+    val habitInEditModeState: HabitInEditModeState = HabitInEditModeState(),
     val habitDataList: List<HabitUiModel> = emptyList(),
-    val completedHabits: List<HabitData> = emptyList(),
-    val userErrorList: List<UserError> = emptyList()
+    val userMessageList: List<UserMessage> = emptyList()
+)
+
+data class HabitInEditModeState(
+    val habitModel: HabitUiModel? = null
 )
 
 data class HabitUiModel(

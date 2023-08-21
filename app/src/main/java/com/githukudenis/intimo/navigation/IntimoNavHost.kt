@@ -2,11 +2,11 @@ package com.githukudenis.intimo.navigation
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import com.githukudenis.intimo.IntimoAppState
+import com.githukudenis.intimo.feature.activity.navigation.activityRoute
 import com.githukudenis.intimo.feature.activity.navigation.activityScreen
 import com.githukudenis.intimo.settings.navigation.settingsScreen
 import com.githukudenis.intimo.splash_screen.splashScreen
@@ -23,30 +23,31 @@ import com.githukudenis.summary.ui.detail.habitDetailRoute
 fun IntimoNavHost(
     appState: IntimoAppState,
     onShowSnackBar: suspend (String, String?) -> Unit,
-    startDestination: String
+    startDestination: String,
+    onOpenActivity: () -> Unit,
+    onPopupFailed: () -> Unit,
 ) {
     val navController = appState.navController
 
     NavHost(navController = navController, startDestination = splashScreenRoute) {
         splashScreen(onTimeout = {
-            navController.navigate(startDestination) {
-                popUpTo(splashScreenRoute) {
-                    inclusive = true
-                }
-            }
+            appState.navigate(startDestination, splashScreenRoute)
         })
         onBoardingScreen(
             onFinishedOnBoarding = {
-                navController.navigate(summaryNavigationRoute) {
-                    popUpTo(onBoardingNavigationRoute){
-                        inclusive = true
-                    }
-                }
+                appState.navigate(summaryNavigationRoute, onBoardingNavigationRoute)
             }
         )
-        summaryScreen(onOpenHabitDetails = { habitId ->
-            navController.navigate("$habitDetailRoute/$habitId")
-        })
+        summaryScreen(
+            snackbarHostState = appState.snackbarHostState,
+            onOpenHabitDetails = { habitId ->
+                appState.navigate("$habitDetailRoute/$habitId", "$habitDetailRoute/$habitId")
+            }, onNavigateUp = {
+                if (!navController.popBackStack()) {
+                    onPopupFailed()
+                }
+            }, onOpenActivity = onOpenActivity
+            )
 
         detailScreen()
 

@@ -68,7 +68,7 @@ val Typography = Typography(
     ),
     headlineSmall = TextStyle(
         fontFamily = Inter,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
         fontSize = 16.sp,
         lineHeight = 20.sp
     ),

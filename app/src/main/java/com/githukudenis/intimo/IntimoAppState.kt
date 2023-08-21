@@ -1,5 +1,6 @@
 package com.githukudenis.intimo
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
@@ -12,28 +13,36 @@ import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun rememberIntimoAppState(
+    snackbarHostState: SnackbarHostState = remember {
+        SnackbarHostState()
+    },
     navController: NavHostController = rememberNavController()
 ): IntimoAppState {
     return remember(
         navController
     ) {
-        IntimoAppState(navController)
+        IntimoAppState(navController, snackbarHostState)
     }
 }
 
 @Stable
 data class IntimoAppState(
-    val navController: NavHostController
+    val navController: NavHostController,
+    val snackbarHostState: SnackbarHostState
 ) {
     val currentDestination: NavDestination?
         @Composable get() = navController.currentBackStackEntryAsState().value?.destination
 
-    fun navigate(route: String, navOptions: NavOptions? = null, extras: Navigator.Extras? = null) {
+    fun navigate(route: String, popUpTo: String? = null, navOptions: NavOptions? = null, extras: Navigator.Extras? = null) {
         navController.navigate(route) {
             launchSingleTop = true
-            popUpTo(route)
+            if (popUpTo != null) {
+                popUpTo(popUpTo) {
+                    inclusive = true
+                }
+            }
         }
     }
 
-    fun popBackStack() = navController.navigateUp()
+    fun popBackStack() = navController.popBackStack()
 }

@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import android.text.format.DateFormat
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,20 +12,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.TimerOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.InputChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.model.nameToString
-import com.githukudenis.summary.ui.HabitUiModel
+import com.githukudenis.summary.ui.home.HabitUiModel
 import kotlinx.datetime.Clock
 import java.time.Instant
 import java.time.LocalDateTime
@@ -52,7 +53,8 @@ fun HabitCard(
     modifier: Modifier = Modifier,
     habitUiModel: HabitUiModel,
     onCheckHabit: (Long) -> Unit,
-    onOpenHabitDetails: (Long) -> Unit
+    onOpenHabitDetails: (Long) -> Unit,
+    onCustomize: (Long) -> Unit
 ) {
     val context = LocalContext.current
     Box(
@@ -83,52 +85,52 @@ fun HabitCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                modifier = modifier,
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            Text(
+                text = habitUiModel.habitIcon,
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Column(
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = habitUiModel.habitIcon,
-                    style = MaterialTheme.typography.headlineMedium
+                    text = habitUiModel.habitType.nameToString(),
+                    style = MaterialTheme.typography.headlineSmall
                 )
-                Column(
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = habitUiModel.habitType.nameToString(),
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                    Text(
-                        text = buildString {
-                            append(
-                                getTimeString(
-                                    context = context,
-                                    timeInMillis = habitUiModel.startTime
-                                )
+                Text(
+                    text = buildString {
+                        append(
+                            getTimeString(
+                                context = context,
+                                timeInMillis = habitUiModel.startTime
                             )
-                            append(" - ")
-                            append(
-                                getTimeString(
-                                    context = context,
-                                    timeInMillis = habitUiModel.startTime + habitUiModel.duration
-                                )
-                            )
-                        },
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            color = Color.Black.copy(alpha = 0.8f)
                         )
+                        append(" - ")
+                        append(
+                            getTimeString(
+                                context = context,
+                                timeInMillis = habitUiModel.startTime + habitUiModel.duration
+                            )
+                        )
+                    },
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        color = Color.Black.copy(alpha = 0.8f)
                     )
+                )
+
+
+                Row {
                     FilterChip(
                         trailingIcon = {
                             Icon(
-                                imageVector = if (habitUiModel.startTime >= Clock.System.now()
-                                        .toEpochMilliseconds()
-                                ) {
-                                    Icons.Outlined.Timelapse
-                                } else if (habitUiModel.completed) {
+                                imageVector = if (habitUiModel.completed) {
                                     Icons.Outlined.Check
+                                }
+                                else if (habitUiModel.startTime >= Clock.System.now().toEpochMilliseconds() && Clock.System.now().toEpochMilliseconds() <= (habitUiModel.startTime + habitUiModel.duration)){
+                                    Icons.Outlined.Timelapse
+                                } else if (habitUiModel.startTime + habitUiModel.duration >= Clock.System.now()
+                                        .toEpochMilliseconds()) {
+                                    Icons.Default.Timer
                                 } else {
                                     Icons.Outlined.TimerOff
                                 },
@@ -141,22 +143,23 @@ fun HabitCard(
                         },
                         label = {
                             Text(
-                                text = if (habitUiModel.startTime >= Clock.System.now()
+                                text = if (habitUiModel.startTime + habitUiModel.duration >= Clock.System.now()
                                         .toEpochMilliseconds()
-                                ) "Upcoming" else if (habitUiModel.completed) "Complete" else "Incomplete"
+                                ) "Upcoming" else if (habitUiModel.completed) "Complete" else "Incomplete",
+                                style = MaterialTheme.typography.labelSmall
                             )
                         }
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = { onCustomize(habitUiModel.habitId) }
+                    ) {
+                        Text(
+                            text = "Personalize",
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
                 }
-            }
-            IconButton(onClick = {
-                onOpenHabitDetails(habitUiModel.habitId)
-            }) {
-                Icon(
-                    imageVector = Icons.Default.ArrowForwardIos,
-                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                    contentDescription = stringResource(id = R.string.open_habit)
-                )
             }
         }
     }
