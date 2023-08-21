@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             IntimoTheme {
-                IntimoApp(shouldHideOnBoarding = shouldHideOnBoarding(uiState))
+                IntimoApp(shouldHideOnBoarding = shouldHideOnBoarding(uiState), onPopupFailed = { finish() })
             }
         }
     }

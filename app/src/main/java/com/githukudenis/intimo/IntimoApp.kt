@@ -51,6 +51,7 @@ import java.time.format.FormatStyle
 @Composable
 fun IntimoApp(
     shouldHideOnBoarding: Boolean,
+    onPopupFailed: () -> Unit,
     appState: IntimoAppState = rememberIntimoAppState()
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -155,7 +156,7 @@ fun IntimoApp(
         Column(
             modifier = Modifier
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp)
                 .fillMaxSize()
         ) {
             IntimoNavHost(
@@ -166,7 +167,11 @@ fun IntimoApp(
                         actionLabel = action
                     )
                 },
-                startDestination = startDestination
+                startDestination = startDestination,
+                onPopupFailed = onPopupFailed,
+                onOpenActivity = {
+                    appState.navigate(activityRoute)
+                }
             )
         }
     }

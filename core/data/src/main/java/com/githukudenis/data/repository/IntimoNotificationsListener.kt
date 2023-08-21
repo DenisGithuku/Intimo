@@ -23,7 +23,7 @@ class IntimoNotificationsListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         sbn?.let { statusBarNotification ->
             // Filter out unclearable and ongoing notifications
-            if (statusBarNotification.isClearable || statusBarNotification.isOngoing) {
+            if (!statusBarNotification.isClearable || statusBarNotification.isOngoing) {
                 return
             }
             scope.launch {
