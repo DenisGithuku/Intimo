@@ -1,6 +1,7 @@
 package com.githukudenis.summary.ui.detail
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -52,17 +53,17 @@ class HabitDetailViewModel @Inject constructor(
                 _uiState.update { habitDetailState ->
                     habitDetailState.copy(
                         habitUiModel = habit.toHabitUiModel(
-                            completed = habitId in completed.flatMap { it.habits }
+                            completed = habitId in completed.filter { it.day.dayId == today }.flatMap { it.habits }
                                 .map { it.habitId },
                         ),
-                        completedDayList = completed.flatMap { it.habits }
-                            .filter { it.habitId == habitId }.map {
-                                Calendar.getInstance().apply { timeInMillis = it.startTime }
-                                    .toInstant()
-                                    .atZone(ZoneId.systemDefault())
-                                    .toLocalDate()
-                            }
-
+                        completedDayList = completed.filter { dayAndHabits ->
+                            dayAndHabits.habits.any { it.habitId == habitId }
+                        }.map {
+                            Calendar.getInstance().apply { timeInMillis = it.day.dayId }
+                                .toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                        }
                     )
                 }
             }
