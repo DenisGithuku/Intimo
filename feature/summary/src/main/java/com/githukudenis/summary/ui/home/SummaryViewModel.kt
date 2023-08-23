@@ -1,6 +1,7 @@
 package com.githukudenis.summary.ui.home
 
 import android.os.Build.VERSION_CODES
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,7 @@ import com.githukudenis.data.repository.HabitsRepository
 import com.githukudenis.data.repository.UsageStatsRepository
 import com.githukudenis.data.repository.UserDataRepository
 import com.githukudenis.model.DataUsageStats
+import com.githukudenis.model.HabitData
 import com.githukudenis.summary.ui.UserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,9 +51,10 @@ class SummaryViewModel @Inject constructor(
         habitsRepository.activeHabitList,
         habitsRepository.completedHabitList,
     ) { active, completed ->
+        Log.d("today", today.toString())
         active.map { habitData ->
             HabitUiModel(
-                completed = habitData.habitId in completed.flatMap { it.habits }.map { it.habitId },
+                completed = habitData.habitId in completed.filter { it.day.dayId == today }.flatMap { it.habits }.map { it.habitId },
                 habitId = habitData.habitId,
                 habitIcon = habitData.habitIcon,
                 habitType = habitData.habitType,
@@ -99,6 +102,16 @@ class SummaryViewModel @Inject constructor(
 
             }
 
+            SummaryUiEvent.UpdateHabit -> {
+                if (uiState.value.habitInEditModeState.habitModel == null) {
+                    return
+                }
+                uiState.value.habitInEditModeState.habitModel?.let {
+                    updateHabit(HabitData(it.habitId, it.habitIcon, it.habitType, it.startTime, it.duration))
+                }
+                clearHabitInEditMode()
+            }
+
             is SummaryUiEvent.ShowMessage -> {
                 val messageList = userMessageList.value.toMutableList()
                 messageList.add(event.error)
@@ -121,6 +134,18 @@ class SummaryViewModel @Inject constructor(
                     it.copy(habitModel = habitInEditing)
                 }
             }
+        }
+    }
+
+    private fun updateHabit(habitData: HabitData) {
+        viewModelScope.launch {
+            habitsRepository.updateHabit(habitData)
+        }
+    }
+
+    private fun clearHabitInEditMode() {
+        habitInEditMode.update {
+            HabitInEditModeState(null)
         }
     }
 
