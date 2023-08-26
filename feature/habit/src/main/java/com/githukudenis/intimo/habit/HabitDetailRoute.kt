@@ -1,21 +1,15 @@
-package com.githukudenis.summary.ui.detail
+package com.githukudenis.intimo.habit
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -24,10 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircleOutline
-import androidx.compose.material.icons.outlined.Cancel
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,8 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -45,9 +33,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.intimo.core.ui.calendar.Date
 import com.githukudenis.intimo.core.ui.calendar.rememberDateUiState
-import com.githukudenis.intimo.feature.summary.R
+import com.githukudenis.intimo.habit.components.DatePill
 import com.githukudenis.model.HabitType
-import com.githukudenis.summary.ui.home.HabitUiModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -60,20 +47,12 @@ fun HabitDetailRoute(
 
     HabitDetailScreen(
         uiState = uiState,
-        onCompleted = {
-            habitDetailViewModel.onHabitComplete(it)
-        },
-        onChangeDate = {
-            habitDetailViewModel.onChangeDate(it)
-        }
     )
 }
 
 @Composable
 private fun HabitDetailScreen(
     uiState: HabitDetailUiState,
-    onCompleted: (Long) -> Unit,
-    onChangeDate: (Long) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -170,53 +149,6 @@ fun HabitContents(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
 
-    }
-}
-
-@Composable
-fun DatePill(
-    dateItem: Date,
-    selected: Boolean,
-    completed: Boolean = false,
-    onChangeDate: (LocalDate) -> Unit
-) {
-
-    Box(
-        modifier = Modifier
-            .size(60.dp, 80.dp)
-            .clip(MaterialTheme.shapes.large)
-            .border(
-                shape = MaterialTheme.shapes.large,
-                border = if (dateItem.isToday) BorderStroke(
-                    width = 1.dp,
-                    color = Color.Black.copy(alpha = 0.07f)
-                ) else BorderStroke(width = 0.dp, color = Color.Transparent)
-            )
-            .background(
-                color = if (selected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.background
-            )
-            .clickable { onChangeDate(dateItem.date) }, contentAlignment = Alignment.TopCenter
-    ) {
-        Column(
-            modifier = Modifier.padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = dateItem.date.dayOfWeek.name.take(3).lowercase()
-                    .replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.labelMedium
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "${dateItem.date.dayOfMonth}",
-                style = MaterialTheme.typography.labelMedium,
-            )
-
-            Icon(
-                imageVector = if (completed) Icons.Filled.Check else Icons.Outlined.Close,
-                contentDescription = "Habit completed"
-            )
-        }
     }
 }
 

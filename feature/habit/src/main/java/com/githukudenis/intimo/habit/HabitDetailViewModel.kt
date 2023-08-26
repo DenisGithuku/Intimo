@@ -1,13 +1,11 @@
-package com.githukudenis.summary.ui.detail
+package com.githukudenis.intimo.habit
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.data.repository.HabitsRepository
-import com.githukudenis.summary.ui.home.toHabitUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +16,6 @@ import java.time.ZoneId
 import java.util.Calendar
 import javax.inject.Inject
 
-@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class HabitDetailViewModel @Inject constructor(
     private val habitsRepository: HabitsRepository,
@@ -44,7 +41,6 @@ class HabitDetailViewModel @Inject constructor(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private fun getHabitDetails(habitId: Long) {
         viewModelScope.launch {
             val completedHabits = habitsRepository.completedHabitList
@@ -70,7 +66,6 @@ class HabitDetailViewModel @Inject constructor(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun onHabitComplete(habitId: Long) {
         viewModelScope.launch {
             val dayId = Calendar.getInstance().apply {
