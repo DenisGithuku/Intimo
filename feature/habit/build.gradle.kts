@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.githukudenis.intimo.feature.summary"
+    namespace = "com.githukudenis.intimo.habit"
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 26
+        minSdk = 24
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -26,15 +26,15 @@ android {
             )
         }
     }
+    buildFeatures {
+        compose = true
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
         jvmTarget = "1.8"
-    }
-    buildFeatures {
-        compose = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.0"
@@ -50,7 +50,6 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:ui"))
     implementation(project(":core:designsystem"))
-    implementation(project(":feature:habit"))
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)
