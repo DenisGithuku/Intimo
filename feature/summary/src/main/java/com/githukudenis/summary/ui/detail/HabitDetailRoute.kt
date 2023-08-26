@@ -1,7 +1,5 @@
 package com.githukudenis.summary.ui.detail
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,7 +24,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircleOutline
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -210,12 +211,11 @@ fun DatePill(
                 text = "${dateItem.date.dayOfMonth}",
                 style = MaterialTheme.typography.labelMedium,
             )
-            if (completed) {
-                Icon(
-                    imageVector = Icons.Filled.CheckCircleOutline,
-                    contentDescription = "Habit completed"
-                )
-            }
+
+            Icon(
+                imageVector = if (completed) Icons.Filled.Check else Icons.Outlined.Close,
+                contentDescription = "Habit completed"
+            )
         }
     }
 }

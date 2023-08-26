@@ -38,6 +38,7 @@ class DateUiState(
 
     var dateUiModel by mutableStateOf(DateUiModel())
 
+
     init {
         setData()
     }
@@ -79,7 +80,7 @@ class DateUiState(
 @RequiresApi(VERSION_CODES.O)
 @Composable
 fun rememberDateUiState(
-    selectedDate: LocalDate
+    selectedDate: LocalDate = LocalDate.now()
 ): DateUiState {
     return remember(selectedDate) {
         DateUiState(selectedDate)

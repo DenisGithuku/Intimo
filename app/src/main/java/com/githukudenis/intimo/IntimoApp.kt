@@ -10,7 +10,6 @@ import com.githukudenis.intimo.navigation.IntimoNavHost
 import com.githukudenis.onboarding.navigation.onBoardingNavigationRoute
 import com.githukudenis.summary.navigation.summaryNavigationRoute
 
-@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun IntimoApp(

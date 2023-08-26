@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessTime
@@ -33,7 +34,7 @@ fun InfoChip(
 
     val habitColor = when (habitStatus) {
         HabitStatus.UPCOMING -> {
-            Color.Yellow.copy(green = .7f)
+            Color(0xFFF2A900)
         }
 
         HabitStatus.PENDING -> {
@@ -41,14 +42,13 @@ fun InfoChip(
         }
 
         HabitStatus.ONGOING -> {
-            Color.Blue
+            Color(0xFF1078CF)
         }
 
         HabitStatus.COMPLETE -> {
             MaterialTheme.colorScheme.primary
         }
     }
-
     Surface(
         shape = shape,
         border = BorderStroke(
@@ -77,12 +77,16 @@ fun InfoChip(
                     HabitStatus.COMPLETE -> {
                         Icons.Outlined.Check
                     }
-                }, contentDescription = stringResource(R.string.habit_status_icon_desc), tint = habitColor
+                },
+                contentDescription = stringResource(R.string.habit_status_icon_desc),
+                tint = habitColor,
+                modifier = Modifier.size(12.dp)
+
             )
             Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = habitStatus.name.lowercase().replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.labelLarge,
+                style = MaterialTheme.typography.labelSmall,
                 color = habitColor
             )
         }

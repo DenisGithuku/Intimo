@@ -29,10 +29,13 @@ fun NavGraphBuilder.detailScreen() {
             }
         ),
         enterTransition = {
-            scaleIn(
-                initialScale = 0.9f,
-                animationSpec = tween(100, easing = LinearEasing)
-            )
+           scaleIn(
+               initialScale = 0.8f,
+               animationSpec = tween(300, easing = EaseOut)
+           ) + fadeIn()
+        },
+        exitTransition = {
+                    fadeOut()
         }
     ) {
         HabitDetailRoute()

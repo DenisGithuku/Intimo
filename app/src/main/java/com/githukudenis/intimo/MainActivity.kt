@@ -32,7 +32,6 @@ class MainActivity : ComponentActivity() {
 
     private val mainActivityViewModel: MainActivityViewModel by viewModels()
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
