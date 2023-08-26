@@ -66,7 +66,6 @@ dependencies {
     implementation(libs.accompanist.permissions)
     implementation(libs.accompanist.drawable.painter)
     implementation(libs.kotlinx.datetime)
-    implementation(libs.horizontal.calendar.view)
     implementation(libs.material.extended.icons)
 
     // hilt

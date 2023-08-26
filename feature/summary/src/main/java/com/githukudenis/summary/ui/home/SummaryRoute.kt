@@ -9,6 +9,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
@@ -18,14 +19,18 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -35,6 +40,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -47,6 +53,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -54,10 +61,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,7 +77,6 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -85,7 +91,8 @@ import com.githukudenis.summary.ui.MessageType
 import com.githukudenis.summary.ui.UserMessage
 import com.githukudenis.summary.ui.components.CardInfo
 import com.githukudenis.summary.ui.components.HabitCard
-import com.githukudenis.summary.ui.components.PersonalizeSheet
+import com.githukudenis.summary.ui.components.SummaryBottomSheet
+import com.githukudenis.summary.ui.components.SummaryTitle
 import com.githukudenis.summary.ui.components.TimePickerDialog
 import com.githukudenis.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.summary.util.hasUsageAccessPermissions
@@ -93,19 +100,21 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 internal fun SummaryRoute(
     snackbarHostState: SnackbarHostState,
     summaryViewModel: SummaryViewModel = hiltViewModel(),
     onOpenHabitDetails: (Long) -> Unit,
     onNavigateUp: () -> Unit,
-    onOpenActivity: () -> Unit
+    onOpenActivity: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
 
     val context = LocalContext.current
@@ -302,30 +311,51 @@ internal fun SummaryRoute(
         )
     }
 
-    val bottomSheetVisible = rememberSaveable {
+    var personalizeSheetVisible = rememberSaveable {
         mutableStateOf(false)
     }
-    val scope = rememberCoroutineScope()
 
-    SummaryScreen(
-        usageStats = uiState.summaryData?.usageStats?.appUsageList ?: emptyList(),
-        unlockCount = uiState.summaryData?.unlockCount ?: 0,
-        notificationCount = uiState.notificationCount,
-        habitDataList = uiState.habitDataList,
-        onCheckHabit = { habitId ->
-            summaryViewModel.onEvent(SummaryUiEvent.CheckHabit(habitId))
-        },
-        onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
-        usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
-        onOpenActivity = onOpenActivity,
-        onCustomize = {
-            summaryViewModel.onEvent(SummaryUiEvent.EditHabit(it))
-            bottomSheetVisible.value = !bottomSheetVisible.value
+    var habitActiveSheetVisible = rememberSaveable {
+        mutableStateOf(false)
+    }
+
+
+    AnimatedContent(
+        targetState = uiState.isLoading,
+        label = "Screen animation"
+    ) {
+        when (it) {
+            true -> {
+                LoadingScreen()
+            }
+
+            false -> {
+                SummaryScreen(
+                    usageStats = uiState.summaryData?.usageStats?.appUsageList ?: emptyList(),
+                    unlockCount = uiState.summaryData?.unlockCount ?: 0,
+                    notificationCount = uiState.notificationCount,
+                    habitDataList = uiState.habitDataList,
+                    onCheckHabit = { habitId ->
+                        summaryViewModel.onEvent(SummaryUiEvent.CheckHabit(habitId))
+                    },
+                    onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
+                    usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
+                    onOpenActivity = onOpenActivity,
+                    onCustomize = {
+                        summaryViewModel.onEvent(SummaryUiEvent.EditHabit(it))
+                        personalizeSheetVisible.value = !personalizeSheetVisible.value
+                    },
+                    onOpenSettings = onOpenSettings,
+                    onStart = {
+                        habitActiveSheetVisible.value = true
+                    }
+                )
+            }
         }
-    )
+    }
+    if (personalizeSheetVisible.value) {
+        SummaryBottomSheet(onDismiss = { personalizeSheetVisible.value = false }) {
 
-    if (bottomSheetVisible.value) {
-        PersonalizeSheet(onDismiss = { bottomSheetVisible.value = !bottomSheetVisible.value }) {
 
             var showTimePicker = rememberSaveable {
                 mutableStateOf(false)
@@ -416,7 +446,10 @@ internal fun SummaryRoute(
                         })
                     }
                 }
-                Button(onClick = { summaryViewModel.onEvent(SummaryUiEvent.UpdateHabit) }) {
+                Button(onClick = {
+                    summaryViewModel.onEvent(SummaryUiEvent.UpdateHabit)
+                    personalizeSheetVisible.value = false
+                }) {
                     Text(
                         text = "Save"
                     )
@@ -440,10 +473,21 @@ internal fun SummaryRoute(
             }
         }
     }
+    if (habitActiveSheetVisible.value) {
+        SummaryBottomSheet(onDismiss = { habitActiveSheetVisible.value = false }) {
+            Column {
+                Text(
+                    text = "Habit playing here"
+                )
+            }
+            Button(onClick = {habitActiveSheetVisible.value = false}) {
+                Text(text = "Hide sheet")
+            }
+        }
+    }
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 internal fun SummaryScreen(
     usageStatsLoading: Boolean,
@@ -454,17 +498,31 @@ internal fun SummaryScreen(
     onCheckHabit: (Long) -> Unit,
     onOpenHabit: (Long) -> Unit,
     onOpenActivity: () -> Unit,
-    onCustomize: (Long) -> Unit
+    onCustomize: (Long) -> Unit,
+    onOpenSettings: () -> Unit,
+    onStart: (Long) -> Unit
 ) {
 
     val context = LocalContext.current
 
     LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxSize()
     ) {
         item {
+            Spacer(
+                modifier = Modifier
+                    .consumeWindowInsets(WindowInsets.systemBars)
+                    .padding(top = 8.dp)
+            )
+        }
+        item {
+            SummaryTitle(date = getCurrentDate(), onOpenSettings = onOpenSettings)
+        }
+        item {
             Text(
+                modifier = Modifier.padding(horizontal = 12.dp),
                 text = stringResource(R.string.screen_time),
                 style = MaterialTheme.typography.headlineSmall
             )
@@ -479,6 +537,7 @@ internal fun SummaryScreen(
         )
         item {
             Text(
+                modifier = Modifier.padding(horizontal = 12.dp),
                 text = "Your habits",
                 style = MaterialTheme.typography.headlineSmall
             )
@@ -487,7 +546,8 @@ internal fun SummaryScreen(
             habitDataList = habitDataList,
             onOpenHabit = onOpenHabit,
             onCheckHabit = onCheckHabit,
-            onCustomize = onCustomize
+            onCustomize = onCustomize,
+            onStart = onStart
         )
     }
 }
@@ -502,6 +562,7 @@ fun LazyListScope.appUsageData(
 ) {
     item {
         Surface(
+            modifier = Modifier.padding(horizontal = 12.dp),
             onClick = onOpenActivity,
             shape = MaterialTheme.shapes.large,
             border = BorderStroke(
@@ -520,15 +581,19 @@ fun LazyListScope.appUsageData(
             ) {
                 when (it) {
                     true -> {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Center
                         ) {
-                            CircularProgressIndicator()
-                            Spacer(modifier = Modifier.width(16.dp))
-                            Text(
-                                text = "Fetching details..."
-                            )
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator()
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text(
+                                    text = "Fetching details..."
+                                )
+                            }
                         }
                     }
 
@@ -717,6 +782,19 @@ fun LazyListScope.appUsageData(
     }
 }
 
+@Composable
+fun LoadingScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator()
+            Text(
+                text = "Fetching data...",
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
+    }
+}
+
 
 fun getTimeFromMillis(timeInMillis: Long): String {
     return if (timeInMillis / 1000 / 60 / 60 >= 1) {
@@ -731,13 +809,12 @@ fun getTimeFromMillis(timeInMillis: Long): String {
 }
 
 
-@RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalLayoutApi::class)
 fun LazyListScope.habitList(
     habitDataList: List<HabitUiModel>,
     onCheckHabit: (Long) -> Unit,
     onOpenHabit: (Long) -> Unit,
-    onCustomize: (Long) -> Unit
+    onCustomize: (Long) -> Unit,
+    onStart: (Long) -> Unit
 ) {
     items(items = habitDataList, key = { it.habitId }) { habitUiModel ->
         HabitCard(
@@ -746,7 +823,7 @@ fun LazyListScope.habitList(
             onOpenHabitDetails = { habitId ->
                 onOpenHabit(habitId)
             },
-            onCustomize = onCustomize
+            onCustomize = onCustomize, onStart = onStart
         )
     }
 }
@@ -757,21 +834,8 @@ fun getApplicationLabel(packageName: String, context: Context): String {
     return context.packageManager.getApplicationLabel(appInfo).toString()
 }
 
-
-@RequiresApi(Build.VERSION_CODES.O)
-@Preview(showSystemUi = true, showBackground = true)
-@Composable
-fun SummaryScreenPrev() {
-    SummaryScreen(
-        usageStats = emptyList(),
-        unlockCount = 100,
-        notificationCount = 230,
-        habitDataList = emptyList(),
-        onCheckHabit = {},
-        onOpenHabit = {},
-        usageStatsLoading = true,
-        onOpenActivity = {},
-        onCustomize = {}
-    )
+private fun getCurrentDate(): String {
+    val today = LocalDate.now()
+    return today.format(DateTimeFormatter.ofPattern("EEEE, d", Locale.getDefault()))
 }
 

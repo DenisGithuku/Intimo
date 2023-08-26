@@ -2,12 +2,11 @@ package com.githukudenis.intimo.navigation
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import com.githukudenis.intimo.IntimoAppState
-import com.githukudenis.intimo.feature.activity.navigation.activityRoute
 import com.githukudenis.intimo.feature.activity.navigation.activityScreen
+import com.githukudenis.intimo.settings.navigation.settingsRoute
 import com.githukudenis.intimo.settings.navigation.settingsScreen
 import com.githukudenis.intimo.splash_screen.splashScreen
 import com.githukudenis.intimo.splash_screen.splashScreenRoute
@@ -22,7 +21,6 @@ import com.githukudenis.summary.ui.detail.habitDetailRoute
 @Composable
 fun IntimoNavHost(
     appState: IntimoAppState,
-    onShowSnackBar: suspend (String, String?) -> Unit,
     startDestination: String,
     onOpenActivity: () -> Unit,
     onPopupFailed: () -> Unit,
@@ -41,13 +39,16 @@ fun IntimoNavHost(
         summaryScreen(
             snackbarHostState = appState.snackbarHostState,
             onOpenHabitDetails = { habitId ->
-                appState.navigate("$habitDetailRoute/$habitId", "$habitDetailRoute/$habitId")
+                appState.navigate("$habitDetailRoute/$habitId")
             }, onNavigateUp = {
                 if (!navController.popBackStack()) {
                     onPopupFailed()
                 }
-            }, onOpenActivity = onOpenActivity
-            )
+            }, onOpenActivity = onOpenActivity,
+            onOpenSettings = {
+                appState.navigate(settingsRoute)
+            }
+        )
 
         detailScreen()
 

@@ -22,6 +22,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.githukudenis.datastore.PreferenceKeys.shouldHideOnBoarding
 import com.githukudenis.designsystem.theme.IntimoTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -31,7 +32,6 @@ class MainActivity : ComponentActivity() {
 
     private val mainActivityViewModel: MainActivityViewModel by viewModels()
 
-    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -50,6 +50,7 @@ class MainActivity : ComponentActivity() {
         }
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
         setContent {
             IntimoTheme {
                 IntimoApp(shouldHideOnBoarding = shouldHideOnBoarding(uiState), onPopupFailed = { finish() })

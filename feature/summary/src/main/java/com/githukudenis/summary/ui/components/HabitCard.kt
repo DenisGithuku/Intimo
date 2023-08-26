@@ -1,9 +1,9 @@
 package com.githukudenis.summary.ui.components
 
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Build
 import android.text.format.DateFormat
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -18,10 +18,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.TimerOff
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Timelapse
-import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.TimerOff
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -35,8 +36,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.githukudenis.intimo.feature.summary.R
+import com.githukudenis.model.HabitType
 import com.githukudenis.model.nameToString
 import com.githukudenis.summary.ui.home.HabitUiModel
 import java.time.Instant
@@ -47,14 +50,14 @@ import java.util.Calendar
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HabitCard(
     modifier: Modifier = Modifier,
     habitUiModel: HabitUiModel,
     onCheckHabit: (Long) -> Unit,
     onOpenHabitDetails: (Long) -> Unit,
-    onCustomize: (Long) -> Unit
+    onCustomize: (Long) -> Unit,
+    onStart: (Long) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -70,11 +73,10 @@ fun HabitCard(
         set(Calendar.MILLISECOND, 0)
     }
 
-    Log.d("now", now.get(Calendar.HOUR_OF_DAY).toString())
-    Log.d("now htime", startTime.get(Calendar.HOUR_OF_DAY).toString())
 
     Box(
         modifier = modifier
+            .padding(horizontal = 12.dp)
             .clip(MaterialTheme.shapes.large)
             .border(
                 shape = MaterialTheme.shapes.large,
@@ -98,17 +100,27 @@ fun HabitCard(
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
                 text = habitUiModel.habitIcon,
-                style = MaterialTheme.typography.headlineMedium
+                style = MaterialTheme.typography.headlineLarge
             )
             Column(
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                InfoChip(
+                    habitStatus = if (habitUiModel.completed) {
+                        HabitStatus.COMPLETE
+                    } else if (startTime.timeInMillis < now.timeInMillis && now.timeInMillis < (startTime.timeInMillis + habitUiModel.duration)) {
+                        HabitStatus.ONGOING
+                    } else if (startTime.timeInMillis + habitUiModel.duration > now.timeInMillis) {
+                        HabitStatus.UPCOMING
+                    } else {
+                        HabitStatus.PENDING
+                    }
+                )
                 Text(
                     text = habitUiModel.habitType.nameToString(),
                     style = MaterialTheme.typography.headlineSmall
@@ -136,32 +148,13 @@ fun HabitCard(
 
 
                 Row {
-                    FilterChip(
-                        trailingIcon = {
-                            Icon(
-                                imageVector = if (habitUiModel.completed) {
-                                    Icons.Outlined.Check
-                                } else if (startTime.timeInMillis > now.timeInMillis && now.timeInMillis < (startTime.timeInMillis + habitUiModel.duration)) {
-                                    Icons.Outlined.Timelapse
-                                } else if (startTime.timeInMillis + habitUiModel.duration > now.timeInMillis) {
-                                    Icons.Default.TimerOff
-                                } else {
-                                    Icons.Outlined.Timer
-                                },
-                                contentDescription = stringResource(R.string.habit_status)
-                            )
-                        },
-                        selected = habitUiModel.completed,
-                        onClick = {
-                            onCheckHabit(habitUiModel.habitId)
-                        },
-                        label = {
-                            Text(
-                                text = if (habitUiModel.completed) "Completed" else if (startTime.timeInMillis > now.timeInMillis) "Upcoming" else if (startTime.timeInMillis < now.timeInMillis && now.timeInMillis < startTime.timeInMillis + habitUiModel.duration) "Ongoing" else "Incomplete",
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-                    )
+                    Button(
+                        enabled = !habitUiModel.completed,
+                        onClick = { onStart(habitUiModel.habitId) }) {
+                        Text(
+                            text = "Start"
+                        )
+                    }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(
                         onClick = { onCustomize(habitUiModel.habitId) }
@@ -177,7 +170,6 @@ fun HabitCard(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun getTimeString(context: Context, timeInMillis: Long): String {
     val isIn24HourFormat = DateFormat.is24HourFormat(context)
     val formatter = if (isIn24HourFormat) {
@@ -190,4 +182,32 @@ private fun getTimeString(context: Context, timeInMillis: Long): String {
         ZoneId.systemDefault()
     )
     return parsedTime.format(formatter)
+}
+
+@Preview()
+@Composable
+fun HabitCardPreview() {
+    HabitCard(
+        habitUiModel = HabitUiModel(
+            completed = false,
+            habitIcon = "\uD83E\uDD38",
+            habitType = HabitType.EXERCISE,
+            startTime = 169023000000,
+            duration = 1800000
+        ), onCheckHabit = {}, onOpenHabitDetails = {}, onCustomize = {}, onStart = {}
+    )
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
+@Composable
+fun HabitCardNightPreview() {
+    HabitCard(
+        habitUiModel = HabitUiModel(
+            completed = false,
+            habitIcon = "\uD83E\uDD38",
+            habitType = HabitType.EXERCISE,
+            startTime = 169023000000,
+            duration = 1800000
+        ), onCheckHabit = {}, onOpenHabitDetails = {}, onCustomize = {}, onStart = {}
+    )
 }
