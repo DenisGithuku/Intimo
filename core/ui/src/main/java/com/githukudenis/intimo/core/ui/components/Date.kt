@@ -1,18 +1,15 @@
-package com.githukudenis.intimo.core.ui.calendar
+package com.githukudenis.intimo.core.ui.components
 
-import android.os.Build.VERSION_CODES
-import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-@RequiresApi(VERSION_CODES.O)
+
 @Stable
 data class Date(
     val date: LocalDate = LocalDate.now(),
@@ -26,7 +23,6 @@ data class DateUiModel(
     val availableDates: List<Date> = emptyList()
 )
 
-@RequiresApi(VERSION_CODES.O)
 @Stable
 class DateUiState(
     initialSelectedDate: LocalDate
@@ -72,12 +68,8 @@ class DateUiState(
             .toList()
     }
 
-    fun updateDate(newDate: LocalDate) {
-        currentSelectedDate = newDate
-    }
 }
 
-@RequiresApi(VERSION_CODES.O)
 @Composable
 fun rememberDateUiState(
     selectedDate: LocalDate = LocalDate.now()
