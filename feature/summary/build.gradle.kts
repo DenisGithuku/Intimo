@@ -2,8 +2,8 @@
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinAndroid)
-    alias(libs.plugins.kotlinKapt)
     alias(libs.plugins.daggerHilt)
+    alias(libs.plugins.kotlinKapt)
 }
 
 android {
@@ -50,6 +50,7 @@ dependencies {
     implementation(project(":core:model"))
     implementation(project(":core:ui"))
     implementation(project(":core:designsystem"))
+    implementation(project(":feature:habit"))
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)

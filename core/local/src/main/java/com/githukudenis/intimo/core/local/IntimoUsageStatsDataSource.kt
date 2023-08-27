@@ -7,10 +7,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import android.hardware.display.DisplayManager
-import android.os.Build
 import android.util.Log
 import android.view.Display
-import androidx.annotation.RequiresApi
 import com.githukudenis.model.ApplicationInfoData
 import com.githukudenis.model.DataUsageStats
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +24,6 @@ class IntimoUsageStatsDataSource @Inject constructor(
     private val usageStatsManager: UsageStatsManager,
     private val context: Context
 ) {
-    @RequiresApi(Build.VERSION_CODES.O)
     fun queryAndAggregateUsageStats(
         date: LocalDate = LocalDate.now()
     ): Flow<DataUsageStats> {
@@ -85,7 +82,7 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 var appLaunchCount = 0
 
                 // all start times for a particular app
-                var eventStartTimeList = mutableListOf<ZonedDateTime>()
+                val eventStartTimeList = mutableListOf<ZonedDateTime>()
 
                 events.forEach { event ->
                     // register time when first shown
@@ -151,10 +148,7 @@ class IntimoUsageStatsDataSource @Inject constructor(
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun getIndividualAppUsage(
-        startTimeMillis: Long,
-        endTimeMillis: Long,
         packageName: String
     ): Flow<ApplicationInfoData> {
 

@@ -12,8 +12,6 @@
     <string name="screen_time">Screen time</string>
     <string name="open_habit">Open Habit</string>
     <string name="habit_status">Habit status</string>
-    <string name="prev_week">Previous week\n</string>
-    <string name="next_week">Next Week\n</string>
     <string name="habit_status_icon_desc">Habit status</string>
 
 </resources>

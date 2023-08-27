@@ -12,8 +12,6 @@ interface UsageStatsRepository {
     ): Flow<DataUsageStats>
 
     fun getIndividualAppUsage(
-        startTimeMillis: Long,
-        endTimeMillis: Long,
         packageName: String
     ): Flow<ApplicationInfoData>
 }

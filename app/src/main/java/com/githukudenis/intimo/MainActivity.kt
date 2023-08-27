@@ -1,28 +1,18 @@
 package com.githukudenis.intimo
 
-import android.app.Activity
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.githukudenis.datastore.PreferenceKeys.shouldHideOnBoarding
 import com.githukudenis.designsystem.theme.IntimoTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -53,7 +43,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             IntimoTheme {
-                IntimoApp(shouldHideOnBoarding = shouldHideOnBoarding(uiState), onPopupFailed = { finish() })
+                IntimoApp(
+                    shouldHideOnBoarding = shouldHideOnBoarding(uiState),
+                    onPopupFailed = { finish() })
             }
         }
     }

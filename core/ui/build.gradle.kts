@@ -44,11 +44,16 @@ android {
 
 dependencies {
     implementation(libs.core.ktx)
+    implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.lifecycle.runtime.compose)
     implementation(libs.activity.compose)
     implementation(platform(libs.compose.bom))
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.ui.tooling.preview)
+    implementation(libs.ui.tooling)
+    implementation(libs.material3)
+    implementation(libs.navigation)
     implementation(libs.kotlinx.datetime)
 
     implementation(libs.appcompat)
