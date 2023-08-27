@@ -68,6 +68,10 @@ class DateUiState(
             .toList()
     }
 
+    fun updateDate(date: LocalDate) {
+        currentSelectedDate = date
+    }
+
 }
 
 @Composable

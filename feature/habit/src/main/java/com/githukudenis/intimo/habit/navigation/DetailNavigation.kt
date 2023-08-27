@@ -13,7 +13,9 @@ import com.githukudenis.intimo.habit.HabitDetailRoute
 
 const val habitDetailRoute = "detail"
 
-fun NavGraphBuilder.detailScreen() {
+fun NavGraphBuilder.detailScreen(
+    onNavigateUp: () -> Unit
+) {
     composable(
         "$habitDetailRoute/{habitId}",
         arguments = listOf(
@@ -31,6 +33,6 @@ fun NavGraphBuilder.detailScreen() {
                     fadeOut()
         }
     ) {
-        HabitDetailRoute()
+        HabitDetailRoute(onNavigateUp = onNavigateUp)
     }
 }

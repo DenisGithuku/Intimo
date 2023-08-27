@@ -3,12 +3,10 @@ package com.githukudenis.summary.ui.home
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
@@ -40,7 +38,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -53,7 +50,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -84,6 +80,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.designsystem.theme.LocalTonalElevation
+import com.githukudenis.intimo.core.ui.components.TimePickerDialog
 import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.model.ApplicationInfoData
 import com.githukudenis.model.nameToString
@@ -93,7 +90,6 @@ import com.githukudenis.summary.ui.components.CardInfo
 import com.githukudenis.summary.ui.components.HabitCard
 import com.githukudenis.summary.ui.components.SummaryBottomSheet
 import com.githukudenis.summary.ui.components.SummaryTitle
-import com.githukudenis.summary.ui.components.TimePickerDialog
 import com.githukudenis.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.summary.util.hasUsageAccessPermissions
 import kotlinx.datetime.Instant
@@ -311,11 +307,11 @@ internal fun SummaryRoute(
         )
     }
 
-    var personalizeSheetVisible = rememberSaveable {
+    val personalizeSheetVisible = rememberSaveable {
         mutableStateOf(false)
     }
 
-    var habitActiveSheetVisible = rememberSaveable {
+    val habitActiveSheetVisible = rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -341,8 +337,8 @@ internal fun SummaryRoute(
                     onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
                     usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
                     onOpenActivity = onOpenActivity,
-                    onCustomize = {
-                        summaryViewModel.onEvent(SummaryUiEvent.EditHabit(it))
+                    onCustomize = { habitId ->
+                        summaryViewModel.onEvent(SummaryUiEvent.EditHabit(habitId))
                         personalizeSheetVisible.value = !personalizeSheetVisible.value
                     },
                     onOpenSettings = onOpenSettings,
@@ -357,7 +353,7 @@ internal fun SummaryRoute(
         SummaryBottomSheet(onDismiss = { personalizeSheetVisible.value = false }) {
 
 
-            var showTimePicker = rememberSaveable {
+            val showTimePicker = rememberSaveable {
                 mutableStateOf(false)
             }
 
@@ -480,7 +476,7 @@ internal fun SummaryRoute(
                     text = "Habit playing here"
                 )
             }
-            Button(onClick = {habitActiveSheetVisible.value = false}) {
+            Button(onClick = { habitActiveSheetVisible.value = false }) {
                 Text(text = "Hide sheet")
             }
         }
@@ -613,20 +609,22 @@ fun LazyListScope.appUsageData(
                                     Get total app usage
                                      */
                                 val totalAppUsage =
-                                    usageStats.sumOf { it.usageDuration.toInt() }.toFloat()
+                                    usageStats.sumOf { usageStat -> usageStat.usageDuration.toInt() }
+                                        .toFloat()
 
                                 /*
                                     splice most four used apps
                                      */
                                 val fourMostUsedApps =
-                                    usageStats.take(4).map { it.usageDuration.toFloat() }
+                                    usageStats.take(4).map { app -> app.usageDuration.toFloat() }
                                         .toMutableList()
 
                                 /*
                                     get sum of remaining values
                                      */
                                 val remainingTotalUsage =
-                                    usageStats.drop(4).sumOf { it.usageDuration.toInt() }.toFloat()
+                                    usageStats.drop(4)
+                                        .sumOf { usage -> usage.usageDuration.toInt() }.toFloat()
 
                                 /*
                                     add remaining usage to first four apps
@@ -673,8 +671,8 @@ fun LazyListScope.appUsageData(
                                 /*
                                     derive plot angles
                                      */
-                                val angles = plotValues.map {
-                                    it * 360f / 100
+                                val angles = plotValues.map { value ->
+                                    value * 360f / 100
                                 }
 
                                 val textMeasurer = rememberTextMeasurer()
@@ -714,11 +712,11 @@ fun LazyListScope.appUsageData(
                                         })
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
-                                    usageWithColors.forEach { appUsage ->
+                                    usageWithColors.forEach { (usage, color) ->
                                         val appName = usageStats
-                                            .find { it.usageDuration.toFloat() == appUsage.first }?.packageName?.let {
+                                            .find { app -> app.usageDuration.toFloat() == usage }?.packageName?.let { packageName ->
                                                 getApplicationLabel(
-                                                    it,
+                                                    packageName,
                                                     context
                                                 )
                                             } ?: "Other"
@@ -727,7 +725,7 @@ fun LazyListScope.appUsageData(
                                         Use the value of other summed apps
                                          */
                                         val upTime =
-                                            usageStats.find { it.usageDuration.toFloat() == appUsage.first }?.usageDuration
+                                            usageStats.find { app -> app.usageDuration.toFloat() == usage }?.usageDuration
                                                 ?: fourMostUsedApps.last().toLong()
                                         val formattedTime = getTimeFromMillis(upTime)
                                         Row(
@@ -739,7 +737,7 @@ fun LazyListScope.appUsageData(
                                                 modifier = Modifier
                                                     .size(15.dp)
                                                     .clip(RoundedCornerShape(6.dp))
-                                                    .background(appUsage.second)
+                                                    .background(color)
                                             )
                                             Text(
                                                 text = buildString {

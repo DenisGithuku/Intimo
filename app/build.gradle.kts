@@ -65,6 +65,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":feature:onboarding"))
     implementation(project(":feature:summary"))
+    implementation(project(":feature:habit"))
     implementation(project(":feature:settings"))
     implementation(project(":feature:activity"))
 

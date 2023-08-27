@@ -3,4 +3,6 @@
 
     <string name="prev_week">Previous week\n</string>
     <string name="next_week">Next Week\n</string>
+    <string name="habit_start_time">Habit start time</string>
+    <string name="navigate_up">Up</string>
 </resources>
