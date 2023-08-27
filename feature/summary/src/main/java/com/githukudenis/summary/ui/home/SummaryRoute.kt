@@ -615,7 +615,7 @@ fun LazyListScope.appUsageData(
                                 /*
                                     splice most four used apps
                                      */
-                                val fourMostUsedApps =
+                                val fourMostUsedAppDurations =
                                     usageStats.take(4).map { app -> app.usageDuration.toFloat() }
                                         .toMutableList()
 
@@ -629,29 +629,13 @@ fun LazyListScope.appUsageData(
                                 /*
                                     add remaining usage to first four apps
                                      */
-                                fourMostUsedApps.add(remainingTotalUsage)
-
-                                /*
-                                    Create colors to map to usage duration
-                                     */
-                                val colors = listOf(
-                                    Color.Blue.copy(green = .7f),
-                                    Color.Green.copy(),
-                                    Color.LightGray,
-                                    Color.Black.copy(alpha = .7f),
-                                    Color.Yellow.copy(green = .7f)
-                                )
-
-                                /*
-                                    create a combination of usage duration and color
-                                     */
-                                val usageWithColors = fourMostUsedApps zip colors
+                                fourMostUsedAppDurations.add(remainingTotalUsage)
 
                                 /*
                                     values to be plotted on canvas
                                      */
-                                val plotValues = usageWithColors.map { usageStats ->
-                                    usageStats.first * 100 / totalAppUsage
+                                val plotValues = fourMostUsedAppDurations.map { duration ->
+                                    duration * 100 / totalAppUsage
                                 }
 
                                 val animateArchValue = remember {
@@ -692,7 +676,12 @@ fun LazyListScope.appUsageData(
                                             onDrawBehind {
                                                 for (i in angles.indices) {
                                                     drawArc(
-                                                        color = usageWithColors.map { it.second }[i],
+                                                        /*
+                                                        Retrieve color generated from icon or use secondary app color
+                                                        */
+                                                        color = Color(fourMostUsedAppDurations.map { duration ->
+                                                            usageStats.find { usageStat -> usageStat.usageDuration.toFloat() == duration }
+                                                        }[i]?.colorSwatch ?: (0xFF3A5BAB).toInt()),
                                                         startAngle = startAngle * animateArchValue.value,
                                                         sweepAngle = angles[i],
                                                         useCenter = false,
@@ -712,7 +701,7 @@ fun LazyListScope.appUsageData(
                                         })
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
-                                    usageWithColors.forEach { (usage, color) ->
+                                    fourMostUsedAppDurations.forEach { usage ->
                                         val appName = usageStats
                                             .find { app -> app.usageDuration.toFloat() == usage }?.packageName?.let { packageName ->
                                                 getApplicationLabel(
@@ -726,8 +715,16 @@ fun LazyListScope.appUsageData(
                                          */
                                         val upTime =
                                             usageStats.find { app -> app.usageDuration.toFloat() == usage }?.usageDuration
-                                                ?: fourMostUsedApps.last().toLong()
+                                                ?: fourMostUsedAppDurations.last().toLong()
                                         val formattedTime = getTimeFromMillis(upTime)
+
+                                        /*
+                                        Retrieve color generated from icon or use secondary app color
+                                         */
+                                        val color =
+                                            usageStats.find { app -> app.usageDuration.toFloat() == usage }?.colorSwatch
+                                                ?: (0xFF3A5BAB).toInt()
+
                                         Row(
                                             modifier = Modifier.padding(vertical = 4.dp),
                                             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -737,7 +734,11 @@ fun LazyListScope.appUsageData(
                                                 modifier = Modifier
                                                     .size(15.dp)
                                                     .clip(RoundedCornerShape(6.dp))
-                                                    .background(color)
+                                                    .background(
+                                                        Color(
+                                                            color
+                                                        )
+                                                    )
                                             )
                                             Text(
                                                 text = buildString {
@@ -836,4 +837,3 @@ private fun getCurrentDate(): String {
     val today = LocalDate.now()
     return today.format(DateTimeFormatter.ofPattern("EEEE, d", Locale.getDefault()))
 }
-
