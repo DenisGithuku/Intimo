@@ -386,18 +386,22 @@ internal fun SummaryRoute(
                     Locale.getDefault()
                 )
             }
-            val formattedStartTime = dateTimeFormatter.format(
-                calendar.value.apply {
-                    habitStartTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
-                    habitStartTime?.minute?.let { set(Calendar.MINUTE, it) }
-                }.time
-            )
-            val formattedEndTime = dateTimeFormatter.format(
-                calendar.value.apply {
-                    habitEndTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
-                    habitEndTime?.minute?.let { set(Calendar.MINUTE, it) }
-                }.time
-            )
+            val formattedStartTime = remember {
+                dateTimeFormatter.format(
+                    calendar.value.apply {
+                        habitStartTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
+                        habitStartTime?.minute?.let { set(Calendar.MINUTE, it) }
+                    }.time
+                )
+            }
+            val formattedEndTime = remember {
+                dateTimeFormatter.format(
+                    calendar.value.apply {
+                        habitEndTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
+                        habitEndTime?.minute?.let { set(Calendar.MINUTE, it) }
+                    }.time
+                )
+            }
 
             Column(
                 modifier = Modifier
@@ -608,23 +612,26 @@ fun LazyListScope.appUsageData(
                                 /*
                                     Get total app usage
                                      */
-                                val totalAppUsage =
+                                val totalAppUsage = remember(usageStats) {
                                     usageStats.sumOf { usageStat -> usageStat.usageDuration.toInt() }
                                         .toFloat()
+                                }
 
                                 /*
                                     splice most four used apps
                                      */
-                                val fourMostUsedAppDurations =
+                                val fourMostUsedAppDurations = remember {
                                     usageStats.take(4).map { app -> app.usageDuration.toFloat() }
                                         .toMutableList()
+                                }
 
                                 /*
                                     get sum of remaining values
                                      */
-                                val remainingTotalUsage =
+                                val remainingTotalUsage = remember {
                                     usageStats.drop(4)
                                         .sumOf { usage -> usage.usageDuration.toInt() }.toFloat()
+                                }
 
                                 /*
                                     add remaining usage to first four apps
@@ -634,8 +641,10 @@ fun LazyListScope.appUsageData(
                                 /*
                                     values to be plotted on canvas
                                      */
-                                val plotValues = fourMostUsedAppDurations.map { duration ->
-                                    duration * 100 / totalAppUsage
+                                val plotValues = remember {
+                                    fourMostUsedAppDurations.map { duration ->
+                                        duration * 100 / totalAppUsage
+                                    }
                                 }
 
                                 val animateArchValue = remember {
@@ -655,8 +664,10 @@ fun LazyListScope.appUsageData(
                                 /*
                                     derive plot angles
                                      */
-                                val angles = plotValues.map { value ->
-                                    value * 360f / 100
+                                val angles = remember {
+                                    plotValues.map { value ->
+                                        value * 360f / 100
+                                    }
                                 }
 
                                 val textMeasurer = rememberTextMeasurer()
@@ -675,13 +686,17 @@ fun LazyListScope.appUsageData(
 
                                             onDrawBehind {
                                                 for (i in angles.indices) {
-                                                    drawArc(
-                                                        /*
+                                                    /*
                                                         Retrieve color generated from icon or use secondary app color
                                                         */
-                                                        color = Color(fourMostUsedAppDurations.map { duration ->
+                                                    val arcColor =
+                                                        fourMostUsedAppDurations.map { duration ->
                                                             usageStats.find { usageStat -> usageStat.usageDuration.toFloat() == duration }
-                                                        }[i]?.colorSwatch ?: (0xFF3A5BAB).toInt()),
+                                                        }[i]?.colorSwatch ?: (0xFF3A5BAB).toInt()
+
+                                                    drawArc(
+
+                                                        color = Color(arcColor),
                                                         startAngle = startAngle * animateArchValue.value,
                                                         sweepAngle = angles[i],
                                                         useCenter = false,
@@ -702,28 +717,33 @@ fun LazyListScope.appUsageData(
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     fourMostUsedAppDurations.forEach { usage ->
-                                        val appName = usageStats
-                                            .find { app -> app.usageDuration.toFloat() == usage }?.packageName?.let { packageName ->
-                                                getApplicationLabel(
-                                                    packageName,
-                                                    context
-                                                )
-                                            } ?: "Other"
+                                        val appName = remember {
+                                            usageStats
+                                                .find { app -> app.usageDuration.toFloat() == usage }?.packageName?.let { packageName ->
+                                                    getApplicationLabel(
+                                                        packageName,
+                                                        context
+                                                    )
+                                                } ?: "Other"
+                                        }
                                         /*
                                         Generate total use time for each
                                         Use the value of other summed apps
                                          */
-                                        val upTime =
+                                        val upTime = remember {
                                             usageStats.find { app -> app.usageDuration.toFloat() == usage }?.usageDuration
                                                 ?: fourMostUsedAppDurations.last().toLong()
+                                        }
                                         val formattedTime = getTimeFromMillis(upTime)
+
 
                                         /*
                                         Retrieve color generated from icon or use secondary app color
                                          */
-                                        val color =
+                                        val color = remember {
                                             usageStats.find { app -> app.usageDuration.toFloat() == usage }?.colorSwatch
                                                 ?: (0xFF3A5BAB).toInt()
+                                        }
 
                                         Row(
                                             modifier = Modifier.padding(vertical = 4.dp),
