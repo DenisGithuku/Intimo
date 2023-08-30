@@ -1,4 +1,4 @@
-package com.githukudenis.intimo.habit
+package com.githukudenis.intimo.habit.detail
 
 import com.githukudenis.model.HabitData
 import com.githukudenis.model.HabitType

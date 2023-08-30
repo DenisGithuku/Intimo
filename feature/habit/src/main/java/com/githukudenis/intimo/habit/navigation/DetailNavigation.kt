@@ -9,7 +9,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.githukudenis.intimo.habit.HabitDetailRoute
+import com.githukudenis.intimo.habit.detail.HabitDetailRoute
 
 const val habitDetailRoute = "detail"
 

@@ -1,7 +1,5 @@
-package com.githukudenis.intimo.habit
+package com.githukudenis.intimo.habit.detail
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

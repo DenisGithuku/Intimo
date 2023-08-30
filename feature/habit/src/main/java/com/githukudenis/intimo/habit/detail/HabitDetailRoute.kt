@@ -1,4 +1,4 @@
-package com.githukudenis.intimo.habit
+package com.githukudenis.intimo.habit.detail
 
 
 import androidx.compose.animation.AnimatedVisibility
@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.ui.components.TimePickerDialog
 import com.githukudenis.intimo.core.ui.components.rememberDateUiState
+import com.githukudenis.intimo.habit.R
 import com.githukudenis.intimo.habit.components.DatePill
 import com.githukudenis.intimo.habit.components.HabitDetailListItem
 import com.githukudenis.model.HabitType
