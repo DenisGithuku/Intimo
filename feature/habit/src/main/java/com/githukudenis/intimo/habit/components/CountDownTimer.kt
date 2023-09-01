@@ -1,6 +1,5 @@
 package com.githukudenis.intimo.habit.components
 
-import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -12,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -30,7 +28,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
-import com.githukudenis.intimo.habit.detail.getTimeFromMillis
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
@@ -40,29 +37,31 @@ import kotlin.math.sin
 fun CountDownTimer(
     modifier: Modifier = Modifier,
     totalTime: Long,
+    currentTime: Long,
+    onTimeChanged: (Long) -> Unit,
+    isTimerRunning: Boolean,
     initialValue: Float = 1f,
     activeBarColor: Color = MaterialTheme.colorScheme.primary,
     inActiveBarColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.04f),
     strokeWidth: Dp = 8.dp,
+    onToggleTimer: () -> Unit,
     onTimerFinished: () -> Unit
 ) {
     var size by remember { mutableStateOf(IntSize.Zero) }
 
     var timerValue by remember { mutableFloatStateOf(initialValue) }
 
-    var currentTime by remember { mutableLongStateOf(totalTime) }
-
-    var isTimerRunning by remember { mutableStateOf(false) }
-
-    val animateTimerPosition = remember {
-        Animatable(0f)
-    }
 
     LaunchedEffect(key1 = isTimerRunning, key2 = currentTime) {
-        if (currentTime >= 0 && isTimerRunning) {
+        if (currentTime > 0 && isTimerRunning) {
             delay(1000L)
-            currentTime -= 1000L
+            onTimeChanged(currentTime - 1000L)
             timerValue = currentTime / totalTime.toFloat()
+        }
+
+        if (currentTime <= 0) {
+            delay(1000L)
+            onTimerFinished()
         }
     }
 
@@ -107,40 +106,49 @@ fun CountDownTimer(
             )
         }
         Text(
-            text = getTimeFromMillis(currentTime),
+            text = formatCountdownTime(currentTime),
             style = MaterialTheme.typography.displaySmall,
             textAlign = TextAlign.Center
         )
 
         Button(
             onClick = {
-                if (currentTime <= 0L) {
-                    currentTime = totalTime
-                    isTimerRunning = true
-                } else {
-                    isTimerRunning = !isTimerRunning
-                }
+                onToggleTimer()
             },
             modifier = Modifier.align(Alignment.BottomCenter),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (!isTimerRunning || currentTime <= 0L) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                containerColor = if (!isTimerRunning || currentTime <= 0L) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
             )
         ) {
             Text(
-                text = if (isTimerRunning && currentTime >= 0L) {
-                    "Stop"
-                } else if (!isTimerRunning && currentTime >= 0L) {
-                    "Resume"
-                } else {
+                text = if (!isTimerRunning && currentTime >= 0L) {
                     "Start"
-                },
+                } else {
+                    "Stop"
+                }
             )
         }
     }
 }
 
+fun formatCountdownTime(milliseconds: Long): String {
+    val hours = (milliseconds / (1000 * 60 * 60)).toInt()
+    val minutes = ((milliseconds % (1000 * 60 * 60)) / (1000 * 60)).toInt()
+    val seconds = ((milliseconds % (1000 * 60)) / 1000).toInt()
+
+    return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+}
+
 @Preview
 @Composable
 fun CountDownTimerPrev() {
-    CountDownTimer(modifier = Modifier.size(200.dp), totalTime = 1000L * 60, onTimerFinished = {})
+    CountDownTimer(
+        modifier = Modifier.size(200.dp),
+        totalTime = 1000L * 60,
+        currentTime = 9000L * 60,
+        isTimerRunning = false,
+        onTimeChanged = {},
+        onToggleTimer = {},
+        onTimerFinished = {}
+    )
 }
