@@ -1,8 +1,10 @@
 package com.githukudenis.summary.ui.home
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,6 +38,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -92,6 +95,8 @@ import com.githukudenis.summary.ui.components.SummaryBottomSheet
 import com.githukudenis.summary.ui.components.SummaryTitle
 import com.githukudenis.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.summary.util.hasUsageAccessPermissions
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -102,7 +107,7 @@ import java.util.Calendar
 import java.util.Locale
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 internal fun SummaryRoute(
     snackbarHostState: SnackbarHostState,
@@ -110,7 +115,8 @@ internal fun SummaryRoute(
     onOpenHabitDetails: (Long) -> Unit,
     onNavigateUp: () -> Unit,
     onOpenActivity: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onStartHabit: (Long) -> Unit
 ) {
 
     val context = LocalContext.current
@@ -331,19 +337,13 @@ internal fun SummaryRoute(
                     unlockCount = uiState.summaryData?.unlockCount ?: 0,
                     notificationCount = uiState.notificationCount,
                     habitDataList = uiState.habitDataList,
-                    onCheckHabit = { habitId ->
-                        summaryViewModel.onEvent(SummaryUiEvent.CheckHabit(habitId))
-                    },
                     onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
                     usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
                     onOpenActivity = onOpenActivity,
-                    onCustomize = { habitId ->
-                        summaryViewModel.onEvent(SummaryUiEvent.EditHabit(habitId))
-                        personalizeSheetVisible.value = !personalizeSheetVisible.value
-                    },
                     onOpenSettings = onOpenSettings,
-                    onStart = {
-                        habitActiveSheetVisible.value = true
+                    onStart = { habitId ->
+                        onStartHabit(habitId)
+//                        habitActiveSheetVisible.value = true
                     }
                 )
             }
@@ -495,10 +495,8 @@ internal fun SummaryScreen(
     habitDataList: List<HabitUiModel>,
     unlockCount: Int,
     notificationCount: Long,
-    onCheckHabit: (Long) -> Unit,
     onOpenHabit: (Long) -> Unit,
     onOpenActivity: () -> Unit,
-    onCustomize: (Long) -> Unit,
     onOpenSettings: () -> Unit,
     onStart: (Long) -> Unit
 ) {
@@ -545,8 +543,6 @@ internal fun SummaryScreen(
         habitList(
             habitDataList = habitDataList,
             onOpenHabit = onOpenHabit,
-            onCheckHabit = onCheckHabit,
-            onCustomize = onCustomize,
             onStart = onStart
         )
     }
@@ -830,19 +826,15 @@ fun getTimeFromMillis(timeInMillis: Long): String {
 
 fun LazyListScope.habitList(
     habitDataList: List<HabitUiModel>,
-    onCheckHabit: (Long) -> Unit,
     onOpenHabit: (Long) -> Unit,
-    onCustomize: (Long) -> Unit,
     onStart: (Long) -> Unit
 ) {
     items(items = habitDataList, key = { it.habitId }) { habitUiModel ->
         HabitCard(
             habitUiModel = habitUiModel,
-            onCheckHabit = onCheckHabit,
             onOpenHabitDetails = { habitId ->
                 onOpenHabit(habitId)
-            },
-            onCustomize = onCustomize, onStart = onStart
+            },onStart = onStart
         )
     }
 }
