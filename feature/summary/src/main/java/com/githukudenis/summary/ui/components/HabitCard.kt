@@ -11,14 +11,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,9 +64,13 @@ fun HabitCard(
                 shape = MaterialTheme.shapes.large,
                 border = BorderStroke(
                     width = 1.dp,
-                    color = Color.Black.copy(
-                        alpha = 0.1f
-                    )
+                    color = if (habitUiModel.completed) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    } else {
+                        Color.Black.copy(
+                            alpha = 0.1f
+                        )
+                    }
                 )
             )
             .background(
@@ -133,13 +134,13 @@ fun HabitCard(
 
 
 
-                    Button(
-                        enabled = !habitUiModel.completed,
-                        onClick = { onStart(habitUiModel.habitId) }) {
-                        Text(
-                            text = "Start"
-                        )
-                    }
+                Button(
+                    enabled = !habitUiModel.completed,
+                    onClick = { onStart(habitUiModel.habitId) }) {
+                    Text(
+                        text = "Start"
+                    )
+                }
             }
         }
     }
