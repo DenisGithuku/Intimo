@@ -7,11 +7,15 @@ import javax.inject.Inject
 
 class IntimoUserDataRepository @Inject constructor(
     private val intimoPrefsDataSource: IntimoPrefsDataSource
-): UserDataRepository {
+) : UserDataRepository {
     override val userData: Flow<UserData>
         get() = intimoPrefsDataSource.userData
 
     override suspend fun setShouldHideOnBoarding(shouldHideOnBoarding: Boolean) {
         intimoPrefsDataSource.setShouldHideOnBoarding(shouldHideOnBoarding)
+    }
+
+    override suspend fun updateHabitTime(habitTime: Long) {
+        intimoPrefsDataSource.setHabitTime(habitTime)
     }
 }
