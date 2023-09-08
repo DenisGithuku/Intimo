@@ -1,10 +1,15 @@
 package com.githukudenis.intimo.habit.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -23,11 +29,13 @@ import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.githukudenis.intimo.habit.R
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
@@ -38,13 +46,13 @@ fun CountDownTimer(
     modifier: Modifier = Modifier,
     totalTime: Long,
     currentTime: Long,
-    onTimeChanged: (Long) -> Unit,
     isTimerRunning: Boolean,
     initialValue: Float = 1f,
     activeBarColor: Color = MaterialTheme.colorScheme.primary,
-    inActiveBarColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.04f),
+    inActiveBarColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
     strokeWidth: Dp = 8.dp,
-    onToggleTimer: () -> Unit,
+    onStartTimer: () -> Unit,
+    onPauseTimer: (Long) -> Unit,
     onTimerFinished: () -> Unit
 ) {
     var size by remember { mutableStateOf(IntSize.Zero) }
@@ -54,8 +62,8 @@ fun CountDownTimer(
 
     LaunchedEffect(key1 = isTimerRunning, key2 = currentTime) {
         if (currentTime > 0 && isTimerRunning) {
-            delay(1000L)
-            onTimeChanged(currentTime - 1000L)
+//            delay(1000L)
+//            onTimeChanged(currentTime - 1000L)
             timerValue = currentTime / totalTime.toFloat()
         }
 
@@ -111,23 +119,43 @@ fun CountDownTimer(
             textAlign = TextAlign.Center
         )
 
-        Button(
-            onClick = {
-                onToggleTimer()
-            },
+
+        CountDownButton(
             modifier = Modifier.align(Alignment.BottomCenter),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (!isTimerRunning || currentTime <= 0L) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary
-            )
-        ) {
-            Text(
-                text = if (!isTimerRunning && currentTime >= 0L) {
-                    "Start"
+            icon = {
+                val icon = if (isTimerRunning) Icons.Default.Pause else Icons.Default.PlayArrow
+                Icon(
+                    imageVector = icon,
+                    contentDescription = stringResource(id = R.string.habit_status_button_icon),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }, onClick = {
+                if (!isTimerRunning) {
+                    onStartTimer()
                 } else {
-                    "Stop"
+                    onPauseTimer(currentTime)
                 }
+            })
+    }
+}
+
+@Composable
+fun CountDownButton(
+    modifier: Modifier = Modifier,
+    icon: @Composable () -> Unit,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                shape = MaterialTheme.shapes.medium
             )
-        }
+            .clickable { onClick() }
+            .padding(12.dp)
+    ) {
+        icon()
     }
 }
 
@@ -147,8 +175,23 @@ fun CountDownTimerPrev() {
         totalTime = 1000L * 60,
         currentTime = 9000L * 60,
         isTimerRunning = false,
-        onTimeChanged = {},
-        onToggleTimer = {},
-        onTimerFinished = {}
+        onStartTimer = {},
+        onTimerFinished = {},
+        onPauseTimer = {}
+    )
+}
+
+@Preview
+@Composable
+fun CountDownButtonPrev() {
+    CountDownButton(
+        icon = {
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        onClick = {}
     )
 }
