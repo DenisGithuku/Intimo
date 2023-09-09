@@ -6,12 +6,11 @@ import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioAttributes
 import android.net.Uri
-import android.os.Build
 import com.githukudenis.data.util.DataSyncManager
 import dagger.hilt.android.HiltAndroidApp
 
 const val notificationChannelId = "intimo_notifications"
-const val notificationName = "Intimo Alerts"
+const val notificationChannelName = "App Alerts"
 
 @HiltAndroidApp
 class IntimoApplication : Application() {
@@ -19,9 +18,7 @@ class IntimoApplication : Application() {
         super.onCreate()
         setUpDataSyncManager()
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            setupNotificationChannel()
-        }
+        setupNotificationChannel()
     }
 
     private fun setUpDataSyncManager() {
@@ -43,12 +40,12 @@ class IntimoApplication : Application() {
 
         val notificationChannel = NotificationChannel(
             notificationChannelId,
-            notificationName,
+            notificationChannelName,
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             setSound(notificationSound, audioAttributes)
             setShowBadge(true)
-            enableVibration(true)
+            description = getString(R.string.intimo_alerts_description)
         }
 
         notificationManager.createNotificationChannel(notificationChannel)
