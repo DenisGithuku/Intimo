@@ -1,12 +1,7 @@
 package com.githukudenis.intimo.splash_screen
 
-import android.content.res.Configuration
 import android.view.animation.OvershootInterpolator
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
@@ -24,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraphBuilder
@@ -78,7 +72,7 @@ fun SplashScreenRoute(
         }
 
         Image(
-            painter = painterResource(id = R.drawable.intimologo),
+            painter = painterResource(id = com.githukudenis.intimo.core.designsystem.R.drawable.intimologo),
             contentDescription = stringResource(R.string.app_logo),
             modifier = Modifier
                 .scale(scale = scale.value)

@@ -52,63 +52,78 @@ class IntimoHabitsDataSource @Inject constructor(
     }
 
     fun provideDefaultHabits(): List<DefaultHabit> {
-        val defaultHabitList = listOf(
+        return listOf(
             DefaultHabit(
                 icon = "\uD83D\uDCDA",
                 habitType = HabitType.READING,
                 startTime = generateHabitTime(hour = 20),
-                duration = generateDuration(1, DurationType.HOUR)
+                duration = generateDuration(1, DurationType.HOUR),
+                durationType = DurationType.HOUR
             ),
             DefaultHabit(
                 icon = "\uD83E\uDDD8",
                 habitType = HabitType.MEDITATION,
-                startTime = generateHabitTime(hour = 7),
-                duration = generateDuration(15, DurationType.MINUTE)
+                startTime = generateHabitTime(7),
+                duration = generateDuration(15, DurationType.MINUTE),
+                durationType = DurationType.MINUTE
+
             ),
             DefaultHabit(
-                icon = "\uD83D\uDECC",
-                habitType = HabitType.SLEEP,
-                startTime = generateHabitTime(21),
-                duration = generateDuration(8, DurationType.HOUR),
+                icon = "\uD83E\uDEA5",
+                habitType = HabitType.FLOSSING,
+                startTime = generateHabitTime(hour = 20, minute = 45),
+                duration = generateDuration(3, DurationType.MINUTE),
+                durationType = DurationType.MINUTE
+
             ),
             DefaultHabit(
                 icon = "✍️",
                 habitType = HabitType.JOURNALING,
                 startTime = generateHabitTime(19),
-                duration = generateDuration(30, DurationType.MINUTE)
+                duration = generateDuration(30, DurationType.MINUTE),
+                durationType = DurationType.MINUTE
+
             ),
             DefaultHabit(
                 icon = "\uD83C\uDFC3",
                 habitType = HabitType.EXERCISE,
                 startTime = generateHabitTime(6),
-                duration = generateDuration(1, DurationType.HOUR)
+                duration = generateDuration(1, DurationType.HOUR),
+                durationType = DurationType.HOUR
             ),
             DefaultHabit(
                 icon = "\uD83E\uDD14",
                 habitType = HabitType.REFLECTION,
                 startTime = generateHabitTime(14),
-                duration = generateDuration(15, DurationType.MINUTE)
+                duration = generateDuration(15, DurationType.MINUTE),
+                durationType = DurationType.MINUTE
+
             ),
             DefaultHabit(
-                icon = "\uD83C\uDF4E",
-                habitType = HabitType.NUTRITION,
+                icon = "\uD83D\uDDD1️",
+                startTime = generateHabitTime(8),
+                duration = generateDuration(2, DurationType.HOUR),
+                habitType = HabitType.DECLUTTERRING,
+                durationType = DurationType.HOUR
+
             ),
             DefaultHabit(
                 icon = "\uD83E\uDD38",
                 habitType = HabitType.STRETCHING,
                 startTime = generateHabitTime(11),
-                duration = generateDuration(10, DurationType.MINUTE)
+                duration = generateDuration(10, DurationType.MINUTE),
+                durationType = DurationType.MINUTE
+
             )
         )
-        return defaultHabitList
     }
 
-    private fun generateHabitTime(hour: Int): Long {
+    private fun generateHabitTime(hour: Int, minute: Int = 0): Long {
         val calendar = Calendar.getInstance()
 
         calendar.apply {
             set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, 0)
+            set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }

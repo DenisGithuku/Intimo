@@ -3,6 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+
     <application
         android:name=".IntimoApplication"
         android:allowBackup="true"
@@ -24,7 +28,15 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:scheme="intimo"
+                    android:host="active_habit" />
+            </intent-filter>
         </activity>
+        <service android:name=".habit.active.ActiveHabitService" />
         <service android:name="com.githukudenis.data.repository.IntimoNotificationsListener"
             android:label="Notification Count Listener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"

@@ -13,5 +13,8 @@
     <string name="open_habit">Open Habit</string>
     <string name="habit_status">Habit status</string>
     <string name="habit_status_icon_desc">Habit status</string>
+    <string name="runtime_permissions_required_text">Intimo requires permissions to ensure best functionality of the app.</string>
+    <string name="permission_request_dialog_title">Permission Request</string>
+    <string name="permission_request_dialog_icon">Info\n</string>
 
 </resources>

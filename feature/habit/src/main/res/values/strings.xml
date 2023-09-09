@@ -5,4 +5,6 @@
     <string name="next_week">Next Week\n</string>
     <string name="habit_start_time">Habit start time</string>
     <string name="navigate_up">Up</string>
+    <string name="habit_notification_description">Feel accomplished</string>
+    <string name="habit_status_button_icon">Habit status button icon</string>
 </resources>

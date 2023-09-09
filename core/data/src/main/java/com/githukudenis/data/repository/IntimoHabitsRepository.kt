@@ -16,7 +16,7 @@ class IntimoHabitsRepository @Inject constructor(
 ) : HabitsRepository {
     override val completedHabitList: Flow<List<DayAndHabits>>
         get() = intimoHabitsDataSource.getDayAndHabits()
-    override val activeHabitList: Flow<List<HabitData>>
+    override val selectedHabitList: Flow<List<HabitData>>
         get() = intimoHabitsDataSource.getActiveHabits()
 
     override suspend fun getHabitById(habitId: Long): HabitData {

@@ -5,10 +5,12 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.hardware.display.DisplayManager
-import android.util.Log
 import android.view.Display
+import androidx.core.graphics.drawable.toBitmap
+import androidx.palette.graphics.Palette
 import com.githukudenis.model.ApplicationInfoData
 import com.githukudenis.model.DataUsageStats
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +21,8 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import javax.inject.Inject
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
 class IntimoUsageStatsDataSource @Inject constructor(
     private val usageStatsManager: UsageStatsManager,
@@ -69,7 +73,6 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 sortedEvents[event.packageName] = packageEvents
             }
 
-            Log.d("events", sortedEvents.map { it.value }.toString())
 
             var usageList = mutableListOf<ApplicationInfoData>()
 
@@ -128,6 +131,7 @@ class IntimoUsageStatsDataSource @Inject constructor(
                     ApplicationInfoData(
                         packageName = packageName,
                         icon = getApplicationIcon(packageName),
+                        colorSwatch = createPaletteAsync(getApplicationIcon(packageName).toBitmap()),
                         usageDuration = totalTime,
                         appLaunchCount = appLaunchCount
                     )
@@ -187,5 +191,14 @@ class IntimoUsageStatsDataSource @Inject constructor(
     private fun isScreenOn(): Boolean {
         val displayManager = context.getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
         return displayManager.getDisplay(Display.DEFAULT_DISPLAY).state == Display.STATE_ON
+    }
+
+    private suspend fun createPaletteAsync(bitmap: Bitmap): Int? {
+        return suspendCoroutine { continuation ->
+            Palette.from(bitmap).generate { palette ->
+                val swatch = palette?.dominantSwatch?.rgb
+                continuation.resume(swatch)
+            }
+        }
     }
 }

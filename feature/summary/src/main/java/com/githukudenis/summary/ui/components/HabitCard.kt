@@ -2,9 +2,7 @@ package com.githukudenis.summary.ui.components
 
 import android.content.Context
 import android.content.res.Configuration
-import android.os.Build
 import android.text.format.DateFormat
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,32 +11,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Timer
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.Timelapse
-import androidx.compose.material.icons.outlined.TimerOff
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.githukudenis.intimo.feature.summary.R
+import com.githukudenis.model.DurationType
 import com.githukudenis.model.HabitType
 import com.githukudenis.model.nameToString
 import com.githukudenis.summary.ui.home.HabitUiModel
@@ -49,14 +35,11 @@ import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCard(
     modifier: Modifier = Modifier,
     habitUiModel: HabitUiModel,
-    onCheckHabit: (Long) -> Unit,
     onOpenHabitDetails: (Long) -> Unit,
-    onCustomize: (Long) -> Unit,
     onStart: (Long) -> Unit
 ) {
     val context = LocalContext.current
@@ -82,9 +65,13 @@ fun HabitCard(
                 shape = MaterialTheme.shapes.large,
                 border = BorderStroke(
                     width = 1.dp,
-                    color = Color.Black.copy(
-                        alpha = 0.1f
-                    )
+                    color = if (habitUiModel.completed) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    } else {
+                        Color.Black.copy(
+                            alpha = 0.1f
+                        )
+                    }
                 )
             )
             .background(
@@ -147,23 +134,13 @@ fun HabitCard(
                 )
 
 
-                Row {
-                    Button(
-                        enabled = !habitUiModel.completed,
-                        onClick = { onStart(habitUiModel.habitId) }) {
-                        Text(
-                            text = "Start"
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TextButton(
-                        onClick = { onCustomize(habitUiModel.habitId) }
-                    ) {
-                        Text(
-                            text = "Personalize",
-                            style = MaterialTheme.typography.labelSmall
-                        )
-                    }
+
+                Button(
+                    enabled = !habitUiModel.completed,
+                    onClick = { onStart(habitUiModel.habitId) }) {
+                    Text(
+                        text = "Start"
+                    )
                 }
             }
         }
@@ -193,8 +170,9 @@ fun HabitCardPreview() {
             habitIcon = "\uD83E\uDD38",
             habitType = HabitType.EXERCISE,
             startTime = 169023000000,
-            duration = 1800000
-        ), onCheckHabit = {}, onOpenHabitDetails = {}, onCustomize = {}, onStart = {}
+            duration = 1800000,
+            durationType = DurationType.MINUTE
+        ), onOpenHabitDetails = {}, onStart = {}
     )
 }
 
@@ -207,7 +185,8 @@ fun HabitCardNightPreview() {
             habitIcon = "\uD83E\uDD38",
             habitType = HabitType.EXERCISE,
             startTime = 169023000000,
-            duration = 1800000
-        ), onCheckHabit = {}, onOpenHabitDetails = {}, onCustomize = {}, onStart = {}
+            duration = 1800000,
+            durationType = DurationType.MINUTE
+        ), onOpenHabitDetails = {}, onStart = {}
     )
 }

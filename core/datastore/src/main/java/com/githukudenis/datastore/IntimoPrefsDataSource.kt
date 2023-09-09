@@ -16,7 +16,8 @@ class IntimoPrefsDataSource @Inject constructor(
     val userData = userPreferences.data.map { prefs ->
         UserData(
             shouldHideOnBoarding = prefs[PreferenceKeys.shouldHideOnBoarding] ?: false,
-            notificationCount = prefs[PreferenceKeys.notificationCount] ?: 0L
+            notificationCount = prefs[PreferenceKeys.notificationCount] ?: 0L,
+            remainingHabitTime = prefs[PreferenceKeys.habitTime] ?: 0L
         )
     }
 
@@ -31,9 +32,16 @@ class IntimoPrefsDataSource @Inject constructor(
             preferences[PreferenceKeys.notificationCount] = notificationCount + 1
         }
     }
+
+    suspend fun setHabitTime(habitTime: Long) {
+        userPreferences.edit { preferences ->
+            preferences[PreferenceKeys.habitTime] = habitTime
+        }
+    }
 }
 
 object PreferenceKeys {
     val shouldHideOnBoarding = booleanPreferencesKey("should_hide_onboarding")
     val notificationCount = longPreferencesKey("notification_count")
+    val habitTime = longPreferencesKey("remaining_time")
 }

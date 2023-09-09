@@ -1,6 +1,7 @@
 package com.githukudenis.summary.ui.home
 
 import com.githukudenis.model.Day
+import com.githukudenis.model.DurationType
 import com.githukudenis.model.HabitData
 import com.githukudenis.model.HabitType
 import com.githukudenis.summary.ui.UserMessage
@@ -27,7 +28,8 @@ data class HabitUiModel(
     val habitIcon: String,
     val habitType: HabitType,
     val startTime: Long = 0,
-    val duration: Long = 0
+    val duration: Long = 0,
+    val durationType: DurationType
 )
 
 fun HabitData.toHabitUiModel(completed: Boolean): HabitUiModel {
@@ -37,6 +39,7 @@ fun HabitData.toHabitUiModel(completed: Boolean): HabitUiModel {
         habitIcon = habitIcon,
         habitType = habitType,
         startTime = startTime,
-        duration = duration
+        duration = duration,
+        durationType = durationType
     )
 }

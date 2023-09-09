@@ -1,9 +1,12 @@
 package com.githukudenis.intimo.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import com.githukudenis.intimo.IntimoAppState
 import com.githukudenis.intimo.feature.activity.navigation.activityScreen
+import com.githukudenis.intimo.habit.navigation.activeHabitRoute
+import com.githukudenis.intimo.habit.navigation.activeHabitScreen
 import com.githukudenis.intimo.habit.navigation.detailScreen
 import com.githukudenis.intimo.habit.navigation.habitDetailRoute
 import com.githukudenis.intimo.settings.navigation.settingsRoute
@@ -22,9 +25,8 @@ fun IntimoNavHost(
     onOpenActivity: () -> Unit,
     onPopupFailed: () -> Unit,
 ) {
-    val navController = appState.navController
 
-    NavHost(navController = navController, startDestination = splashScreenRoute) {
+    NavHost(navController = appState.navController, startDestination = splashScreenRoute) {
         splashScreen(onTimeout = {
             appState.navigate(startDestination, splashScreenRoute)
         })
@@ -38,20 +40,34 @@ fun IntimoNavHost(
             onOpenHabitDetails = { habitId ->
                 appState.navigate("${habitDetailRoute}/$habitId")
             }, onNavigateUp = {
-                if (!navController.popBackStack()) {
+                if (!appState.navController.popBackStack()) {
                     onPopupFailed()
                 }
             }, onOpenActivity = onOpenActivity,
             onOpenSettings = {
                 appState.navigate(settingsRoute)
+            },
+            onStartHabit = { habitId ->
+                appState.navigate("${activeHabitRoute}/$habitId")
             }
         )
 
         detailScreen(
             onNavigateUp = {
-                navController.popBackStack()
+                appState.popBackStack()
             }
         )
+
+        activeHabitScreen(onHabitCompleted = {
+            if (!appState.navController.popBackStack()) {
+                appState.navigate(summaryNavigationRoute)
+            }
+        }, onNavigateUp = {
+            Log.d("dest", appState.navController.currentDestination?.route.toString())
+            if (!appState.navController.popBackStack()) {
+                appState.navigate(summaryNavigationRoute)
+            }
+        })
 
         settingsScreen()
 

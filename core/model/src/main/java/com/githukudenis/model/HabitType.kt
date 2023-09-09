@@ -4,11 +4,12 @@ enum class HabitType {
     MEDITATION,
     READING,
     JOURNALING,
-    SLEEP,
     REFLECTION,
     EXERCISE,
     STRETCHING,
-    NUTRITION
+    DECLUTTERRING,
+    FLOSSING,
+    BREATHING
 }
 
 fun HabitType.nameToString(): String {

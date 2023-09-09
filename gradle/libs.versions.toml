@@ -15,7 +15,7 @@ compose-bom = "2023.08.00"
 firebase-bom = "32.2.2"
 appcompat = "1.6.1"
 material = "1.9.0"
-material-extended-icons = "1.6.0-alpha03"
+material-extended-icons = "1.6.0-alpha04"
 navigation = "2.7.1"
 datastore-prefs = "1.0.0"
 hilt = "2.47"
@@ -25,6 +25,8 @@ accompanist = "0.31.5-beta"
 room = "2.5.2"
 kotlinx-time = "0.4.0"
 compose-material="1.6.0-alpha04"
+palette = "28.0.0"
+support = "28.0.0"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -61,6 +63,8 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room"}
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-time"}
+palette = { group = "com.android.support", name = "palette-v7", version.ref = "palette"}
+support-core = { group = "com.android.support", name = "support-core-utils", version.ref = "support" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

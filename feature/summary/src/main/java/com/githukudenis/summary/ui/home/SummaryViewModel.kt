@@ -1,7 +1,6 @@
 package com.githukudenis.summary.ui.home
 
-import android.os.Build.VERSION_CODES
-import androidx.annotation.RequiresApi
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.data.repository.HabitsRepository
@@ -15,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -22,7 +22,6 @@ import java.time.LocalDate
 import java.util.Calendar
 import javax.inject.Inject
 
-@RequiresApi(VERSION_CODES.O)
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository,
@@ -44,7 +43,7 @@ class SummaryViewModel @Inject constructor(
         MutableStateFlow(QueryTime(date = LocalDate.now()))
 
     private var habitUiModelList = combine(
-        habitsRepository.activeHabitList,
+        habitsRepository.selectedHabitList,
         habitsRepository.completedHabitList,
     ) { active, completed ->
         active.map { habitData ->
@@ -55,7 +54,8 @@ class SummaryViewModel @Inject constructor(
                 habitIcon = habitData.habitIcon,
                 habitType = habitData.habitType,
                 startTime = habitData.startTime,
-                duration = habitData.duration
+                duration = habitData.duration,
+                durationType = habitData.durationType
             )
         }
     }
@@ -96,6 +96,10 @@ class SummaryViewModel @Inject constructor(
 
             }
 
+            is SummaryUiEvent.StartHabit -> {
+                startHabit(event.habitId)
+            }
+
             SummaryUiEvent.UpdateHabit -> {
                 if (uiState.value.habitInEditModeState.habitModel == null) {
                     return
@@ -107,7 +111,8 @@ class SummaryViewModel @Inject constructor(
                             it.habitIcon,
                             it.habitType,
                             it.startTime,
-                            it.duration
+                            it.duration,
+                            it.durationType
                         )
                     )
                 }
@@ -118,10 +123,6 @@ class SummaryViewModel @Inject constructor(
                 val messageList = userMessageList.value.toMutableList()
                 messageList.add(event.error)
                 userMessageList.update { messageList }
-            }
-
-            is SummaryUiEvent.CheckHabit -> {
-                completeHabit(event.habitId)
             }
 
             is SummaryUiEvent.DismissMessage -> {
@@ -139,6 +140,19 @@ class SummaryViewModel @Inject constructor(
         }
     }
 
+    private fun startHabit(habitId: Long) {
+        viewModelScope.launch {
+            val habitData = habitsRepository.selectedHabitList.first().find {
+                it.habitId == habitId
+            }
+
+            Log.d("active habit", habitData.toString())
+            habitData?.let {
+                userDataRepository.updateHabitTime(it.duration)
+            }
+        }
+    }
+
     private fun updateHabit(habitData: HabitData) {
         viewModelScope.launch {
             habitsRepository.updateHabit(habitData)
@@ -148,27 +162,6 @@ class SummaryViewModel @Inject constructor(
     private fun clearHabitInEditMode() {
         habitInEditMode.update {
             HabitInEditModeState(null)
-        }
-    }
-
-    private fun completeHabit(habitId: Long) {
-        viewModelScope.launch {
-            val habit =
-                uiState.value.habitDataList.find { habit -> habit.habitId == habitId }
-                    ?: return@launch
-            if (habit.completed) {
-                return@launch
-            }
-            val dayId = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-            habitsRepository.completeHabit(
-                dayId = dayId,
-                habitId = habit.habitId
-            )
         }
     }
 

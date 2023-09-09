@@ -83,7 +83,8 @@ class OnBoardingViewModel @Inject constructor(
                         habitIcon = habit.icon,
                         habitType = habit.habitType,
                         startTime = habit.startTime,
-                        duration = habit.duration
+                        duration = habit.duration,
+                        durationType = habit.durationType
                     )
                 }
             habitsRepository.insertHabit(*habits.toTypedArray())

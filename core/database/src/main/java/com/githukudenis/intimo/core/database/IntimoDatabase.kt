@@ -16,7 +16,7 @@ import com.githukudenis.model.HabitData
     version = 1,
     exportSchema = false
 )
-@TypeConverters(value = [HabitTypeConverter::class])
+@TypeConverters(value = [HabitTypeConverter::class, DurationTypeConverter::class])
 abstract class IntimoDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
 
