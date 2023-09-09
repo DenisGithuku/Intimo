@@ -10,7 +10,7 @@ interface HabitsRepository {
 
     val completedHabitList: Flow<List<DayAndHabits>>
 
-    val activeHabitList: Flow<List<HabitData>>
+    val selectedHabitList: Flow<List<HabitData>>
 
     val availableHabitList: List<DefaultHabit>
     suspend fun getHabitById(habitId: Long): HabitData

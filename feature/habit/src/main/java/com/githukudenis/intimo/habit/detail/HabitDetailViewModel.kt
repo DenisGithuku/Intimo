@@ -64,29 +64,11 @@ class HabitDetailViewModel @Inject constructor(
         }
     }
 
-    fun onHabitComplete(habitId: Long) {
+    fun onUpdate(habitUiModel: HabitUiModel) {
         viewModelScope.launch {
-            val dayId = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
-            habitsRepository.completeHabit(
-                dayId, habitId
+            habitsRepository.updateHabit(
+                habitUiModel.toHabitData()
             )
-            getHabitDetails(habitId)
-        }
-    }
-
-    fun onChangeDate(date: Long) {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(selectedDate = date)
-            }
-            _uiState.value.habitId?.let {
-                getHabitDetails(it)
-            }
         }
     }
 }

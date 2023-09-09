@@ -6,20 +6,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Start
 import androidx.compose.material3.Button
@@ -53,12 +47,14 @@ import com.githukudenis.intimo.core.ui.components.rememberDateUiState
 import com.githukudenis.intimo.habit.R
 import com.githukudenis.intimo.habit.components.DatePill
 import com.githukudenis.intimo.habit.components.HabitDetailListItem
+import com.githukudenis.intimo.habit.components.HabitDurationDialog
+import com.githukudenis.intimo.habit.components.HorizontalDateView
+import com.githukudenis.model.DurationType
 import com.githukudenis.model.HabitType
 import com.githukudenis.model.nameToString
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.util.Calendar
 import java.util.Locale
 
@@ -97,6 +93,10 @@ fun HabitDetailRoute(
         HabitDetailScreen(
             modifier = Modifier.padding(paddingValues),
             uiState = uiState,
+            onUpdate = { habitUiModel ->
+                habitDetailViewModel.onUpdate(habitUiModel)
+                onNavigateUp()
+            }
         )
     }
 
@@ -107,6 +107,7 @@ fun HabitDetailRoute(
 private fun HabitDetailScreen(
     modifier: Modifier = Modifier,
     uiState: HabitDetailUiState,
+    onUpdate: (HabitUiModel) -> Unit
 ) {
     Column(
         modifier = modifier
@@ -145,65 +146,12 @@ private fun HabitDetailScreen(
             thickness = 0.7.dp,
             modifier = Modifier.fillMaxWidth()
         )
-        uiState.habitUiModel?.let { HabitContents(habitDetail = it, onUpdate = {}) }
-    }
-}
-
-
-@Composable
-fun HorizontalDateView(
-    selectedDate: LocalDate,
-    dates: List<Date>,
-    completedDates: List<LocalDate>,
-    onPrevWeekListener: (LocalDate) -> Unit,
-    onNextWeekListener: (LocalDate) -> Unit,
-    onChangeDate: (LocalDate) -> Unit,
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { onPrevWeekListener(selectedDate) }) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = stringResource(id = R.string.prev_week),
-                )
-            }
-            Text(
-                text = selectedDate.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL)),
-                style = MaterialTheme.typography.labelMedium
-            )
-            IconButton(
-                enabled = selectedDate < LocalDate.now(),
-                onClick = { onNextWeekListener(selectedDate) }) {
-                Icon(
-                    imageVector = Icons.Default.ArrowForwardIos,
-                    contentDescription = stringResource(id = R.string.next_week),
-                )
-            }
-        }
-        LazyRow(
-            modifier = Modifier.padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(items = dates, key = { it.date }) { dateItem ->
-                DatePill(
-                    dateItem = dateItem,
-                    selected = dateItem.date == selectedDate,
-                    onChangeDate = onChangeDate,
-                    completed = dateItem.date in completedDates
-                )
-            }
+        uiState.habitUiModel?.let {
+            HabitContents(habitDetail = it, onUpdate = onUpdate)
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -227,6 +175,10 @@ fun HabitContents(
         )
     }
 
+    val habitDuration = rememberSaveable {
+        mutableStateOf(habitDetail.duration)
+    }
+
     val pickerState = rememberTimePickerState(
         initialHour = habitTime.value.get(Calendar.HOUR_OF_DAY),
         initialMinute = habitTime.value.get(Calendar.MINUTE)
@@ -236,11 +188,19 @@ fun HabitContents(
         mutableStateOf(false)
     }
 
+    var habitDurationChanged by remember {
+        mutableStateOf(false)
+    }
+
     val timeFormatter = DateTimeFormatter.ofPattern(
         if (pickerState.is24hour) "hh:mm" else "hh:mm a",
         Locale.getDefault()
     )
     val pickerIsVisible = rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var habitDurationDialogVisible by remember {
         mutableStateOf(false)
     }
 
@@ -287,16 +247,16 @@ fun HabitContents(
             },
             description = {
                 Text(
-                    text = getTimeFromMillis(habitDetail.duration),
+                    text = getTimeFromMillis(habitDuration.value),
                     style = MaterialTheme.typography.labelSmall
                 )
             },
             onClick = {
-                pickerIsVisible.value = true
+                habitDurationDialogVisible = true
             },
         )
         AnimatedVisibility(
-            visible = habitTimeChanged,
+            visible = habitTimeChanged || habitDurationChanged,
             enter = fadeIn() + slideInVertically(),
             exit = fadeOut() + slideOutVertically()
         ) {
@@ -307,6 +267,7 @@ fun HabitContents(
                             set(Calendar.MILLISECOND, 0)
                             set(Calendar.SECOND, 0)
                         }.timeInMillis,
+                        duration = habitDuration.value
                     )
                 )
             }) {
@@ -343,6 +304,25 @@ fun HabitContents(
         ) {
             TimePicker(state = pickerState)
         }
+    }
+    if (habitDurationDialogVisible) {
+        HabitDurationDialog(
+            durationValue = habitDetail.duration,
+            onDismissRequest = { duration ->
+                habitDuration.value = duration
+                habitDurationChanged = duration != habitDetail.duration
+                habitDurationDialogVisible = false
+            }
+        )
+    }
+}
+
+fun formatDurationMillis(timeInMillis: Long): String {
+    return if (timeInMillis / 1000 / 60 / 60 >= 1) {
+        if (timeInMillis / 1000 / 60 / 60 > 1)
+            "${timeInMillis / 1000 / 60 / 60} hours" else "${timeInMillis / 1000 / 60 / 60} hour"
+    } else {
+        "${timeInMillis / 1000 / 60 % 60} minutes"
     }
 }
 
@@ -385,5 +365,20 @@ fun UnselectedPillPrev() {
 @Preview(name = "Habit contents preview")
 @Composable
 fun HabitContentsPrev() {
-    HabitContents(habitDetail = HabitUiModel(habitIcon = "", habitType = HabitType.EXERCISE)) {}
+    HabitContents(
+        habitDetail = HabitUiModel(
+            habitIcon = "",
+            habitType = HabitType.EXERCISE,
+            durationType = DurationType.MINUTE
+        )
+    ) {}
+}
+
+@Preview
+@Composable
+fun HabitDurationDialogPrev() {
+    HabitDurationDialog(
+        durationValue = 1000L,
+        onDismissRequest = { }
+    )
 }

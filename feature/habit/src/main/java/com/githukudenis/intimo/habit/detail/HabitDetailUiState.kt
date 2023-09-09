@@ -1,5 +1,6 @@
 package com.githukudenis.intimo.habit.detail
 
+import com.githukudenis.model.DurationType
 import com.githukudenis.model.HabitData
 import com.githukudenis.model.HabitType
 import java.time.LocalDate
@@ -18,7 +19,8 @@ data class HabitUiModel(
     val habitIcon: String,
     val habitType: HabitType,
     val startTime: Long = 0,
-    val duration: Long = 0
+    val duration: Long = 0,
+    val durationType: DurationType
 )
 
 fun HabitData.toHabitUiModel(completed: Boolean): HabitUiModel {
@@ -28,6 +30,18 @@ fun HabitData.toHabitUiModel(completed: Boolean): HabitUiModel {
         habitIcon = habitIcon,
         habitType = habitType,
         startTime = startTime,
-        duration = duration
+        duration = duration,
+        durationType = durationType
+    )
+}
+
+fun HabitUiModel.toHabitData(): HabitData {
+    return HabitData(
+        habitId = habitId,
+        habitIcon = habitIcon,
+        habitType = habitType,
+        startTime = startTime,
+        duration = duration,
+        durationType = durationType
     )
 }
