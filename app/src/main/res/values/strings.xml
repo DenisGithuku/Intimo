@@ -2,4 +2,5 @@
     <string name="app_name">Intimo</string>
     <string name="app_logo">App logo</string>
     <string name="navigate_back">Back</string>
+    <string name="intimo_alerts_description">Delivers notification on running habits\n</string>
 </resources>

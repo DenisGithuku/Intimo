@@ -12,5 +12,6 @@ data class HabitData(
     val habitType: HabitType,
     val startTime: Long = 0,
     val duration: Long = 0,
+    val durationType: DurationType
 )
 

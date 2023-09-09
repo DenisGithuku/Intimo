@@ -5,7 +5,8 @@ data class DefaultHabit(
     val habitType: HabitType,
     val selected: Boolean = false,
     val startTime: Long = 0,
-    val duration: Long = 0
+    val duration: Long = 0,
+    val durationType: DurationType
 )
 
 fun DefaultHabit.toHabitData(): HabitData {
@@ -13,7 +14,8 @@ fun DefaultHabit.toHabitData(): HabitData {
         habitIcon = icon,
         habitType = habitType,
         startTime = startTime,
-        duration = duration
+        duration = duration,
+        durationType = durationType
     )
 }
 
