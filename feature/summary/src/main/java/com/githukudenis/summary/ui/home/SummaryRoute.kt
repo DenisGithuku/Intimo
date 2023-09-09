@@ -1,10 +1,8 @@
 package com.githukudenis.summary.ui.home
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -23,36 +21,37 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.AccessTime
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -71,6 +70,7 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -92,11 +92,8 @@ import com.githukudenis.summary.ui.UserMessage
 import com.githukudenis.summary.ui.components.CardInfo
 import com.githukudenis.summary.ui.components.HabitCard
 import com.githukudenis.summary.ui.components.SummaryBottomSheet
-import com.githukudenis.summary.ui.components.SummaryTitle
 import com.githukudenis.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.summary.util.hasUsageAccessPermissions
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -107,7 +104,7 @@ import java.util.Calendar
 import java.util.Locale
 
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SummaryRoute(
     snackbarHostState: SnackbarHostState,
@@ -119,369 +116,400 @@ internal fun SummaryRoute(
     onStartHabit: (Long) -> Unit
 ) {
 
-    val context = LocalContext.current
-    val uiState by summaryViewModel.uiState.collectAsStateWithLifecycle()
-
-
-    var shouldShowUsagePermissionsDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    var shouldShowNotificationPermissionsDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    LaunchedEffect(uiState.userMessageList, snackbarHostState) {
-        if (uiState.userMessageList.isNotEmpty()) {
-            val userMessage = uiState.userMessageList.first()
-            snackbarHostState.showSnackbar(
-                message = userMessage.message ?: "An error occurred",
-                duration = when (val messageType = userMessage.messageType) {
-                    MessageType.INFO -> {
-                        SnackbarDuration.Short
-                    }
-
-                    is MessageType.ERROR -> {
-                        when (messageType.dismissable) {
-                            true -> SnackbarDuration.Short
-                            false -> SnackbarDuration.Indefinite
-                        }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                title = {
+                    Text(
+                        text = getCurrentDate()
+                    )
+                },
+                actions = {
+                    IconButton(
+                        onClick = onOpenSettings
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = stringResource(
+                                id = R.string.settings
+                            )
+                        )
                     }
                 },
+                scrollBehavior = scrollBehavior
             )
-            summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
         }
-    }
+    ) { paddingValues ->
 
-    val usageAccessPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult(),
-        onResult = {
-            if (context.hasUsageAccessPermissions()) {
-                summaryViewModel.onEvent(SummaryUiEvent.Refresh)
-            } else {
-                val userMessage = UserMessage(
-                    message = "Usage access permissions required",
-                    messageType = MessageType.ERROR(dismissable = false)
-                )
-                summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-            }
-        }
-    )
+        val context = LocalContext.current
+        val uiState by summaryViewModel.uiState.collectAsStateWithLifecycle()
 
-    val usagePermissionsAllowed = context.hasUsageAccessPermissions()
-    val notificationAccessPermissionsAllowed = context.hasNotificationAccessPermissions()
 
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-
-    DisposableEffect(lifecycle, usagePermissionsAllowed, notificationAccessPermissionsAllowed) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> {
-                    shouldShowUsagePermissionsDialog = !context.hasUsageAccessPermissions()
-                    shouldShowNotificationPermissionsDialog =
-                        !context.hasNotificationAccessPermissions()
-                }
-
-                else -> Unit
-            }
+        var shouldShowUsagePermissionsDialog by rememberSaveable {
+            mutableStateOf(false)
         }
 
-        lifecycle.addObserver(observer)
-
-        onDispose {
-            lifecycle.removeObserver(observer)
+        var shouldShowNotificationPermissionsDialog by rememberSaveable {
+            mutableStateOf(false)
         }
-    }
 
-    if (shouldShowUsagePermissionsDialog) {
-        AlertDialog(
-            properties = DialogProperties(
-                dismissOnBackPress = false, dismissOnClickOutside = false
-            ),
-            title = {
-                Text(
-                    text = context.getString(R.string.usage_permission_dialog_title)
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                        usageAccessPermissionLauncher.launch(intent)
-                    }
-                ) {
-                    Text(
-                        text = context.getString(R.string.permission_dialog_positive_button)
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        shouldShowUsagePermissionsDialog = false
-                        val userMessage = UserMessage(
-                            message = "Usage access permissions required",
-                            messageType = MessageType.ERROR(dismissable = false)
-                        )
-                        summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                        summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
-                        onNavigateUp()
-                    }
-                ) {
-                    Text(
-                        text = context.getString(R.string.permission_dialog_negative_button)
-                    )
-                }
-            },
-            text = {
-                Text(
-                    text = context.getString(R.string.usage_permission_dialog_description)
-                )
-            },
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = LocalTonalElevation.current.large,
-            onDismissRequest = {
-                shouldShowUsagePermissionsDialog = false
-                val userMessage = UserMessage(
-                    message = "Usage access permissions required",
-                    messageType = MessageType.ERROR(dismissable = false)
-                )
-                summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
-                onNavigateUp()
-            }
-        )
-    }
-    if (shouldShowNotificationPermissionsDialog) {
-        AlertDialog(
-            properties = DialogProperties(
-                dismissOnBackPress = false, dismissOnClickOutside = false
-            ),
-            title = {
-                Text(
-                    text = context.getString(R.string.notification_access_permission_dialog_title)
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val intent =
-                            Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-                        usageAccessPermissionLauncher.launch(intent)
-                    }
-                ) {
-                    Text(
-                        text = context.getString(R.string.permission_dialog_positive_button)
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        shouldShowNotificationPermissionsDialog = false
-                        val userMessage = UserMessage(
-                            message = "Notification access permissions required",
-                            messageType = MessageType.ERROR(dismissable = false)
-                        )
-                        summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                        summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
-                        onNavigateUp()
-                    }
-                ) {
-                    Text(
-                        text = context.getString(R.string.permission_dialog_negative_button)
-                    )
-                }
-            },
-            text = {
-                Text(
-                    text = context.getString(R.string.notification_access_permission_dialog_description)
-                )
-            },
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = LocalTonalElevation.current.large,
-            onDismissRequest = {
-                shouldShowNotificationPermissionsDialog = false
-                val userMessage = UserMessage(
-                    message = "Notification access permissions required",
-                    messageType = MessageType.ERROR(dismissable = false)
-                )
-                summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
-                onNavigateUp()
-            }
-        )
-    }
-
-    val personalizeSheetVisible = rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    val habitActiveSheetVisible = rememberSaveable {
-        mutableStateOf(false)
-    }
-
-
-    AnimatedContent(
-        targetState = uiState.isLoading,
-        label = "Screen animation"
-    ) {
-        when (it) {
-            true -> {
-                LoadingScreen()
-            }
-
-            false -> {
-                SummaryScreen(
-                    usageStats = uiState.summaryData?.usageStats?.appUsageList ?: emptyList(),
-                    unlockCount = uiState.summaryData?.unlockCount ?: 0,
-                    notificationCount = uiState.notificationCount,
-                    habitDataList = uiState.habitDataList,
-                    onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
-                    usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
-                    onOpenActivity = onOpenActivity,
-                    onOpenSettings = onOpenSettings,
-                    onStart = { habitId ->
-                        onStartHabit(habitId)
-//                        habitActiveSheetVisible.value = true
-                    }
-                )
-            }
-        }
-    }
-    if (personalizeSheetVisible.value) {
-        SummaryBottomSheet(onDismiss = { personalizeSheetVisible.value = false }) {
-
-
-            val showTimePicker = rememberSaveable {
-                mutableStateOf(false)
-            }
-
-            val timePickerState = rememberTimePickerState()
-
-            val habitStartTime = remember {
-                uiState.habitInEditModeState.habitModel?.startTime?.let {
-                    Instant.fromEpochMilliseconds(it)
-                        .toLocalDateTime(TimeZone.currentSystemDefault())
-                }
-            }
-
-            val habitEndTime = remember {
-                uiState.habitInEditModeState.habitModel?.let { habitUiModel ->
-                    Instant.fromEpochMilliseconds(habitUiModel.startTime + habitUiModel.duration)
-                        .toLocalDateTime(TimeZone.currentSystemDefault())
-                }
-            }
-
-
-            val calendar = rememberSaveable {
-                mutableStateOf(Calendar.getInstance().apply {
-                    isLenient = false
-                })
-            }
-
-            val dateTimeFormatter = remember {
-                SimpleDateFormat(
-                    if (timePickerState.is24hour) "HH:mm" else "HH:mm a",
-                    Locale.getDefault()
-                )
-            }
-            val formattedStartTime = remember {
-                dateTimeFormatter.format(
-                    calendar.value.apply {
-                        habitStartTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
-                        habitStartTime?.minute?.let { set(Calendar.MINUTE, it) }
-                    }.time
-                )
-            }
-            val formattedEndTime = remember {
-                dateTimeFormatter.format(
-                    calendar.value.apply {
-                        habitEndTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
-                        habitEndTime?.minute?.let { set(Calendar.MINUTE, it) }
-                    }.time
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-            ) {
-                uiState.habitInEditModeState.habitModel?.let { habitUiModel ->
-                    Text(
-                        text = habitUiModel.habitType.nameToString(),
-                        style = MaterialTheme.typography.headlineMedium
-                    )
-                    Row(
-                        verticalAlignment = CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        AssistChip(onClick = {
-                            showTimePicker.value = true
-                        }, label = {
-                            Text(
-                                text = formattedStartTime,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }, trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.AccessTime,
-                                contentDescription = "Change time"
-                            )
-                        })
-                        Text(text = " - ")
-                        AssistChip(onClick = {
-                            showTimePicker.value = true
-                        }, label = {
-                            Text(
-                                text = formattedEndTime,
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }, trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.AccessTime,
-                                contentDescription = "Change time"
-                            )
-                        })
-                    }
-                }
-                Button(onClick = {
-                    summaryViewModel.onEvent(SummaryUiEvent.UpdateHabit)
-                    personalizeSheetVisible.value = false
-                }) {
-                    Text(
-                        text = "Save"
-                    )
-                }
-            }
-            if (showTimePicker.value) {
-                TimePickerDialog(
-                    onCancel = { showTimePicker.value = false },
-                    onConfirm = {
-                        calendar.value = calendar.value.apply {
-                            set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                            set(Calendar.MINUTE, timePickerState.hour)
-                            isLenient = false
+        LaunchedEffect(uiState.userMessageList, snackbarHostState) {
+            if (uiState.userMessageList.isNotEmpty()) {
+                val userMessage = uiState.userMessageList.first()
+                snackbarHostState.showSnackbar(
+                    message = userMessage.message ?: "An error occurred",
+                    duration = when (val messageType = userMessage.messageType) {
+                        MessageType.INFO -> {
+                            SnackbarDuration.Short
                         }
-                        showTimePicker.value = false
-                        Log.d("time", calendar.value.time.toString())
+
+                        is MessageType.ERROR -> {
+                            when (messageType.dismissable) {
+                                true -> SnackbarDuration.Short
+                                false -> SnackbarDuration.Indefinite
+                            }
+                        }
+                    },
+                )
+                summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
+            }
+        }
+
+        val usageAccessPermissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult(),
+            onResult = {
+                if (context.hasUsageAccessPermissions()) {
+                    summaryViewModel.onEvent(SummaryUiEvent.Refresh)
+                } else {
+                    val userMessage = UserMessage(
+                        message = "Usage access permissions required",
+                        messageType = MessageType.ERROR(dismissable = false)
+                    )
+                    summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
+                }
+            }
+        )
+
+        val usagePermissionsAllowed = context.hasUsageAccessPermissions()
+        val notificationAccessPermissionsAllowed = context.hasNotificationAccessPermissions()
+
+        val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+        DisposableEffect(lifecycle, usagePermissionsAllowed, notificationAccessPermissionsAllowed) {
+            val observer = LifecycleEventObserver { _, event ->
+                when (event) {
+                    Lifecycle.Event.ON_START -> {
+                        shouldShowUsagePermissionsDialog = !context.hasUsageAccessPermissions()
+                        shouldShowNotificationPermissionsDialog =
+                            !context.hasNotificationAccessPermissions()
                     }
-                ) {
-                    TimePicker(state = timePickerState)
+
+                    else -> Unit
+                }
+            }
+
+            lifecycle.addObserver(observer)
+
+            onDispose {
+                lifecycle.removeObserver(observer)
+            }
+        }
+
+        if (shouldShowUsagePermissionsDialog) {
+            AlertDialog(
+                properties = DialogProperties(
+                    dismissOnBackPress = false, dismissOnClickOutside = false
+                ),
+                title = {
+                    Text(
+                        text = context.getString(R.string.usage_permission_dialog_title)
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                            usageAccessPermissionLauncher.launch(intent)
+                        }
+                    ) {
+                        Text(
+                            text = context.getString(R.string.permission_dialog_positive_button)
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            shouldShowUsagePermissionsDialog = false
+                            val userMessage = UserMessage(
+                                message = "Usage access permissions required",
+                                messageType = MessageType.ERROR(dismissable = false)
+                            )
+                            summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
+                            summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
+                            onNavigateUp()
+                        }
+                    ) {
+                        Text(
+                            text = context.getString(R.string.permission_dialog_negative_button)
+                        )
+                    }
+                },
+                text = {
+                    Text(
+                        text = context.getString(R.string.usage_permission_dialog_description)
+                    )
+                },
+                shape = MaterialTheme.shapes.extraLarge,
+                tonalElevation = LocalTonalElevation.current.large,
+                onDismissRequest = {
+                    shouldShowUsagePermissionsDialog = false
+                    val userMessage = UserMessage(
+                        message = "Usage access permissions required",
+                        messageType = MessageType.ERROR(dismissable = false)
+                    )
+                    summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
+                    summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
+                    onNavigateUp()
+                }
+            )
+        }
+        if (shouldShowNotificationPermissionsDialog) {
+            AlertDialog(
+                properties = DialogProperties(
+                    dismissOnBackPress = false, dismissOnClickOutside = false
+                ),
+                title = {
+                    Text(
+                        text = context.getString(R.string.notification_access_permission_dialog_title)
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val intent =
+                                Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                            usageAccessPermissionLauncher.launch(intent)
+                        }
+                    ) {
+                        Text(
+                            text = context.getString(R.string.permission_dialog_positive_button)
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            shouldShowNotificationPermissionsDialog = false
+                            val userMessage = UserMessage(
+                                message = "Notification access permissions required",
+                                messageType = MessageType.ERROR(dismissable = false)
+                            )
+                            summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
+                            summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
+                            onNavigateUp()
+                        }
+                    ) {
+                        Text(
+                            text = context.getString(R.string.permission_dialog_negative_button)
+                        )
+                    }
+                },
+                text = {
+                    Text(
+                        text = context.getString(R.string.notification_access_permission_dialog_description)
+                    )
+                },
+                shape = MaterialTheme.shapes.extraLarge,
+                tonalElevation = LocalTonalElevation.current.large,
+                onDismissRequest = {
+                    shouldShowNotificationPermissionsDialog = false
+                    val userMessage = UserMessage(
+                        message = "Notification access permissions required",
+                        messageType = MessageType.ERROR(dismissable = false)
+                    )
+                    summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
+                    summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
+                    onNavigateUp()
+                }
+            )
+        }
+
+        val personalizeSheetVisible = rememberSaveable {
+            mutableStateOf(false)
+        }
+
+        val habitActiveSheetVisible = rememberSaveable {
+            mutableStateOf(false)
+        }
+
+
+        AnimatedContent(
+            targetState = uiState.isLoading,
+            label = "Screen animation"
+        ) {
+            when (it) {
+                true -> {
+                    LoadingScreen()
+                }
+
+                false -> {
+                    SummaryScreen(
+                        modifier = Modifier.padding(paddingValues),
+                        usageStats = uiState.summaryData?.usageStats?.appUsageList ?: emptyList(),
+                        unlockCount = uiState.summaryData?.unlockCount ?: 0,
+                        notificationCount = uiState.notificationCount,
+                        habitDataList = uiState.habitDataList,
+                        onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
+                        usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
+                        onOpenActivity = onOpenActivity,
+                        onStart = { habitId ->
+                            summaryViewModel.onEvent(SummaryUiEvent.StartHabit(habitId))
+                            onStartHabit(habitId)
+                        }
+                    )
                 }
             }
         }
-    }
-    if (habitActiveSheetVisible.value) {
-        SummaryBottomSheet(onDismiss = { habitActiveSheetVisible.value = false }) {
-            Column {
-                Text(
-                    text = "Habit playing here"
-                )
+        if (personalizeSheetVisible.value) {
+            SummaryBottomSheet(onDismiss = { personalizeSheetVisible.value = false }) {
+
+
+                val showTimePicker = rememberSaveable {
+                    mutableStateOf(false)
+                }
+
+                val timePickerState = rememberTimePickerState()
+
+                val habitStartTime = remember {
+                    uiState.habitInEditModeState.habitModel?.startTime?.let {
+                        Instant.fromEpochMilliseconds(it)
+                            .toLocalDateTime(TimeZone.currentSystemDefault())
+                    }
+                }
+
+                val habitEndTime = remember {
+                    uiState.habitInEditModeState.habitModel?.let { habitUiModel ->
+                        Instant.fromEpochMilliseconds(habitUiModel.startTime + habitUiModel.duration)
+                            .toLocalDateTime(TimeZone.currentSystemDefault())
+                    }
+                }
+
+
+                val calendar = rememberSaveable {
+                    mutableStateOf(Calendar.getInstance().apply {
+                        isLenient = false
+                    })
+                }
+
+                val dateTimeFormatter = remember {
+                    SimpleDateFormat(
+                        if (timePickerState.is24hour) "HH:mm" else "HH:mm a",
+                        Locale.getDefault()
+                    )
+                }
+                val formattedStartTime = remember {
+                    dateTimeFormatter.format(
+                        calendar.value.apply {
+                            habitStartTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
+                            habitStartTime?.minute?.let { set(Calendar.MINUTE, it) }
+                        }.time
+                    )
+                }
+                val formattedEndTime = remember {
+                    dateTimeFormatter.format(
+                        calendar.value.apply {
+                            habitEndTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
+                            habitEndTime?.minute?.let { set(Calendar.MINUTE, it) }
+                        }.time
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                ) {
+                    uiState.habitInEditModeState.habitModel?.let { habitUiModel ->
+                        Text(
+                            text = habitUiModel.habitType.nameToString(),
+                            style = MaterialTheme.typography.headlineMedium
+                        )
+                        Row(
+                            verticalAlignment = CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            AssistChip(onClick = {
+                                showTimePicker.value = true
+                            }, label = {
+                                Text(
+                                    text = formattedStartTime,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }, trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.AccessTime,
+                                    contentDescription = "Change time"
+                                )
+                            })
+                            Text(text = " - ")
+                            AssistChip(onClick = {
+                                showTimePicker.value = true
+                            }, label = {
+                                Text(
+                                    text = formattedEndTime,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }, trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.AccessTime,
+                                    contentDescription = "Change time"
+                                )
+                            })
+                        }
+                    }
+                    Button(onClick = {
+                        summaryViewModel.onEvent(SummaryUiEvent.UpdateHabit)
+                        personalizeSheetVisible.value = false
+                    }) {
+                        Text(
+                            text = "Save"
+                        )
+                    }
+                }
+                if (showTimePicker.value) {
+                    TimePickerDialog(
+                        onCancel = { showTimePicker.value = false },
+                        onConfirm = {
+                            calendar.value = calendar.value.apply {
+                                set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                                set(Calendar.MINUTE, timePickerState.hour)
+                                isLenient = false
+                            }
+                            showTimePicker.value = false
+                            Log.d("time", calendar.value.time.toString())
+                        }
+                    ) {
+                        TimePicker(state = timePickerState)
+                    }
+                }
             }
-            Button(onClick = { habitActiveSheetVisible.value = false }) {
-                Text(text = "Hide sheet")
+        }
+        if (habitActiveSheetVisible.value) {
+            SummaryBottomSheet(onDismiss = { habitActiveSheetVisible.value = false }) {
+                Column {
+                    Text(
+                        text = "Habit playing here"
+                    )
+                }
+                Button(onClick = { habitActiveSheetVisible.value = false }) {
+                    Text(text = "Hide sheet")
+                }
             }
         }
     }
@@ -490,6 +518,7 @@ internal fun SummaryRoute(
 
 @Composable
 internal fun SummaryScreen(
+    modifier: Modifier = Modifier,
     usageStatsLoading: Boolean,
     usageStats: List<ApplicationInfoData>,
     habitDataList: List<HabitUiModel>,
@@ -497,7 +526,6 @@ internal fun SummaryScreen(
     notificationCount: Long,
     onOpenHabit: (Long) -> Unit,
     onOpenActivity: () -> Unit,
-    onOpenSettings: () -> Unit,
     onStart: (Long) -> Unit
 ) {
 
@@ -505,19 +533,9 @@ internal fun SummaryScreen(
 
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
     ) {
-        item {
-            Spacer(
-                modifier = Modifier
-                    .consumeWindowInsets(WindowInsets.systemBars)
-                    .padding(top = 8.dp)
-            )
-        }
-        item {
-            SummaryTitle(date = getCurrentDate(), onOpenSettings = onOpenSettings)
-        }
         item {
             Text(
                 modifier = Modifier.padding(horizontal = 12.dp),
@@ -667,7 +685,8 @@ fun LazyListScope.appUsageData(
 
 
                                 val textMeasurer = rememberTextMeasurer()
-                                val totalAppTime = appUsageStats.sumOf { it.usageDuration }
+                                val totalAppTime =
+                                    appUsageStats.sumOf { appUsage -> appUsage.usageDuration }
                                 val totalAppTimeText = getTimeFromMillis(totalAppTime)
 
 
@@ -834,7 +853,7 @@ fun LazyListScope.habitList(
             habitUiModel = habitUiModel,
             onOpenHabitDetails = { habitId ->
                 onOpenHabit(habitId)
-            },onStart = onStart
+            }, onStart = onStart
         )
     }
 }

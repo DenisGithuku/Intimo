@@ -2,7 +2,6 @@ package com.githukudenis.summary.navigation
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,7 +19,8 @@ fun NavGraphBuilder.summaryScreen(
     onOpenHabitDetails: (Long) -> Unit,
     onNavigateUp: () -> Unit,
     onOpenActivity: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onStartHabit: (Long) -> Unit
 ) {
     composable(
         route = summaryNavigationRoute,
@@ -46,7 +46,8 @@ fun NavGraphBuilder.summaryScreen(
             onOpenHabitDetails = onOpenHabitDetails,
             onNavigateUp = onNavigateUp,
             onOpenActivity = onOpenActivity,
-            onOpenSettings = onOpenSettings
+            onOpenSettings = onOpenSettings,
+            onStartHabit = onStartHabit
         )
     }
 }
