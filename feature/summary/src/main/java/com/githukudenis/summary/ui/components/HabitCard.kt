@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.githukudenis.model.DurationType
 import com.githukudenis.model.HabitType
 import com.githukudenis.model.nameToString
 import com.githukudenis.summary.ui.home.HabitUiModel
@@ -169,7 +170,8 @@ fun HabitCardPreview() {
             habitIcon = "\uD83E\uDD38",
             habitType = HabitType.EXERCISE,
             startTime = 169023000000,
-            duration = 1800000
+            duration = 1800000,
+            durationType = DurationType.MINUTE
         ), onOpenHabitDetails = {}, onStart = {}
     )
 }
@@ -183,7 +185,8 @@ fun HabitCardNightPreview() {
             habitIcon = "\uD83E\uDD38",
             habitType = HabitType.EXERCISE,
             startTime = 169023000000,
-            duration = 1800000
+            duration = 1800000,
+            durationType = DurationType.MINUTE
         ), onOpenHabitDetails = {}, onStart = {}
     )
 }
