@@ -1,5 +1,6 @@
 package com.githukudenis.onboarding.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.data.repository.HabitsRepository
@@ -9,6 +10,10 @@ import com.githukudenis.model.DefaultHabit
 import com.githukudenis.model.HabitData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -20,14 +25,28 @@ class OnBoardingViewModel @Inject constructor(
     private val habitsRepository: HabitsRepository
 ) : ViewModel() {
 
-    var onBoardingUiState = MutableStateFlow(OnBoardingUiState())
-        private set
+    private val selectedHabitList = MutableStateFlow(emptyList<DefaultHabit>())
 
-    init {
-        onBoardingUiState.update { currentState ->
-            currentState.copy(availableDefaultHabits = habitsRepository.availableHabitList)
-        }
-    }
+    private val isLoading = MutableStateFlow(false)
+
+    var onBoardingUiState: StateFlow<OnBoardingUiState> = combine(
+        habitsRepository.availableHabitList,
+        selectedHabitList,
+        isLoading
+    ) { availableHabitList, selectedHabitList, isLoading ->
+        val state = OnBoardingUiState(
+            availableDefaultHabits = availableHabitList,
+            selectedDefaultHabits = selectedHabitList,
+            isLoading = isLoading
+        )
+        Log.d("state", state.toString())
+        state
+
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = OnBoardingUiState()
+    )
 
 
     private fun setShouldHideOnBoarding() {
@@ -55,18 +74,15 @@ class OnBoardingViewModel @Inject constructor(
         } else {
             selectedHabits.add(defaultHabit)
         }
-        onBoardingUiState.update { currentState ->
-            currentState.copy(
-                selectedDefaultHabits = selectedHabits
-            )
+
+        selectedHabitList.update {
+            selectedHabits
         }
     }
 
     private fun storeHabits() {
-        onBoardingUiState.update {
-            it.copy(
-                isLoading = true
-            )
+        isLoading.update {
+            true
         }
 
         viewModelScope.launch {
@@ -90,8 +106,8 @@ class OnBoardingViewModel @Inject constructor(
             habitsRepository.insertHabit(*habits.toTypedArray())
 
         }
-        onBoardingUiState.update {
-            it.copy(isLoading = false)
+        isLoading.update {
+            false
         }
         setShouldHideOnBoarding()
     }
