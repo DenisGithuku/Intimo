@@ -15,5 +15,4 @@ interface UserDataRepository {
     Set whether user has completed onboarding
      */
     suspend fun setShouldHideOnBoarding(shouldHideOnBoarding: Boolean)
-    suspend fun updateHabitTime(habitTime: Long)
 }
