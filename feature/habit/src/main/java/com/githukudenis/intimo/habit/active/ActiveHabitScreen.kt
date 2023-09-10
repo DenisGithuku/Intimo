@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.intimo.habit.R
 import com.githukudenis.intimo.habit.components.CountDownTimer
+import com.githukudenis.model.HabitType
 import com.githukudenis.model.nameToString
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,7 +41,7 @@ fun ActiveHabitRoute(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(title = {  }, navigationIcon = {
+            CenterAlignedTopAppBar(title = { }, navigationIcon = {
                 IconButton(onClick = onNavigateUp) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
@@ -61,22 +62,50 @@ fun ActiveHabitRoute(
                 modifier = Modifier.padding(paddingValues),
                 activeHabitUiState = state,
                 onStartTimer = {
-                    viewModel.onToggleTimer(true)
+                    viewModel.onStartHabit()
                     startTimerService(
                         context,
                         habitData.habitType.nameToString(),
-                        context.getString(R.string.habit_notification_description),
-                        duration = state.timerState.currentTime ?: 0L,
-                        habitId = habitData.habitId
+                        content = context.getString(R.string.habit_notification_description),
+                        duration = state.timerState.currentTime,
+                        habitId = habitData.habitId,
+                        habitType = habitData.habitType
                     )
                 },
-                onTimerFinished = {
-                    viewModel.onToggleTimer(false)
-                    currentOnHabitCompleted()
-                },
-                onPauseTimer = { remTime ->
-                    viewModel.onToggleTimer(false)
+                onPauseTimer = {
                     stopTimerService(context)
+                },
+                onResumeTimer = {
+                    startTimerService(
+                        context,
+                        habitData.habitType.nameToString(),
+                        content = context.getString(R.string.habit_notification_description),
+                        duration = state.timerState.currentTime,
+                        habitId = habitData.habitId,
+                        habitType = habitData.habitType
+                    )
+                },
+                onRestartHabit = {
+                    viewModel.onRestartHabit()
+                    stopTimerService(context)
+                    startTimerService(
+                        context,
+                        habitData.habitType.nameToString(),
+                        content = context.getString(R.string.habit_notification_description),
+                        duration = habitData.duration,
+                        habitId = habitData.habitId,
+                        habitType = habitData.habitType
+                    )
+
+                },
+                onCancelHabit = {
+                    viewModel.onCancelHabit()
+                    stopTimerService(context)
+                    onNavigateUp()
+                },
+                onTimerFinished = {
+                    viewModel.onCompleteHabit()
+                    currentOnHabitCompleted()
                 }
             )
         }
@@ -88,8 +117,11 @@ internal fun ActiveHabitScreen(
     modifier: Modifier = Modifier,
     activeHabitUiState: ActiveHabitUiState,
     onStartTimer: () -> Unit,
+    onPauseTimer: () -> Unit,
+    onResumeTimer: () -> Unit,
+    onRestartHabit: () -> Unit,
+    onCancelHabit: () -> Unit,
     onTimerFinished: () -> Unit,
-    onPauseTimer: (Long) -> Unit,
 ) {
 
     val (totalTime, currentTime) = activeHabitUiState.timerState
@@ -99,27 +131,24 @@ internal fun ActiveHabitScreen(
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        activeHabitUiState.habitData?.habitType?.let { habitType ->
+        activeHabitUiState.habitData?.let { habit ->
             Text(
-                text = habitType.nameToString(),
+                text = habit.habitType.nameToString(),
                 style = MaterialTheme.typography.displayMedium
             )
-        }
 
-        totalTime?.let { totalTime ->
-            currentTime?.let { currentTime ->
-                activeHabitUiState.timerState.timerButtonStatusText?.let {
-                    CountDownTimer(
-                        modifier = Modifier.size(200.dp),
-                        totalTime = totalTime,
-                        currentTime = currentTime,
-                        isTimerRunning = activeHabitUiState.timerState.isRunning,
-                        onStartTimer = onStartTimer,
-                        onTimerFinished = onTimerFinished,
-                        onPauseTimer = onPauseTimer
-                    )
-                }
-            }
+            CountDownTimer(
+                modifier = Modifier.size(200.dp),
+                totalTime = totalTime,
+                currentTime = currentTime,
+                isTimerRunning = activeHabitUiState.timerState.isRunning,
+                onStartTimer = onStartTimer,
+                onPauseTimer = onPauseTimer,
+                onResumeTimer = onResumeTimer,
+                onRestartHabit = onRestartHabit,
+                onCancelHabit = onCancelHabit,
+                onTimerFinished = onTimerFinished
+            )
         }
     }
 }
@@ -136,6 +165,7 @@ fun startTimerService(
     context: Context,
     title: String,
     content: String,
+    habitType: HabitType,
     duration: Long,
     habitId: Long
 ) {
@@ -144,6 +174,7 @@ fun startTimerService(
         putExtra("content", content)
         putExtra("duration", duration)
         putExtra("habitId", habitId)
+        putExtra("habitType", habitType.name)
         action = ActiveHabitService.NotificationAction.START.toString()
     }
     context.startService(intent)

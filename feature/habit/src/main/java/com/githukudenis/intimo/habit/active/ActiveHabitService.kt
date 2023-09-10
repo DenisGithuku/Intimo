@@ -11,9 +11,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE
 import androidx.core.app.TaskStackBuilder
 import androidx.core.net.toUri
-import com.githukudenis.data.repository.UserDataRepository
+import com.githukudenis.data.repository.HabitsRepository
 import com.githukudenis.intimo.core.designsystem.R
 import com.githukudenis.intimo.habit.components.formatCountdownTime
+import com.githukudenis.model.HabitType
 import com.githukudenis.model.RunningHabit
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +36,7 @@ class ActiveHabitService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Inject
-    lateinit var userDataRepository: UserDataRepository
+    lateinit var habitsRepository: HabitsRepository
 
     override fun onCreate() {
         super.onCreate()
@@ -48,7 +49,7 @@ class ActiveHabitService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.action?.let { action ->
-            intent.extras?.let { extras ->
+           intent.extras?.let innerLet@ { extras ->
 
                 val notificationData = NotificationData(
                     title = extras.getString("title"),
@@ -57,7 +58,8 @@ class ActiveHabitService : Service() {
                         habitId = extras.getLong("habitId"),
                         totalTime = extras.getLong("duration"),
                         isRunning = true,
-                        remainingTime = extras.getLong("duration")
+                        remainingTime = extras.getLong("duration"),
+                        habitType = HabitType.valueOf(extras.getString("habitType") ?: return@innerLet )
                     )
                 )
 
@@ -84,25 +86,22 @@ class ActiveHabitService : Service() {
             notificationManager.notify(notificationId, notification.build())
 
             scope.launch {
-                notificationData.habit.remainingTime?.let { time ->
-                    if (time <= 0L) {
-                        stop()
-                        return@launch
-                    }
-
-                    var init = time
-                    while (init > 0L) {
-                        Log.d("loop", "Called in loop $init")
-                        userDataRepository.updateHabitTime(init)
-                        val updatedNotification = notification.setContentText(
-                            "Remaining time: ${formatCountdownTime(init)}"
-                        )
-
-                        notificationManager.notify(notificationId, updatedNotification.build())
-                        init -= 1000L
-                        delay(1000L)
-                    }
+                if (notificationData.habit.remainingTime <= 0L) {
+                    stop()
+                    return@launch
                 }
+                var init = notificationData.habit.remainingTime
+                while (init >= 0L) {
+                    habitsRepository.updateRunningHabit(notificationData.habit.copy(remainingTime = init))
+                    val updatedNotification = notification.setContentText(
+                        "Remaining time: ${formatCountdownTime(init)}"
+                    )
+
+                    notificationManager.notify(notificationId, updatedNotification.build())
+                    init -= 1000L
+                    delay(1000L)
+                }
+
             }
             startForeground(notificationId, notification.build())
         } catch (e: Exception) {
