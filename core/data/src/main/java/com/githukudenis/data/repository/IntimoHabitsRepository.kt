@@ -6,7 +6,9 @@ import com.githukudenis.model.Day
 import com.githukudenis.model.DayAndHabits
 import com.githukudenis.model.DefaultHabit
 import com.githukudenis.model.HabitData
+import com.githukudenis.model.RunningHabit
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -15,15 +17,36 @@ class IntimoHabitsRepository @Inject constructor(
     private val intimoCoroutineDispatcher: IntimoCoroutineDispatcher
 ) : HabitsRepository {
     override val completedHabitList: Flow<List<DayAndHabits>>
-        get() = intimoHabitsDataSource.getDayAndHabits()
+        get() = intimoHabitsDataSource.dayAndHabits.flowOn(intimoCoroutineDispatcher.ioDispatcher)
     override val selectedHabitList: Flow<List<HabitData>>
-        get() = intimoHabitsDataSource.getActiveHabits()
+        get() = intimoHabitsDataSource.activeHabits.flowOn(intimoCoroutineDispatcher.ioDispatcher)
 
     override suspend fun getHabitById(habitId: Long): HabitData {
         return withContext(intimoCoroutineDispatcher.ioDispatcher) {
             intimoHabitsDataSource.getHabitById(
                 habitId
             )
+        }
+    }
+
+    override val runningHabits: Flow<List<RunningHabit>>
+        get() = intimoHabitsDataSource.runningHabits.flowOn(intimoCoroutineDispatcher.ioDispatcher)
+
+    override suspend fun insertRunningHabit(habit: RunningHabit) {
+        withContext(intimoCoroutineDispatcher.ioDispatcher) {
+            intimoHabitsDataSource.insertRunningHabit(habit)
+        }
+    }
+
+    override suspend fun updateRunningHabit(habit: RunningHabit) {
+        withContext(intimoCoroutineDispatcher.ioDispatcher) {
+            intimoHabitsDataSource.updateRunningHabit(habit)
+        }
+    }
+
+    override suspend fun deleteRunningHabit(habit: RunningHabit) {
+        withContext(intimoCoroutineDispatcher.ioDispatcher) {
+            intimoHabitsDataSource.deleteRunningHabit(habit)
         }
     }
 
@@ -54,6 +77,6 @@ class IntimoHabitsRepository @Inject constructor(
         }
     }
 
-    override val availableHabitList: List<DefaultHabit>
+    override val availableHabitList: Flow<List<DefaultHabit>>
         get() = intimoHabitsDataSource.provideDefaultHabits()
 }

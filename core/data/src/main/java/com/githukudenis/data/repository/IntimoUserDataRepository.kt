@@ -14,8 +14,4 @@ class IntimoUserDataRepository @Inject constructor(
     override suspend fun setShouldHideOnBoarding(shouldHideOnBoarding: Boolean) {
         intimoPrefsDataSource.setShouldHideOnBoarding(shouldHideOnBoarding)
     }
-
-    override suspend fun updateHabitTime(habitTime: Long) {
-        intimoPrefsDataSource.setHabitTime(habitTime)
-    }
 }

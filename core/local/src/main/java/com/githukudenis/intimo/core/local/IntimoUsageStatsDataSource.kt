@@ -11,10 +11,17 @@ import android.hardware.display.DisplayManager
 import android.view.Display
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
+import com.githukudenis.intimo.core.database.DayAndNotificationsDao
+import com.githukudenis.intimo.core.database.NotificationsDao
 import com.githukudenis.model.ApplicationInfoData
 import com.githukudenis.model.DataUsageStats
+import com.githukudenis.model.DayAndNotifications
+import com.githukudenis.model.DayAndNotificationsPostedCrossRef
+import com.githukudenis.model.NotificationPosted
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
@@ -26,8 +33,15 @@ import kotlin.coroutines.suspendCoroutine
 
 class IntimoUsageStatsDataSource @Inject constructor(
     private val usageStatsManager: UsageStatsManager,
+    private val dayAndNotificationsDao: DayAndNotificationsDao,
+    private val notificationsDao: NotificationsDao,
     private val context: Context
 ) {
+    val allNotificationsPosted: Flow<List<NotificationPosted>>
+        get() = notificationsDao.getAllNotifications()
+    val notificationPostedData: Flow<List<DayAndNotifications>>
+        get() = dayAndNotificationsDao.getDayAndNotifications()
+
     fun queryAndAggregateUsageStats(
         date: LocalDate = LocalDate.now()
     ): Flow<DataUsageStats> {
@@ -149,7 +163,7 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 .toMutableList()
 
             emit(DataUsageStats(appUsageList = usageList, unlockCount = unlockCount))
-        }
+        }.flowOn(Dispatchers.IO)
     }
 
     fun getIndividualAppUsage(
@@ -200,5 +214,22 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 continuation.resume(swatch)
             }
         }
+    }
+
+    fun insertDayAndNotifications(dayId: Long, notifId: Long) {
+        dayAndNotificationsDao.insertDayAndNotification(
+            DayAndNotificationsPostedCrossRef(
+                dayId = dayId,
+                notifPrimaryId = notifId
+            )
+        )
+    }
+
+    fun getNotificationsByPackage(packageName: String): Flow<List<NotificationPosted>> {
+        return notificationsDao.getNotificationsByPackage(packageName)
+    }
+
+    fun insertNotificationPosted(notificationPosted: NotificationPosted) {
+        notificationsDao.insertNotification(notificationPosted)
     }
 }

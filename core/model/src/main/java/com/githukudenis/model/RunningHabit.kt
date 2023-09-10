@@ -1,9 +1,14 @@
 package com.githukudenis.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity()
 data class RunningHabit(
-    val habitId: Long? = null,
+    @PrimaryKey
+    val habitId: Long,
     val isRunning: Boolean = false,
-    val habitType: HabitType? = null,
-    val totalTime: Long? = null,
-    val remainingTime: Long? = null
+    val habitType: HabitType,
+    val totalTime: Long = 0L,
+    val remainingTime: Long = 0L
 )

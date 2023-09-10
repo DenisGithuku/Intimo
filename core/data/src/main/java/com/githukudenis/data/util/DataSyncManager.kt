@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import com.githukudenis.data.di.IntimoCoroutineDispatcher
 import com.githukudenis.data.repository.HabitsRepository
-import com.githukudenis.datastore.IntimoPrefsDataSource
 import com.githukudenis.model.Day
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -19,8 +18,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class DataSyncManager : BroadcastReceiver() {
-    @Inject
-    lateinit var intimoPrefsDataSource: IntimoPrefsDataSource
 
     @Inject
     lateinit var intimoCoroutineDispatcher: IntimoCoroutineDispatcher
@@ -30,25 +27,19 @@ class DataSyncManager : BroadcastReceiver() {
 
     private val scope = CoroutineScope(Job() + Dispatchers.IO)
 
-    override fun onReceive(p0: Context?, p1: Intent?) {
-        resetUserData()
-        refreshHabitData()
-    }
+    private val dayId = Calendar.getInstance().apply {
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
+    }.timeInMillis
 
-    private fun resetUserData() {
-        scope.launch {
-            intimoPrefsDataSource.storeNotificationCount(0)
-        }
+    override fun onReceive(p0: Context?, p1: Intent?) {
+        refreshHabitData()
     }
 
     private fun refreshHabitData() {
         scope.launch {
-            val dayId = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis
             habitsRepository.insertDay(
                 Day(dayId = dayId)
             )
@@ -60,12 +51,7 @@ class DataSyncManager : BroadcastReceiver() {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         alarmManager.setRepeating(
             AlarmManager.RTC,
-            Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }.timeInMillis,
+            dayId,
             AlarmManager.INTERVAL_DAY,
             PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_MUTABLE)
         )

@@ -7,7 +7,9 @@ import com.githukudenis.model.DefaultHabit
 import com.githukudenis.model.DurationType
 import com.githukudenis.model.HabitData
 import com.githukudenis.model.HabitType
+import com.githukudenis.model.RunningHabit
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -29,18 +31,19 @@ class IntimoHabitsDataSource @Inject constructor(
         habitDao.updateHabit(habitData)
     }
 
-    fun getDayAndHabits(): Flow<List<DayAndHabits>> {
-        return dayAndHabitsDao.getDayAndHabits()
+    val dayAndHabits: Flow<List<DayAndHabits>> = dayAndHabitsDao.getDayAndHabits()
+
+    fun insertRunningHabit(habit: RunningHabit) {
+        habitDao.insertRunningHabit(habit)
     }
 
+    val runningHabits: Flow<List<RunningHabit>> = habitDao.getRunningHabits()
 
     fun getHabitById(habitId: Long): HabitData {
         return habitDao.getHabit(habitId)
     }
 
-    fun getActiveHabits(): Flow<List<HabitData>> {
-        return habitDao.getHabitList()
-    }
+    val activeHabits: Flow<List<HabitData>> = habitDao.getHabitList()
 
     fun completeHabit(dayId: Long, habitId: Long) {
         dayAndHabitsDao.insertDayWithHabit(
@@ -51,8 +54,8 @@ class IntimoHabitsDataSource @Inject constructor(
         )
     }
 
-    fun provideDefaultHabits(): List<DefaultHabit> {
-        return listOf(
+    fun provideDefaultHabits(): Flow<List<DefaultHabit>> = flow {
+        emit(listOf(
             DefaultHabit(
                 icon = "\uD83D\uDCDA",
                 habitType = HabitType.READING,
@@ -115,7 +118,7 @@ class IntimoHabitsDataSource @Inject constructor(
                 durationType = DurationType.MINUTE
 
             )
-        )
+        ))
     }
 
     private fun generateHabitTime(hour: Int, minute: Int = 0): Long {
@@ -143,5 +146,13 @@ class IntimoHabitsDataSource @Inject constructor(
                 value * minute
             }
         }
+    }
+
+    fun updateRunningHabit(habit: RunningHabit) {
+        habitDao.updateRunningHabit(habit)
+    }
+
+    fun deleteRunningHabit(habit: RunningHabit) {
+        habitDao.deleteRunningHabit(habit)
     }
 }

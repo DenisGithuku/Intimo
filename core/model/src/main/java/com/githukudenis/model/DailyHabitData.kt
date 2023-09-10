@@ -2,6 +2,7 @@ package com.githukudenis.model
 
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.Junction
 import androidx.room.PrimaryKey
 import androidx.room.Relation
@@ -12,7 +13,7 @@ data class Day(
     val dayId: Long,
 )
 
-@Entity(primaryKeys = ["dayId", "habitId"])
+@Entity(primaryKeys = ["dayId", "habitId"], indices = [Index("habitId")])
 data class DayAndHabitCrossRef(
     val dayId: Long,
     val habitId: Long
@@ -28,16 +29,4 @@ data class DayAndHabits(
         )
     )
     val habits: List<HabitData>
-)
-
-data class HabitAndDay(
-    @Embedded val habit: HabitData,
-    @Relation(
-        parentColumn = "habitId",
-        entityColumn = "dayId",
-        associateBy = Junction(
-            value = DayAndHabitCrossRef::class
-        )
-    )
-    val days: List<Day>
 )
