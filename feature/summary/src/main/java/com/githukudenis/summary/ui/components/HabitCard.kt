@@ -3,7 +3,9 @@ package com.githukudenis.summary.ui.components
 import android.content.Context
 import android.content.res.Configuration
 import android.text.format.DateFormat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,6 +24,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -38,6 +43,7 @@ import java.util.Locale
 @Composable
 fun HabitCard(
     modifier: Modifier = Modifier,
+    isRunning: Boolean,
     habitUiModel: HabitUiModel,
     onOpenHabitDetails: (Long) -> Unit,
     onStart: (Long) -> Unit
@@ -87,59 +93,99 @@ fun HabitCard(
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = habitUiModel.habitIcon,
-                style = MaterialTheme.typography.headlineLarge
-            )
-            Column(
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                InfoChip(
-                    habitStatus = if (habitUiModel.completed) {
-                        HabitStatus.COMPLETE
-                    } else if (startTime.timeInMillis < now.timeInMillis && now.timeInMillis < (startTime.timeInMillis + habitUiModel.duration)) {
-                        HabitStatus.ONGOING
-                    } else if (startTime.timeInMillis + habitUiModel.duration > now.timeInMillis) {
-                        HabitStatus.UPCOMING
-                    } else {
-                        HabitStatus.PENDING
-                    }
-                )
                 Text(
-                    text = habitUiModel.habitType.nameToString(),
-                    style = MaterialTheme.typography.headlineSmall
+                    text = habitUiModel.habitIcon,
+                    style = MaterialTheme.typography.headlineLarge
                 )
-                Text(
-                    text = buildString {
-                        append(
-                            getTimeString(
-                                context = context,
-                                timeInMillis = startTime.timeInMillis
-                            )
-                        )
-                        append(" - ")
-                        append(
-                            getTimeString(
-                                context = context,
-                                timeInMillis = startTime.timeInMillis + habitUiModel.duration
-                            )
-                        )
-                    },
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        color = Color.Black.copy(alpha = 0.8f)
+                Column(
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    InfoChip(
+                        habitStatus = if (habitUiModel.completed) {
+                            HabitStatus.COMPLETE
+                        } else if (isRunning) {
+                            HabitStatus.IN_PROGRESS
+                        } else if (startTime.timeInMillis < now.timeInMillis && now.timeInMillis < (startTime.timeInMillis + habitUiModel.duration)) {
+                            HabitStatus.DELAYED_START
+                        } else if (startTime.timeInMillis + habitUiModel.duration > now.timeInMillis) {
+                            HabitStatus.UPCOMING
+                        } else {
+                            HabitStatus.PENDING
+                        }
                     )
+                    Text(
+                        text = habitUiModel.habitType.nameToString(),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                    )
+                    Text(
+                        text = buildString {
+                            append(
+                                getTimeString(
+                                    context = context,
+                                    timeInMillis = startTime.timeInMillis
+                                )
+                            )
+                            append(" - ")
+                            append(
+                                getTimeString(
+                                    context = context,
+                                    timeInMillis = startTime.timeInMillis + habitUiModel.duration
+                                )
+                            )
+                        },
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = Color.Black.copy(alpha = 0.6f)
+                        )
+                    )
+
+
+                    Button(
+                        enabled = !habitUiModel.completed,
+                        onClick = { onStart(habitUiModel.habitId) }) {
+                        Text(
+                            text = if (isRunning) "Active" else "Start"
+                        )
+                    }
+                }
+            }
+            if (isRunning && habitUiModel.remainingTime > 0L) {
+                val animatedArcValue = animateFloatAsState(
+                    targetValue = ((((habitUiModel.duration - habitUiModel.remainingTime)) * 100 / habitUiModel.duration) * 360f) / 100,
+                    label = "arc value"
                 )
 
+                val arcValueColor = MaterialTheme.colorScheme.tertiary
+                val arcBgColor = MaterialTheme.colorScheme.primary.copy(
+                    alpha = 0.09f
+                )
 
-
-                Button(
-                    enabled = !habitUiModel.completed,
-                    onClick = { onStart(habitUiModel.habitId) }) {
-                    Text(
-                        text = "Start"
+                Canvas(modifier = Modifier.size(60.dp)) {
+                    drawArc(
+                        color = arcBgColor,
+                        startAngle = -90f,
+                        useCenter = false,
+                        sweepAngle = 360f,
+                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                    )
+                    drawArc(
+                        color = arcValueColor,
+                        startAngle = -90f,
+                        sweepAngle = animatedArcValue.value,
+                        useCenter = false,
+                        style = Stroke(
+                            width = 4.dp.toPx(),
+                            cap = StrokeCap.Round
+                        )
                     )
                 }
             }
@@ -165,6 +211,7 @@ private fun getTimeString(context: Context, timeInMillis: Long): String {
 @Composable
 fun HabitCardPreview() {
     HabitCard(
+        isRunning = true,
         habitUiModel = HabitUiModel(
             completed = false,
             habitIcon = "\uD83E\uDD38",
@@ -180,6 +227,7 @@ fun HabitCardPreview() {
 @Composable
 fun HabitCardNightPreview() {
     HabitCard(
+        isRunning = false,
         habitUiModel = HabitUiModel(
             completed = false,
             habitIcon = "\uD83E\uDD38",
