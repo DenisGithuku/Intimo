@@ -36,7 +36,6 @@ fun IntimoNavHost(
             }
         )
         summaryScreen(
-            snackbarHostState = appState.snackbarHostState,
             onOpenHabitDetails = { habitId ->
                 appState.navigate("${habitDetailRoute}/$habitId")
             }, onNavigateUp = {
