@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,10 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.onSizeChanged
@@ -44,21 +43,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.githukudenis.intimo.habit.R
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
 @Composable
 fun CountDownTimer(
     modifier: Modifier = Modifier,
     totalTime: Long,
+    habitName: String,
     currentTime: Long,
     isTimerRunning: Boolean,
     initialValue: Float = 1f,
     activeBarColor: Color = MaterialTheme.colorScheme.primary,
     inActiveBarColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-    strokeWidth: Dp = 8.dp,
+    strokeWidth: Dp = 2.dp,
     onStartTimer: () -> Unit,
     onPauseTimer: () -> Unit,
     onResumeTimer: () -> Unit,
@@ -82,7 +80,10 @@ fun CountDownTimer(
         }
     }
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = modifier.onSizeChanged {
@@ -90,48 +91,67 @@ fun CountDownTimer(
             }
         ) {
             Canvas(modifier = modifier) {
+
+                drawArc(
+                    color = activeBarColor,
+                    startAngle = -90f,
+                    sweepAngle = 360f * timerValue,
+                    useCenter = false,
+                    size = Size(size.width.toFloat(), size.height.toFloat()),
+                    style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Square)
+                )
                 drawArc(
                     color = inActiveBarColor,
-                    startAngle = -215f,
-                    sweepAngle = 250f,
+                    startAngle = -90f,
+                    sweepAngle = 360f,
                     useCenter = false,
                     size = Size(size.width.toFloat(), size.height.toFloat()),
                     style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
                 )
+//                val center = Offset(size.width / 2f, size.height / 2f)
+//                val sweepAngleDegrees = (250f * timerValue + 145f) * (PI / 180f).toFloat()
+//                val radius = size.width / 2f
 
-                drawArc(
-                    color = activeBarColor,
-                    startAngle = -215f,
-                    sweepAngle = 250f * timerValue,
-                    useCenter = false,
-                    size = Size(size.width.toFloat(), size.height.toFloat()),
-                    style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
-                )
-                val center = Offset(size.width / 2f, size.height / 2f)
-                val sweepAngleDegrees = (250f * timerValue + 145f) * (PI / 180f).toFloat()
-                val radius = size.width / 2f
-
-                val sideA = cos(sweepAngleDegrees) * radius
-                val sideB = sin(sweepAngleDegrees) * radius
+//                val sideA = cos(sweepAngleDegrees) * radius
+//                val sideB = sin(sweepAngleDegrees) * radius
 
 
-                drawPoints(
-                    listOf(Offset(center.x + sideA, center.y + sideB)),
-                    pointMode = PointMode.Points,
-                    color = activeBarColor,
-                    strokeWidth = (strokeWidth * 3f).toPx(),
-                    cap = StrokeCap.Round
-                )
+//                drawPoints(
+//                    listOf(Offset(center.x + sideA, center.y + sideB)),
+//                    pointMode = PointMode.Points,
+//                    color = activeBarColor,
+//                    strokeWidth = (strokeWidth * 3f).toPx(),
+//                    cap = StrokeCap.Round
+//                )
+
             }
             Text(
-                text = formatCountdownTime(currentTime),
-                style = MaterialTheme.typography.displaySmall,
+                text = habitName,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 32.sp
+                ),
                 textAlign = TextAlign.Center
             )
-
-
         }
-        Spacer(modifier = Modifier.height(12.dp))
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = formatCountdownTime(currentTime),
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = 32.sp
+                ),
+
+                )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(R.string.habit_remaining_time_text),
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -224,7 +244,11 @@ fun formatCountdownTime(milliseconds: Long): String {
     val minutes = ((milliseconds % (1000 * 60 * 60)) / (1000 * 60)).toInt()
     val seconds = ((milliseconds % (1000 * 60)) / 1000).toInt()
 
-    return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    return if (hours > 0) {
+        String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    } else {
+        String.format("%02d:%02d", minutes, seconds)
+    }
 }
 
 @Preview
@@ -234,6 +258,7 @@ fun CountDownTimerPrev() {
         modifier = Modifier.size(200.dp),
         totalTime = 1000L * 60,
         currentTime = 9000L * 60,
+        habitName = "Sleeping",
         isTimerRunning = false,
         onStartTimer = {},
         onPauseTimer = {},
