@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.DirectionsRun
 import androidx.compose.material.icons.outlined.Timelapse
 import androidx.compose.material.icons.outlined.TimerOff
 import androidx.compose.material3.Icon
@@ -41,12 +42,15 @@ fun InfoChip(
             MaterialTheme.colorScheme.error
         }
 
-        HabitStatus.ONGOING -> {
+        HabitStatus.IN_PROGRESS -> {
             Color(0xFF1078CF)
         }
 
         HabitStatus.COMPLETE -> {
             MaterialTheme.colorScheme.primary
+        }
+        HabitStatus.DELAYED_START -> {
+            Color(0xFFFFA663)
         }
     }
     Surface(
@@ -69,13 +73,15 @@ fun InfoChip(
                     HabitStatus.PENDING -> {
                         Icons.Outlined.TimerOff
                     }
-
-                    HabitStatus.ONGOING -> {
-                        Icons.Outlined.AccessTime
-                    }
-
                     HabitStatus.COMPLETE -> {
                         Icons.Outlined.Check
+                    }
+
+                    HabitStatus.DELAYED_START -> {
+                        Icons.Outlined.AccessTime
+                    }
+                    HabitStatus.IN_PROGRESS -> {
+                        Icons.Outlined.DirectionsRun
                     }
                 },
                 contentDescription = stringResource(R.string.habit_status_icon_desc),
@@ -84,8 +90,13 @@ fun InfoChip(
 
             )
             Spacer(modifier = Modifier.width(4.dp))
+            val habitName = if (habitStatus == HabitStatus.IN_PROGRESS || habitStatus == HabitStatus.DELAYED_START) {
+                habitStatus.name.split("_").joinToString(" ").lowercase().replaceFirstChar { it.uppercase() }
+            } else {
+                habitStatus.name.lowercase().replaceFirstChar { it.uppercase() }
+            }
             Text(
-                text = habitStatus.name.lowercase().replaceFirstChar { it.uppercase() },
+                text = habitName,
                 style = MaterialTheme.typography.labelSmall,
                 color = habitColor
             )
@@ -95,7 +106,8 @@ fun InfoChip(
 
 enum class HabitStatus {
     UPCOMING,
-    ONGOING,
+    DELAYED_START,
+    IN_PROGRESS,
     PENDING,
     COMPLETE
 }
