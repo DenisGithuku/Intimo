@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.githukudenis.data.repository.HabitsRepository
 import com.githukudenis.data.repository.UsageStatsRepository
 import com.githukudenis.model.DataUsageStats
-import com.githukudenis.summary.ui.UserMessage
+import com.githukudenis.intimo.core.util.UserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
