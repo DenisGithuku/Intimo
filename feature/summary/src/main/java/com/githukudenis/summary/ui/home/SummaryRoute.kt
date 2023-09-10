@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -33,10 +32,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -46,13 +42,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -83,31 +78,22 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.designsystem.theme.LocalTonalElevation
-import com.githukudenis.intimo.core.ui.components.TimePickerDialog
 import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.model.ApplicationInfoData
-import com.githukudenis.model.nameToString
 import com.githukudenis.summary.ui.MessageType
 import com.githukudenis.summary.ui.UserMessage
 import com.githukudenis.summary.ui.components.CardInfo
 import com.githukudenis.summary.ui.components.HabitCard
-import com.githukudenis.summary.ui.components.SummaryBottomSheet
 import com.githukudenis.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.summary.util.hasUsageAccessPermissions
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
-import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
 import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SummaryRoute(
-    snackbarHostState: SnackbarHostState,
     summaryViewModel: SummaryViewModel = hiltViewModel(),
     onOpenHabitDetails: (Long) -> Unit,
     onNavigateUp: () -> Unit,
@@ -117,12 +103,18 @@ internal fun SummaryRoute(
 ) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+
+    val snackbarHostState = remember {
+        SnackbarHostState()
+    }
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surface
                 ),
                 title = {
                     Text(
@@ -171,7 +163,7 @@ internal fun SummaryRoute(
                         is MessageType.ERROR -> {
                             when (messageType.dismissable) {
                                 true -> SnackbarDuration.Short
-                                false -> SnackbarDuration.Indefinite
+                                false -> SnackbarDuration.Long
                             }
                         }
                     },
@@ -251,7 +243,6 @@ internal fun SummaryRoute(
                                 messageType = MessageType.ERROR(dismissable = false)
                             )
                             summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                            summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
                             onNavigateUp()
                         }
                     ) {
@@ -274,7 +265,6 @@ internal fun SummaryRoute(
                         messageType = MessageType.ERROR(dismissable = false)
                     )
                     summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                    summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
                     onNavigateUp()
                 }
             )
@@ -311,7 +301,6 @@ internal fun SummaryRoute(
                                 messageType = MessageType.ERROR(dismissable = false)
                             )
                             summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                            summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
                             onNavigateUp()
                         }
                     ) {
@@ -334,20 +323,10 @@ internal fun SummaryRoute(
                         messageType = MessageType.ERROR(dismissable = false)
                     )
                     summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                    summaryViewModel.onEvent(SummaryUiEvent.DismissMessage(userMessage.id))
                     onNavigateUp()
                 }
             )
         }
-
-        val personalizeSheetVisible = rememberSaveable {
-            mutableStateOf(false)
-        }
-
-        val habitActiveSheetVisible = rememberSaveable {
-            mutableStateOf(false)
-        }
-
 
         AnimatedContent(
             targetState = uiState.isLoading,
@@ -361,6 +340,7 @@ internal fun SummaryRoute(
                 false -> {
                     SummaryScreen(
                         modifier = Modifier.padding(paddingValues),
+                        runningHabitState = uiState.runningHabitState,
                         usageStats = uiState.summaryData?.usageStats?.appUsageList ?: emptyList(),
                         unlockCount = uiState.summaryData?.unlockCount ?: 0,
                         notificationCount = uiState.notificationCount,
@@ -369,146 +349,21 @@ internal fun SummaryRoute(
                         usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
                         onOpenActivity = onOpenActivity,
                         onStart = { habitId ->
-                            summaryViewModel.onEvent(SummaryUiEvent.StartHabit(habitId))
+                            if (uiState.runningHabitState.habitId != null && uiState.runningHabitState.habitId != habitId) {
+                                summaryViewModel.onEvent(
+                                    SummaryUiEvent.ShowMessage(
+                                        UserMessage(
+                                            id = 1,
+                                            message = context.getString(R.string.multiple_habit_running_error_text),
+                                            messageType = MessageType.ERROR(dismissable = true)
+                                        )
+                                    )
+                                )
+                                return@SummaryScreen
+                            }
                             onStartHabit(habitId)
                         }
                     )
-                }
-            }
-        }
-        if (personalizeSheetVisible.value) {
-            SummaryBottomSheet(onDismiss = { personalizeSheetVisible.value = false }) {
-
-
-                val showTimePicker = rememberSaveable {
-                    mutableStateOf(false)
-                }
-
-                val timePickerState = rememberTimePickerState()
-
-                val habitStartTime = remember {
-                    uiState.habitInEditModeState.habitModel?.startTime?.let {
-                        Instant.fromEpochMilliseconds(it)
-                            .toLocalDateTime(TimeZone.currentSystemDefault())
-                    }
-                }
-
-                val habitEndTime = remember {
-                    uiState.habitInEditModeState.habitModel?.let { habitUiModel ->
-                        Instant.fromEpochMilliseconds(habitUiModel.startTime + habitUiModel.duration)
-                            .toLocalDateTime(TimeZone.currentSystemDefault())
-                    }
-                }
-
-
-                val calendar = rememberSaveable {
-                    mutableStateOf(Calendar.getInstance().apply {
-                        isLenient = false
-                    })
-                }
-
-                val dateTimeFormatter = remember {
-                    SimpleDateFormat(
-                        if (timePickerState.is24hour) "HH:mm" else "HH:mm a",
-                        Locale.getDefault()
-                    )
-                }
-                val formattedStartTime = remember {
-                    dateTimeFormatter.format(
-                        calendar.value.apply {
-                            habitStartTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
-                            habitStartTime?.minute?.let { set(Calendar.MINUTE, it) }
-                        }.time
-                    )
-                }
-                val formattedEndTime = remember {
-                    dateTimeFormatter.format(
-                        calendar.value.apply {
-                            habitEndTime?.hour?.let { set(Calendar.HOUR_OF_DAY, it) }
-                            habitEndTime?.minute?.let { set(Calendar.MINUTE, it) }
-                        }.time
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                ) {
-                    uiState.habitInEditModeState.habitModel?.let { habitUiModel ->
-                        Text(
-                            text = habitUiModel.habitType.nameToString(),
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                        Row(
-                            verticalAlignment = CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
-                            AssistChip(onClick = {
-                                showTimePicker.value = true
-                            }, label = {
-                                Text(
-                                    text = formattedStartTime,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }, trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.AccessTime,
-                                    contentDescription = "Change time"
-                                )
-                            })
-                            Text(text = " - ")
-                            AssistChip(onClick = {
-                                showTimePicker.value = true
-                            }, label = {
-                                Text(
-                                    text = formattedEndTime,
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }, trailingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.AccessTime,
-                                    contentDescription = "Change time"
-                                )
-                            })
-                        }
-                    }
-                    Button(onClick = {
-                        summaryViewModel.onEvent(SummaryUiEvent.UpdateHabit)
-                        personalizeSheetVisible.value = false
-                    }) {
-                        Text(
-                            text = "Save"
-                        )
-                    }
-                }
-                if (showTimePicker.value) {
-                    TimePickerDialog(
-                        onCancel = { showTimePicker.value = false },
-                        onConfirm = {
-                            calendar.value = calendar.value.apply {
-                                set(Calendar.HOUR_OF_DAY, timePickerState.hour)
-                                set(Calendar.MINUTE, timePickerState.hour)
-                                isLenient = false
-                            }
-                            showTimePicker.value = false
-                            Log.d("time", calendar.value.time.toString())
-                        }
-                    ) {
-                        TimePicker(state = timePickerState)
-                    }
-                }
-            }
-        }
-        if (habitActiveSheetVisible.value) {
-            SummaryBottomSheet(onDismiss = { habitActiveSheetVisible.value = false }) {
-                Column {
-                    Text(
-                        text = "Habit playing here"
-                    )
-                }
-                Button(onClick = { habitActiveSheetVisible.value = false }) {
-                    Text(text = "Hide sheet")
                 }
             }
         }
@@ -520,10 +375,11 @@ internal fun SummaryRoute(
 internal fun SummaryScreen(
     modifier: Modifier = Modifier,
     usageStatsLoading: Boolean,
+    runningHabitState: RunningHabitState,
     usageStats: List<ApplicationInfoData>,
     habitDataList: List<HabitUiModel>,
     unlockCount: Int,
-    notificationCount: Long,
+    notificationCount: Int,
     onOpenHabit: (Long) -> Unit,
     onOpenActivity: () -> Unit,
     onStart: (Long) -> Unit
@@ -561,6 +417,7 @@ internal fun SummaryScreen(
         habitList(
             habitDataList = habitDataList,
             onOpenHabit = onOpenHabit,
+            runningHabitState = runningHabitState,
             onStart = onStart
         )
     }
@@ -570,7 +427,7 @@ fun LazyListScope.appUsageData(
     isLoading: Boolean,
     appUsageStats: List<ApplicationInfoData>,
     unlockCount: Int,
-    notificationCount: Long,
+    notificationCount: Int,
     context: Context,
     onOpenActivity: () -> Unit
 ) {
@@ -844,6 +701,7 @@ fun getTimeFromMillis(timeInMillis: Long): String {
 
 
 fun LazyListScope.habitList(
+    runningHabitState: RunningHabitState,
     habitDataList: List<HabitUiModel>,
     onOpenHabit: (Long) -> Unit,
     onStart: (Long) -> Unit
@@ -851,6 +709,7 @@ fun LazyListScope.habitList(
     items(items = habitDataList, key = { it.habitId }) { habitUiModel ->
         HabitCard(
             habitUiModel = habitUiModel,
+            isRunning = runningHabitState.habitId == habitUiModel.habitId,
             onOpenHabitDetails = { habitId ->
                 onOpenHabit(habitId)
             }, onStart = onStart
@@ -868,3 +727,5 @@ private fun getCurrentDate(): String {
     val today = LocalDate.now()
     return today.format(DateTimeFormatter.ofPattern("EEEE, d", Locale.getDefault()))
 }
+
+

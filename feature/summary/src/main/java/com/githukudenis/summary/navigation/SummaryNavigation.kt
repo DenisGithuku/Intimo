@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.material3.SnackbarHostState
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.githukudenis.summary.ui.home.SummaryRoute
@@ -15,7 +14,6 @@ import com.githukudenis.summary.ui.home.SummaryRoute
 const val summaryNavigationRoute = "summary"
 
 fun NavGraphBuilder.summaryScreen(
-    snackbarHostState: SnackbarHostState,
     onOpenHabitDetails: (Long) -> Unit,
     onNavigateUp: () -> Unit,
     onOpenActivity: () -> Unit,
@@ -42,7 +40,6 @@ fun NavGraphBuilder.summaryScreen(
         }
     ) {
         SummaryRoute(
-            snackbarHostState = snackbarHostState,
             onOpenHabitDetails = onOpenHabitDetails,
             onNavigateUp = onNavigateUp,
             onOpenActivity = onOpenActivity,

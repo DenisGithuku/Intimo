@@ -1,32 +1,26 @@
 package com.githukudenis.summary.ui.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.data.repository.HabitsRepository
 import com.githukudenis.data.repository.UsageStatsRepository
-import com.githukudenis.data.repository.UserDataRepository
 import com.githukudenis.model.DataUsageStats
-import com.githukudenis.model.HabitData
 import com.githukudenis.summary.ui.UserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
-    private val userDataRepository: UserDataRepository,
-    private val usageStatsRepository: UsageStatsRepository,
-    private val habitsRepository: HabitsRepository,
+    usageStatsRepository: UsageStatsRepository,
+    habitsRepository: HabitsRepository,
 ) : ViewModel() {
 
     private val today = Calendar.getInstance().apply {
@@ -36,17 +30,31 @@ class SummaryViewModel @Inject constructor(
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
-    var habitInEditMode = MutableStateFlow(HabitInEditModeState())
-        private set
-
     private var queryDetails =
         MutableStateFlow(QueryTime(date = LocalDate.now()))
+
+    private val usageStats = combine(
+        usageStatsRepository.queryAndAggregateUsageStats(
+            date = queryDetails.value.date ?: LocalDate.now()
+        ),
+        usageStatsRepository.dayAndNotificationList,
+    ) { usageStats, dayAndNotifications ->
+        Pair(usageStats, dayAndNotifications)
+    }
 
     private var habitUiModelList = combine(
         habitsRepository.selectedHabitList,
         habitsRepository.completedHabitList,
-    ) { active, completed ->
+        habitsRepository.runningHabits
+    ) { active, completed, running ->
         active.map { habitData ->
+
+            val remTime = if (running.isNotEmpty()) {
+                running.find { it.habitId == habitData.habitId }?.remainingTime ?: 0L
+            } else {
+                0L
+            }
+
             HabitUiModel(
                 completed = habitData.habitId in completed.filter { it.day.dayId == today }
                     .flatMap { it.habits }.map { it.habitId },
@@ -55,7 +63,8 @@ class SummaryViewModel @Inject constructor(
                 habitType = habitData.habitType,
                 startTime = habitData.startTime,
                 duration = habitData.duration,
-                durationType = habitData.durationType
+                durationType = habitData.durationType,
+                remainingTime = remTime
             )
         }
     }
@@ -63,25 +72,33 @@ class SummaryViewModel @Inject constructor(
     private var userMessageList = MutableStateFlow(emptyList<UserMessage>())
 
     var uiState: StateFlow<SummaryUiState> = combine(
-        usageStatsRepository.queryAndAggregateUsageStats(
-            date = queryDetails.value.date ?: LocalDate.now()
-        ),
-        userDataRepository.userData,
-        habitInEditMode,
+        usageStats,
         habitUiModelList,
-        userMessageList
-    ) { usageStats, userData, habitInEditMode, habitList, userMessageList ->
+        userMessageList,
+        habitsRepository.runningHabits
+    ) { usageStats, habitList, userMessageList, running ->
         val summaryData = SummaryData(
-            usageStats,
-            usageStats.unlockCount
+            usageStats.first,
+            usageStats.first.unlockCount
         )
+        val runningHabitState = if (running.isNotEmpty()) {
+            running.first().run {
+                RunningHabitState(
+                    habitId, isRunning, remainingTime
+                )
+            }
+        } else {
+            RunningHabitState()
+        }
+
         SummaryUiState(
             summaryData = summaryData,
-            notificationCount = userData.notificationCount,
-            habitDataList = habitList,
+            notificationCount = usageStats.second.filter { it.day.dayId == today }
+                .flatMap { it.notifications }.size,
+            habitDataList = habitList.sortedBy { it.startTime },
             userMessageList = userMessageList,
-            habitInEditModeState = habitInEditMode,
-            isLoading = false
+            isLoading = false,
+            runningHabitState = runningHabitState
         )
     }
         .stateIn(
@@ -96,29 +113,6 @@ class SummaryViewModel @Inject constructor(
 
             }
 
-            is SummaryUiEvent.StartHabit -> {
-                startHabit(event.habitId)
-            }
-
-            SummaryUiEvent.UpdateHabit -> {
-                if (uiState.value.habitInEditModeState.habitModel == null) {
-                    return
-                }
-                uiState.value.habitInEditModeState.habitModel?.let {
-                    updateHabit(
-                        HabitData(
-                            it.habitId,
-                            it.habitIcon,
-                            it.habitType,
-                            it.startTime,
-                            it.duration,
-                            it.durationType
-                        )
-                    )
-                }
-                clearHabitInEditMode()
-            }
-
             is SummaryUiEvent.ShowMessage -> {
                 val messageList = userMessageList.value.toMutableList()
                 messageList.add(event.error)
@@ -126,42 +120,9 @@ class SummaryViewModel @Inject constructor(
             }
 
             is SummaryUiEvent.DismissMessage -> {
-                val messageList = userMessageList.value.filter { it.id == event.messageId }
+                val messageList = userMessageList.value.filterNot { it.id == event.messageId }
                 userMessageList.update { messageList }
             }
-
-            is SummaryUiEvent.EditHabit -> {
-                val habitInEditing =
-                    uiState.value.habitDataList.find { it.habitId == event.habitId } ?: return
-                habitInEditMode.update {
-                    it.copy(habitModel = habitInEditing)
-                }
-            }
-        }
-    }
-
-    private fun startHabit(habitId: Long) {
-        viewModelScope.launch {
-            val habitData = habitsRepository.selectedHabitList.first().find {
-                it.habitId == habitId
-            }
-
-            Log.d("active habit", habitData.toString())
-            habitData?.let {
-                userDataRepository.updateHabitTime(it.duration)
-            }
-        }
-    }
-
-    private fun updateHabit(habitData: HabitData) {
-        viewModelScope.launch {
-            habitsRepository.updateHabit(habitData)
-        }
-    }
-
-    private fun clearHabitInEditMode() {
-        habitInEditMode.update {
-            HabitInEditModeState(null)
         }
     }
 

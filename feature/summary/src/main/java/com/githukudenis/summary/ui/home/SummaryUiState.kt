@@ -2,28 +2,23 @@ package com.githukudenis.summary.ui.home
 
 import com.githukudenis.model.Day
 import com.githukudenis.model.DurationType
-import com.githukudenis.model.HabitData
 import com.githukudenis.model.HabitType
 import com.githukudenis.summary.ui.UserMessage
-
 
 
 data class SummaryUiState(
     val isLoading: Boolean = false,
     val summaryData: SummaryData? = null,
-    val notificationCount: Long = 0L,
+    val notificationCount: Int = 0,
+    val runningHabitState: RunningHabitState = RunningHabitState(),
     val days: List<Day> = emptyList(),
-    val habitInEditModeState: HabitInEditModeState = HabitInEditModeState(),
     val habitDataList: List<HabitUiModel> = emptyList(),
     val userMessageList: List<UserMessage> = emptyList()
 )
 
-data class HabitInEditModeState(
-    val habitModel: HabitUiModel? = null
-)
-
 data class HabitUiModel(
     val completed: Boolean = false,
+    val remainingTime: Long = 0L,
     val habitId: Long = 0,
     val habitIcon: String,
     val habitType: HabitType,
@@ -32,14 +27,9 @@ data class HabitUiModel(
     val durationType: DurationType
 )
 
-fun HabitData.toHabitUiModel(completed: Boolean): HabitUiModel {
-    return HabitUiModel(
-        completed = completed,
-        habitId = habitId,
-        habitIcon = habitIcon,
-        habitType = habitType,
-        startTime = startTime,
-        duration = duration,
-        durationType = durationType
-    )
-}
+data class RunningHabitState(
+    val habitId: Long? = null,
+    val isRunning: Boolean = false,
+    val remainingTime: Long = 0L
+)
+
