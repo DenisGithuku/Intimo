@@ -7,6 +7,8 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -17,7 +19,7 @@ class IntimoNotificationsListener : NotificationListenerService() {
     @Inject
     lateinit var usageStatsRepository: UsageStatsRepository
 
-    val dayId = Calendar.getInstance().apply {
+    private val dayId = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0)
         set(Calendar.MINUTE, 0)
         set(Calendar.SECOND, 0)
@@ -29,15 +31,26 @@ class IntimoNotificationsListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
         sbn?.let { statusBarNotification ->
             scope.launch {
-                usageStatsRepository.insertNotification(
-                    NotificationPosted(
-                        notificationId = statusBarNotification.id,
-                        packageName = statusBarNotification.packageName
+                val notificationsPosted = usageStatsRepository.dayAndNotificationList.first()
+                    .filter { it.day.dayId == dayId }
+                    .flatMap { it.notifications }
+                    .map { it.notificationId }
+
+                if (statusBarNotification.id in notificationsPosted && statusBarNotification.isOngoing) {
+                    return@launch
+                }
+
+                val notifPrimaryIdDeferred = async {
+                    usageStatsRepository.insertNotification(
+                        NotificationPosted(
+                            notificationId = statusBarNotification.id,
+                            packageName = statusBarNotification.packageName
+                        )
                     )
-                )
+                }
                 usageStatsRepository.insertDayAndNotifications(
                     dayId = dayId,
-                    notifId = statusBarNotification.id.toLong()
+                    notifId = notifPrimaryIdDeferred.await()
                 )
             }
         }
