@@ -13,9 +13,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -132,14 +130,12 @@ internal fun ActiveHabitScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         activeHabitUiState.habitData?.let { habit ->
-            Text(
-                text = habit.habitType.nameToString(),
-                style = MaterialTheme.typography.displayMedium
-            )
+
 
             CountDownTimer(
                 modifier = Modifier.size(200.dp),
                 totalTime = totalTime,
+                habitName = habit.habitType.nameToString(),
                 currentTime = currentTime,
                 isTimerRunning = activeHabitUiState.timerState.isRunning,
                 onStartTimer = onStartTimer,

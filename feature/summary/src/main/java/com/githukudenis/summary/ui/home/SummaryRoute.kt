@@ -18,8 +18,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,13 +35,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -86,9 +88,7 @@ import com.githukudenis.summary.ui.components.CardInfo
 import com.githukudenis.summary.ui.components.HabitCard
 import com.githukudenis.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.summary.util.hasUsageAccessPermissions
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.util.Calendar
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -111,14 +111,15 @@ internal fun SummaryRoute(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            CenterAlignedTopAppBar(
+            MediumTopAppBar(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
                 ),
                 title = {
                     Text(
-                        text = getCurrentDate()
+                        text = getTimeStatus(),
+                        style = MaterialTheme.typography.headlineSmall
                     )
                 },
                 actions = {
@@ -339,7 +340,9 @@ internal fun SummaryRoute(
 
                 false -> {
                     SummaryScreen(
-                        modifier = Modifier.padding(paddingValues),
+                        modifier = Modifier
+                            .consumeWindowInsets(paddingValues),
+                        contentPadding = paddingValues,
                         runningHabitState = uiState.runningHabitState,
                         usageStats = uiState.summaryData?.usageStats?.appUsageList ?: emptyList(),
                         unlockCount = uiState.summaryData?.unlockCount ?: 0,
@@ -374,6 +377,7 @@ internal fun SummaryRoute(
 @Composable
 internal fun SummaryScreen(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues,
     usageStatsLoading: Boolean,
     runningHabitState: RunningHabitState,
     usageStats: List<ApplicationInfoData>,
@@ -388,7 +392,8 @@ internal fun SummaryScreen(
     val context = LocalContext.current
 
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
             .fillMaxSize()
     ) {
@@ -396,7 +401,10 @@ internal fun SummaryScreen(
             Text(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 text = stringResource(R.string.screen_time),
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(
+                    alpha = 0.7f
+                )
             )
         }
         appUsageData(
@@ -411,7 +419,10 @@ internal fun SummaryScreen(
             Text(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 text = "Your habits",
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(
+                    alpha = 0.7f
+                )
             )
         }
         habitList(
@@ -470,7 +481,6 @@ fun LazyListScope.appUsageData(
 
                     false -> {
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
@@ -550,6 +560,9 @@ fun LazyListScope.appUsageData(
                                 val textLayoutResult = remember(totalAppTimeText) {
                                     textMeasurer.measure(totalAppTimeText)
                                 }
+                                val labelMedium = MaterialTheme.typography.labelMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                                )
                                 Spacer(
                                     modifier = Modifier
                                         .size(120.dp)
@@ -567,7 +580,6 @@ fun LazyListScope.appUsageData(
                                                         }[i]?.colorSwatch ?: (0xFF3A5BAB).toInt()
 
                                                     drawArc(
-
                                                         color = Color(arcColor),
                                                         startAngle = startAngle * animateArchValue.value,
                                                         sweepAngle = angles[i],
@@ -576,7 +588,9 @@ fun LazyListScope.appUsageData(
                                                     )
                                                     startAngle += angles[i]
                                                 }
+
                                                 drawText(
+                                                    style = labelMedium,
                                                     textMeasurer = textMeasurer,
                                                     text = totalAppTimeText,
                                                     topLeft = Offset(
@@ -637,7 +651,10 @@ fun LazyListScope.appUsageData(
                                                     append("$appName ")
                                                     append(formattedTime)
                                                 },
-                                                style = MaterialTheme.typography.labelSmall
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(
+                                                    alpha = 0.8f
+                                                )
                                             )
                                         }
                                     }
@@ -723,9 +740,21 @@ fun getApplicationLabel(packageName: String, context: Context): String {
     return context.packageManager.getApplicationLabel(appInfo).toString()
 }
 
-private fun getCurrentDate(): String {
-    val today = LocalDate.now()
-    return today.format(DateTimeFormatter.ofPattern("EEEE, d", Locale.getDefault()))
+private fun getTimeStatus(): String {
+    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+    return when {
+        hour < 12 -> {
+            "Good morning"
+        }
+
+        hour <= 15 -> {
+            "Good afternoon"
+        }
+
+        else -> {
+            "Good evening"
+        }
+    }
 }
 
 

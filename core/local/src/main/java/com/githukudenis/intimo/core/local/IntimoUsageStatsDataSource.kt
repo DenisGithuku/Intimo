@@ -229,7 +229,7 @@ class IntimoUsageStatsDataSource @Inject constructor(
         return notificationsDao.getNotificationsByPackage(packageName)
     }
 
-    fun insertNotificationPosted(notificationPosted: NotificationPosted) {
-        notificationsDao.insertNotification(notificationPosted)
+    fun insertNotificationPosted(notificationPosted: NotificationPosted): Long {
+        return notificationsDao.insertNotification(notificationPosted)
     }
 }

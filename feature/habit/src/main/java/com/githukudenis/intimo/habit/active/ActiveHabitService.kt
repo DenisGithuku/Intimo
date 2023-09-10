@@ -25,7 +25,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-const val notificationId: Int = 101
 const val pendingIntentId = 102
 
 @AndroidEntryPoint
@@ -66,7 +65,7 @@ class ActiveHabitService : Service() {
                 when (action) {
                     NotificationAction.START.toString() -> start(notificationData)
                     NotificationAction.STOP.toString() -> {
-                        notificationManager.cancel(notificationId)
+                        notificationManager.cancel(notificationData.habit.habitId.toInt())
                         stop()
                     }
                 }
@@ -83,7 +82,7 @@ class ActiveHabitService : Service() {
     private fun start(notificationData: NotificationData) {
         try {
             val notification = createNotification(notificationData)
-            notificationManager.notify(notificationId, notification.build())
+            notificationManager.notify(notificationData.habit.habitId.toInt(), notification.build())
 
             scope.launch {
                 if (notificationData.habit.remainingTime <= 0L) {
@@ -97,13 +96,13 @@ class ActiveHabitService : Service() {
                         "Remaining time: ${formatCountdownTime(init)}"
                     )
 
-                    notificationManager.notify(notificationId, updatedNotification.build())
+                    notificationManager.notify(notificationData.habit.habitId.toInt(), updatedNotification.build())
                     init -= 1000L
                     delay(1000L)
                 }
 
             }
-            startForeground(notificationId, notification.build())
+            startForeground(notificationData.habit.habitId.toInt(), notification.build())
         } catch (e: Exception) {
             Log.e("habit update error", e.localizedMessage ?: "Could not update habit")
         }

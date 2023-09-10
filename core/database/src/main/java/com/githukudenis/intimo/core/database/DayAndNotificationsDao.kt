@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DayAndNotificationsDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertDayAndNotification(dayAndNotificationsPostedCrossRef: DayAndNotificationsPostedCrossRef)
 
     @Transaction

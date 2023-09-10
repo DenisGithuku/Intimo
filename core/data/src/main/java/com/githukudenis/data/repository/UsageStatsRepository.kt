@@ -15,7 +15,7 @@ interface UsageStatsRepository {
 
     fun getNotificationsByPackage(packageName: String): Flow<List<NotificationPosted>>
 
-    suspend fun insertNotification(notificationPosted: NotificationPosted)
+    suspend fun insertNotification(notificationPosted: NotificationPosted): Long
 
     suspend fun insertDayAndNotifications(dayId: Long, notifId: Long)
 

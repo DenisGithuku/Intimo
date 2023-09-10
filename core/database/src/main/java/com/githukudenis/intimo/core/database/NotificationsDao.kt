@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NotificationsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertNotification(notificationPosted: NotificationPosted)
+    fun insertNotification(notificationPosted: NotificationPosted): Long
 
     @Query("SELECT * FROM NotificationPosted")
     fun getAllNotifications(): Flow<List<NotificationPosted>>

@@ -25,8 +25,8 @@ class IntimoUsageStatsRepository @Inject constructor(
             return intimoUsageStatsDataSource.getNotificationsByPackage(packageName).flowOn(intimoCoroutineDispatcher.ioDispatcher)
     }
 
-    override suspend fun insertNotification(notificationPosted: NotificationPosted) {
-        withContext(intimoCoroutineDispatcher.ioDispatcher) {
+    override suspend fun insertNotification(notificationPosted: NotificationPosted): Long {
+        return withContext(intimoCoroutineDispatcher.ioDispatcher) {
             intimoUsageStatsDataSource.insertNotificationPosted(notificationPosted)
         }
     }
