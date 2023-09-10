@@ -82,8 +82,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.designsystem.theme.LocalTonalElevation
 import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.model.ApplicationInfoData
-import com.githukudenis.summary.ui.MessageType
-import com.githukudenis.summary.ui.UserMessage
+import com.githukudenis.intimo.core.util.MessageType
+import com.githukudenis.intimo.core.util.UserMessage
 import com.githukudenis.summary.ui.components.CardInfo
 import com.githukudenis.summary.ui.components.HabitCard
 import com.githukudenis.summary.util.hasNotificationAccessPermissions

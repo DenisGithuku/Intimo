@@ -1,6 +1,6 @@
 package com.githukudenis.summary.ui.home
 
-import com.githukudenis.summary.ui.UserMessage
+import com.githukudenis.intimo.core.util.UserMessage
 
 sealed interface SummaryUiEvent {
     data object Refresh : SummaryUiEvent

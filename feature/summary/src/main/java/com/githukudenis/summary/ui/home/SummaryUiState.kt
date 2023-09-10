@@ -3,7 +3,7 @@ package com.githukudenis.summary.ui.home
 import com.githukudenis.model.Day
 import com.githukudenis.model.DurationType
 import com.githukudenis.model.HabitType
-import com.githukudenis.summary.ui.UserMessage
+import com.githukudenis.intimo.core.util.UserMessage
 
 
 data class SummaryUiState(
