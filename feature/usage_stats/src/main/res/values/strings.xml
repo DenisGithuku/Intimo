@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="retry_button_text">Retry</string>
+    <string name="limit_icon_text">Limit</string>
+    <string name="cancel_button_text">Cancel</string>
+    <string name="accept_button_text">OK</string>
+    <string name="limit_time_description">This timer will reset at midnight</string>
+    <string name="limit_time_text">Set app timer</string>
+    <string name="info_icon_text">Info\n</string>
+    <string name="system_app_info_text">Timers are not available for important system apps</string>
+    <string name="system_app_info_title">Can\'t set app timer</string>
+    <string name="back_button">Back</string>
+    <string name="back_to_top_button_text">Back to top</string>
+    <string name="scroll_back_up_icon_text">Scroll back up</string>
+</resources>
