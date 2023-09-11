@@ -16,9 +16,9 @@ const val summaryNavigationRoute = "summary"
 fun NavGraphBuilder.summaryScreen(
     onOpenHabitDetails: (Long) -> Unit,
     onNavigateUp: () -> Unit,
-    onOpenActivity: () -> Unit,
     onOpenSettings: () -> Unit,
-    onStartHabit: (Long) -> Unit
+    onStartHabit: (Long) -> Unit,
+    onOpenUsageStats: () -> Unit
 ) {
     composable(
         route = summaryNavigationRoute,
@@ -42,9 +42,9 @@ fun NavGraphBuilder.summaryScreen(
         SummaryRoute(
             onOpenHabitDetails = onOpenHabitDetails,
             onNavigateUp = onNavigateUp,
-            onOpenActivity = onOpenActivity,
             onOpenSettings = onOpenSettings,
-            onStartHabit = onStartHabit
+            onStartHabit = onStartHabit,
+            onOpenUsageStats = onOpenUsageStats
         )
     }
 }

@@ -80,10 +80,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.designsystem.theme.LocalTonalElevation
+import com.githukudenis.intimo.core.util.MessageType
+import com.githukudenis.intimo.core.util.TimeFormatter
+import com.githukudenis.intimo.core.util.UserMessage
 import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.model.ApplicationInfoData
-import com.githukudenis.intimo.core.util.MessageType
-import com.githukudenis.intimo.core.util.UserMessage
 import com.githukudenis.summary.ui.components.CardInfo
 import com.githukudenis.summary.ui.components.HabitCard
 import com.githukudenis.summary.util.hasNotificationAccessPermissions
@@ -97,9 +98,9 @@ internal fun SummaryRoute(
     summaryViewModel: SummaryViewModel = hiltViewModel(),
     onOpenHabitDetails: (Long) -> Unit,
     onNavigateUp: () -> Unit,
-    onOpenActivity: () -> Unit,
     onOpenSettings: () -> Unit,
-    onStartHabit: (Long) -> Unit
+    onStartHabit: (Long) -> Unit,
+    onOpenUsageStats: () -> Unit
 ) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -350,7 +351,6 @@ internal fun SummaryRoute(
                         habitDataList = uiState.habitDataList,
                         onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
                         usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
-                        onOpenActivity = onOpenActivity,
                         onStart = { habitId ->
                             if (uiState.runningHabitState.habitId != null && uiState.runningHabitState.habitId != habitId) {
                                 summaryViewModel.onEvent(
@@ -365,7 +365,8 @@ internal fun SummaryRoute(
                                 return@SummaryScreen
                             }
                             onStartHabit(habitId)
-                        }
+                        },
+                        onOpenUsageStats = onOpenUsageStats
                     )
                 }
             }
@@ -385,8 +386,8 @@ internal fun SummaryScreen(
     unlockCount: Int,
     notificationCount: Int,
     onOpenHabit: (Long) -> Unit,
-    onOpenActivity: () -> Unit,
-    onStart: (Long) -> Unit
+    onStart: (Long) -> Unit,
+    onOpenUsageStats: () -> Unit
 ) {
 
     val context = LocalContext.current
@@ -413,7 +414,7 @@ internal fun SummaryScreen(
             notificationCount = notificationCount,
             context = context,
             isLoading = usageStatsLoading,
-            onOpenActivity = onOpenActivity
+            onOpenUsageStats = onOpenUsageStats
         )
         item {
             Text(
@@ -440,12 +441,12 @@ fun LazyListScope.appUsageData(
     unlockCount: Int,
     notificationCount: Int,
     context: Context,
-    onOpenActivity: () -> Unit
+    onOpenUsageStats: () -> Unit
 ) {
     item {
         Surface(
             modifier = Modifier.padding(horizontal = 12.dp),
-            onClick = onOpenActivity,
+            onClick = onOpenUsageStats,
             shape = MaterialTheme.shapes.large,
             border = BorderStroke(
                 width = 1.dp,
@@ -554,7 +555,7 @@ fun LazyListScope.appUsageData(
                                 val textMeasurer = rememberTextMeasurer()
                                 val totalAppTime =
                                     appUsageStats.sumOf { appUsage -> appUsage.usageDuration }
-                                val totalAppTimeText = getTimeFromMillis(totalAppTime)
+                                val totalAppTimeText = TimeFormatter.getTimeFromMillis(totalAppTime)
 
 
                                 val textLayoutResult = remember(totalAppTimeText) {
@@ -620,7 +621,7 @@ fun LazyListScope.appUsageData(
                                             appUsageStats.find { app -> app.usageDuration.toFloat() == usage }?.usageDuration
                                                 ?: fourMostUsedAppDurations.last().toLong()
 
-                                        val formattedTime = getTimeFromMillis(upTime)
+                                        val formattedTime = TimeFormatter.getTimeFromMillis(upTime)
 
 
                                         /*
@@ -704,19 +705,6 @@ fun LoadingScreen() {
 }
 
 
-fun getTimeFromMillis(timeInMillis: Long): String {
-    return if (timeInMillis / 1000 / 60 / 60 >= 1) {
-        "${timeInMillis / 1000 / 60 / 60}hr ${timeInMillis / 1000 / 60 % 60}min"
-    } else if (timeInMillis / 1000 / 60 >= 1) {
-        "${timeInMillis / 1000 / 60}min"
-    } else if (timeInMillis / 1000 >= 1) {
-        "Less than a minute"
-    } else {
-        "0 min"
-    }
-}
-
-
 fun LazyListScope.habitList(
     runningHabitState: RunningHabitState,
     habitDataList: List<HabitUiModel>,
@@ -743,16 +731,14 @@ fun getApplicationLabel(packageName: String, context: Context): String {
 private fun getTimeStatus(): String {
     val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
     return when {
-        hour < 12 -> {
-            "Good morning"
+        hour > 15 -> {
+            "Good evening"
         }
-
-        hour <= 15 -> {
+        hour >= 12 -> {
             "Good afternoon"
         }
-
         else -> {
-            "Good evening"
+            "Good morning"
         }
     }
 }
