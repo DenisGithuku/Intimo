@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.githukudenis.intimo.settings"
+    namespace = "com.githukudenis.intimo.feature.settings"
     compileSdk = 34
 
     defaultConfig {

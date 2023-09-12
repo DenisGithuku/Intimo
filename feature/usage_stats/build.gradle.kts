@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.githukudenis.intimo.usage_stats"
+    namespace = "com.githukudenis.intimo.feature.usage_stats"
     compileSdk = 34
 
     defaultConfig {

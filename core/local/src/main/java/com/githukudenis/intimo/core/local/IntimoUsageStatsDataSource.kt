@@ -6,18 +6,17 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.hardware.display.DisplayManager
 import android.view.Display
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
 import com.githukudenis.intimo.core.database.DayAndNotificationsDao
 import com.githukudenis.intimo.core.database.NotificationsDao
-import com.githukudenis.model.ApplicationInfoData
-import com.githukudenis.model.DataUsageStats
-import com.githukudenis.model.DayAndNotifications
-import com.githukudenis.model.DayAndNotificationsPostedCrossRef
-import com.githukudenis.model.NotificationPosted
+import com.githukudenis.intimo.core.model.ApplicationInfoData
+import com.githukudenis.intimo.core.model.DataUsageStats
+import com.githukudenis.intimo.core.model.DayAndNotifications
+import com.githukudenis.intimo.core.model.DayAndNotificationsPostedCrossRef
+import com.githukudenis.intimo.core.model.NotificationPosted
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -144,8 +143,10 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 usageList.add(
                     ApplicationInfoData(
                         packageName = packageName,
-                        icon = getApplicationIcon(packageName),
-                        colorSwatch = createPaletteAsync(getApplicationIcon(packageName).toBitmap()),
+                        icon = context.packageManager.getApplicationIcon(packageName),
+                        colorSwatch = createPaletteAsync(
+                            context.packageManager.getApplicationIcon(packageName).toBitmap()
+                        ),
                         usageDuration = totalTime,
                         appLaunchCount = appLaunchCount
                     )
@@ -176,17 +177,6 @@ class IntimoUsageStatsDataSource @Inject constructor(
             usageStats.appUsageList.firstOrNull { app -> app.packageName == packageName }
                 ?: ApplicationInfoData(packageName = packageName)
         }
-    }
-
-    private fun getAppUsagePercentage(
-        individualUsage: Long,
-        totalTime: Long
-    ): Float {
-        return ((individualUsage / totalTime) * 100).toFloat()
-    }
-
-    private fun getApplicationIcon(packageName: String): Drawable {
-        return context.packageManager.getApplicationIcon(packageName)
     }
 
     private fun isNonSystemApp(packageName: String): Boolean {

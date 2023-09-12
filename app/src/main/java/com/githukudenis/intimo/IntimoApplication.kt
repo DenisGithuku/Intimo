@@ -6,7 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioAttributes
 import android.net.Uri
-import com.githukudenis.data.util.DataSyncManager
+import com.githukudenis.intimo.core.data.util.DataSyncManager
 import dagger.hilt.android.HiltAndroidApp
 
 const val notificationChannelId = "intimo_notifications"

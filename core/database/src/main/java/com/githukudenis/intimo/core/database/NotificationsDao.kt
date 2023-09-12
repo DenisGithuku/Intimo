@@ -4,7 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.githukudenis.model.NotificationPosted
+import com.githukudenis.intimo.core.model.NotificationPosted
 import kotlinx.coroutines.flow.Flow
 
 @Dao

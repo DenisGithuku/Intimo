@@ -4,25 +4,25 @@ import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import com.githukudenis.intimo.IntimoAppState
-import com.githukudenis.intimo.feature.activity.navigation.activityScreen
-import com.githukudenis.intimo.habit.navigation.activeHabitRoute
-import com.githukudenis.intimo.habit.navigation.activeHabitScreen
-import com.githukudenis.intimo.habit.navigation.detailScreen
-import com.githukudenis.intimo.habit.navigation.habitDetailRoute
-import com.githukudenis.intimo.settings.navigation.settingsRoute
-import com.githukudenis.intimo.settings.navigation.settingsScreen
+import com.githukudenis.intimo.feature.habit.navigation.activeHabitRoute
+import com.githukudenis.intimo.feature.habit.navigation.activeHabitScreen
+import com.githukudenis.intimo.feature.habit.navigation.detailScreen
+import com.githukudenis.intimo.feature.habit.navigation.habitDetailRoute
+import com.githukudenis.intimo.feature.settings.navigation.settingsRoute
+import com.githukudenis.intimo.feature.settings.navigation.settingsScreen
 import com.githukudenis.intimo.splash_screen.splashScreen
 import com.githukudenis.intimo.splash_screen.splashScreenRoute
-import com.githukudenis.onboarding.navigation.onBoardingNavigationRoute
-import com.githukudenis.onboarding.navigation.onBoardingScreen
-import com.githukudenis.summary.navigation.summaryNavigationRoute
-import com.githukudenis.summary.navigation.summaryScreen
+import com.githukudenis.intimo.feature.usage_stats.usageStatsRoute
+import com.githukudenis.intimo.feature.usage_stats.usageStatsScreen
+import com.githukudenis.intimo.feature.onboarding.navigation.onBoardingNavigationRoute
+import com.githukudenis.intimo.feature.onboarding.navigation.onBoardingScreen
+import com.githukudenis.intimo.feature.summary.navigation.summaryNavigationRoute
+import com.githukudenis.intimo.feature.summary.navigation.summaryScreen
 
 @Composable
 fun IntimoNavHost(
     appState: IntimoAppState,
     startDestination: String,
-    onOpenActivity: () -> Unit,
     onPopupFailed: () -> Unit,
 ) {
 
@@ -37,17 +37,20 @@ fun IntimoNavHost(
         )
         summaryScreen(
             onOpenHabitDetails = { habitId ->
-                appState.navigate("${habitDetailRoute}/$habitId")
+                appState.navigate("$habitDetailRoute/$habitId")
             }, onNavigateUp = {
                 if (!appState.navController.popBackStack()) {
                     onPopupFailed()
                 }
-            }, onOpenActivity = onOpenActivity,
+            },
             onOpenSettings = {
                 appState.navigate(settingsRoute)
             },
             onStartHabit = { habitId ->
-                appState.navigate("${activeHabitRoute}/$habitId")
+                appState.navigate("$activeHabitRoute/$habitId")
+            },
+            onOpenUsageStats = {
+                appState.navigate(usageStatsRoute)
             }
         )
 
@@ -68,8 +71,8 @@ fun IntimoNavHost(
             }
         })
 
-        settingsScreen()
+        usageStatsScreen( onNavigateUp = { appState.navController.navigateUp() } )
 
-        activityScreen()
+        settingsScreen()
     }
 }

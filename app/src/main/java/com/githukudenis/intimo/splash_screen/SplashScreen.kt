@@ -5,9 +5,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.githukudenis.designsystem.theme.QwitcherGrypen
+import com.githukudenis.intimo.core.designsystem.theme.QwitcherGrypen
 import com.githukudenis.intimo.R
 import kotlinx.coroutines.delay
 
@@ -48,7 +50,7 @@ fun SplashScreenRoute(
     onTimeout: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(color=MaterialTheme.colorScheme.background),
     ) {
 
         val scale = remember {

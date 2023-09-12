@@ -1,13 +1,13 @@
 package com.githukudenis.intimo.core.database
 
-import com.githukudenis.model.Day
-import com.githukudenis.model.DayAndHabitCrossRef
-import com.githukudenis.model.DayAndHabits
-import com.githukudenis.model.DefaultHabit
-import com.githukudenis.model.DurationType
-import com.githukudenis.model.HabitData
-import com.githukudenis.model.HabitType
-import com.githukudenis.model.RunningHabit
+import com.githukudenis.intimo.core.model.Day
+import com.githukudenis.intimo.core.model.DayAndHabitCrossRef
+import com.githukudenis.intimo.core.model.DayAndHabits
+import com.githukudenis.intimo.core.model.DefaultHabit
+import com.githukudenis.intimo.core.model.DurationType
+import com.githukudenis.intimo.core.model.HabitData
+import com.githukudenis.intimo.core.model.HabitType
+import com.githukudenis.intimo.core.model.RunningHabit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.util.Calendar

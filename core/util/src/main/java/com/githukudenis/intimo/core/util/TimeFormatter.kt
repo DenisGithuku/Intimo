@@ -14,5 +14,15 @@ class TimeFormatter {
                 "0 min"
             }
         }
+
+        fun getHoursAndMinutes(timeInMillis: Long): String {
+            return if (timeInMillis / 1000 / 60 / 60 > 0 && timeInMillis / 1000 / 60 % 60 > 0) {
+                "${timeInMillis / 1000 / 60 / 60}h ${timeInMillis / 1000 / 60 % 60}m"
+            } else if (timeInMillis / 1000 / 60 / 60 > 0 && timeInMillis / 1000 / 60 % 60 <= 0) {
+                "${timeInMillis / 1000 / 60 / 60}h"
+            } else {
+                "${timeInMillis / 1000 / 60}m"
+            }
+        }
     }
 }

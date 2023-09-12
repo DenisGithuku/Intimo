@@ -1,4 +1,4 @@
-package com.githukudenis.model
+package com.githukudenis.intimo.core.model
 
 import android.graphics.drawable.Drawable
 

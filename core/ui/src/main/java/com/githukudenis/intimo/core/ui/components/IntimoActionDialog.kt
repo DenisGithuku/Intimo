@@ -67,7 +67,7 @@ fun IntimoActionDialog(
                     modifier = Modifier
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     if (icon != null) {
                         icon()

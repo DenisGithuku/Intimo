@@ -1,8 +1,8 @@
 package com.githukudenis.intimo.core.database
 
 import androidx.room.TypeConverter
-import com.githukudenis.model.DurationType
-import com.githukudenis.model.HabitType
+import com.githukudenis.intimo.core.model.DurationType
+import com.githukudenis.intimo.core.model.HabitType
 
 class HabitTypeConverter {
     @TypeConverter

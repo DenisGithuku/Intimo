@@ -5,8 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.githukudenis.model.DayAndNotifications
-import com.githukudenis.model.DayAndNotificationsPostedCrossRef
+import com.githukudenis.intimo.core.model.DayAndNotifications
+import com.githukudenis.intimo.core.model.DayAndNotificationsPostedCrossRef
 import kotlinx.coroutines.flow.Flow
 
 @Dao

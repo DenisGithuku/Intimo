@@ -1,11 +1,11 @@
-package com.githukudenis.data.repository
+package com.githukudenis.intimo.core.data.repository
 
-import com.githukudenis.data.di.IntimoCoroutineDispatcher
+import com.githukudenis.intimo.core.data.di.IntimoCoroutineDispatcher
 import com.githukudenis.intimo.core.local.IntimoUsageStatsDataSource
-import com.githukudenis.model.ApplicationInfoData
-import com.githukudenis.model.DataUsageStats
-import com.githukudenis.model.DayAndNotifications
-import com.githukudenis.model.NotificationPosted
+import com.githukudenis.intimo.core.model.ApplicationInfoData
+import com.githukudenis.intimo.core.model.DataUsageStats
+import com.githukudenis.intimo.core.model.DayAndNotifications
+import com.githukudenis.intimo.core.model.NotificationPosted
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext

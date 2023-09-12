@@ -12,4 +12,6 @@
     <string name="back_button">Back</string>
     <string name="back_to_top_button_text">Back to top</string>
     <string name="scroll_back_up_icon_text">Scroll back up</string>
+    <string name="increase_time_icon_text">Increase</string>
+    <string name="decrease_time_icon_text">Decrease</string>
 </resources>

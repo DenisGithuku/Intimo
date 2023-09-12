@@ -6,8 +6,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.githukudenis.model.HabitData
-import com.githukudenis.model.RunningHabit
+import com.githukudenis.intimo.core.model.HabitData
+import com.githukudenis.intimo.core.model.RunningHabit
 import kotlinx.coroutines.flow.Flow
 
 @Dao
