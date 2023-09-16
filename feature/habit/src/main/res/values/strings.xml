@@ -7,4 +7,8 @@
     <string name="navigate_up">Up</string>
     <string name="habit_notification_description">Feel accomplished</string>
     <string name="habit_status_button_icon">Habit status button icon</string>
+    <string name="stop_habit">Stop</string>
+    <string name="restart_habit">Restart</string>
+    <string name="habit_remaining_time_text">Remaining</string>
+    <string name="habit_completed">Habit completed. Onwards and onwards 🎊</string>
 </resources>

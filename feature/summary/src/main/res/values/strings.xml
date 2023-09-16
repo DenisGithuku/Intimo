@@ -16,5 +16,6 @@
     <string name="runtime_permissions_required_text">Intimo requires permissions to ensure best functionality of the app.</string>
     <string name="permission_request_dialog_title">Permission Request</string>
     <string name="permission_request_dialog_icon">Info\n</string>
+    <string name="multiple_habit_running_error_text">Only one habit can be run at a given time</string>
 
 </resources>

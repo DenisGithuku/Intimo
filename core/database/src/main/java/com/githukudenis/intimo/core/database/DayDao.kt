@@ -3,7 +3,7 @@ package com.githukudenis.intimo.core.database
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
-import com.githukudenis.model.Day
+import com.githukudenis.intimo.core.model.Day
 
 @Dao
 interface DayDao {

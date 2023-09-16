@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cancel_button_text">Cancel</string>
+    <string name="accept_button_text">Ok</string>
+</resources>

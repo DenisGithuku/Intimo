@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.githukudenis.intimo.habit"
+    namespace = "com.githukudenis.intimo.feature.habit"
     compileSdk = 34
 
     defaultConfig {
@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:model"))
     implementation(project(":core:ui"))
+    implementation(project(":core:util"))
     implementation(project(":core:designsystem"))
 
     implementation(libs.core.ktx)

@@ -20,12 +20,13 @@
             <option value="$PROJECT_DIR$/core/local" />
             <option value="$PROJECT_DIR$/core/model" />
             <option value="$PROJECT_DIR$/core/ui" />
+            <option value="$PROJECT_DIR$/core/util" />
             <option value="$PROJECT_DIR$/feature" />
-            <option value="$PROJECT_DIR$/feature/activity" />
             <option value="$PROJECT_DIR$/feature/habit" />
             <option value="$PROJECT_DIR$/feature/onboarding" />
             <option value="$PROJECT_DIR$/feature/settings" />
             <option value="$PROJECT_DIR$/feature/summary" />
+            <option value="$PROJECT_DIR$/feature/usage_stats" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />

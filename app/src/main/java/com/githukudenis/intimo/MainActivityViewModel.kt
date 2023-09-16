@@ -1,10 +1,9 @@
 package com.githukudenis.intimo
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.githukudenis.data.repository.UserDataRepository
-import com.githukudenis.model.UserData
+import com.githukudenis.intimo.core.data.repository.UserDataRepository
+import com.githukudenis.intimo.core.model.UserData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainActivityViewModel @Inject constructor(
-    private val userDataRepository: UserDataRepository
+    userDataRepository: UserDataRepository
 ) : ViewModel() {
 
     val uiState: StateFlow<MainActivityUiState> = userDataRepository.userData.map {

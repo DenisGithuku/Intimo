@@ -5,8 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
-import com.githukudenis.model.DayAndHabitCrossRef
-import com.githukudenis.model.DayAndHabits
+import com.githukudenis.intimo.core.model.DayAndHabitCrossRef
+import com.githukudenis.intimo.core.model.DayAndHabits
 import kotlinx.coroutines.flow.Flow
 
 @Dao

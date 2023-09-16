@@ -69,7 +69,7 @@ dependencies {
     implementation(project(":feature:summary"))
     implementation(project(":feature:habit"))
     implementation(project(":feature:settings"))
-    implementation(project(":feature:activity"))
+    implementation(project(":feature:usage_stats"))
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)

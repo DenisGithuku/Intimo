@@ -2,11 +2,15 @@ package com.githukudenis.intimo.core.database.di
 
 import android.content.Context
 import androidx.room.Room
+import com.githukudenis.intimo.core.database.AppsInFocusModeDao
+import com.githukudenis.intimo.core.database.AppsInFocusModeDatasource
 import com.githukudenis.intimo.core.database.DayAndHabitsDao
+import com.githukudenis.intimo.core.database.DayAndNotificationsDao
 import com.githukudenis.intimo.core.database.DayDao
 import com.githukudenis.intimo.core.database.HabitDao
 import com.githukudenis.intimo.core.database.IntimoDatabase
 import com.githukudenis.intimo.core.database.IntimoHabitsDataSource
+import com.githukudenis.intimo.core.database.NotificationsDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -52,6 +56,24 @@ object DatabaseModule {
 
     @Provides
     @Singleton
+    fun provideNotificationsDao(
+        intimoDatabase: IntimoDatabase
+    ): NotificationsDao = intimoDatabase.notificationsDao()
+
+    @Provides
+    @Singleton
+    fun provideDayAndNotificationsDao(
+        intimoDatabase: IntimoDatabase
+    ): DayAndNotificationsDao = intimoDatabase.dayAndNotificationsDao()
+
+    @Provides
+    @Singleton
+    fun provideAppsInFocusModeDao(
+        intimoDatabase: IntimoDatabase
+    ): AppsInFocusModeDao = intimoDatabase.appsInFocusModeDao()
+
+    @Provides
+    @Singleton
     fun provideHabitsDataSource(
         habitDao: HabitDao,
         dayDao: DayDao,
@@ -62,5 +84,13 @@ object DatabaseModule {
             dayDao = dayDao,
             dayAndHabitsDao = dayAndHabitsDao,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideAppsInFocusModeDatasource(
+        appsInFocusModeDao: AppsInFocusModeDao
+    ): AppsInFocusModeDatasource {
+        return AppsInFocusModeDatasource(appsInFocusModeDao)
     }
 }

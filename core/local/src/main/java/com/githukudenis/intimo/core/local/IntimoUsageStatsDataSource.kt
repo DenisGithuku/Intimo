@@ -6,15 +6,21 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.hardware.display.DisplayManager
 import android.view.Display
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
-import com.githukudenis.model.ApplicationInfoData
-import com.githukudenis.model.DataUsageStats
+import com.githukudenis.intimo.core.database.DayAndNotificationsDao
+import com.githukudenis.intimo.core.database.NotificationsDao
+import com.githukudenis.intimo.core.model.ApplicationInfoData
+import com.githukudenis.intimo.core.model.DataUsageStats
+import com.githukudenis.intimo.core.model.DayAndNotifications
+import com.githukudenis.intimo.core.model.DayAndNotificationsPostedCrossRef
+import com.githukudenis.intimo.core.model.NotificationPosted
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import java.time.Instant
 import java.time.LocalDate
@@ -26,8 +32,15 @@ import kotlin.coroutines.suspendCoroutine
 
 class IntimoUsageStatsDataSource @Inject constructor(
     private val usageStatsManager: UsageStatsManager,
+    private val dayAndNotificationsDao: DayAndNotificationsDao,
+    private val notificationsDao: NotificationsDao,
     private val context: Context
 ) {
+    val allNotificationsPosted: Flow<List<NotificationPosted>>
+        get() = notificationsDao.getAllNotifications()
+    val notificationPostedData: Flow<List<DayAndNotifications>>
+        get() = dayAndNotificationsDao.getDayAndNotifications()
+
     fun queryAndAggregateUsageStats(
         date: LocalDate = LocalDate.now()
     ): Flow<DataUsageStats> {
@@ -130,8 +143,10 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 usageList.add(
                     ApplicationInfoData(
                         packageName = packageName,
-                        icon = getApplicationIcon(packageName),
-                        colorSwatch = createPaletteAsync(getApplicationIcon(packageName).toBitmap()),
+                        icon = context.packageManager.getApplicationIcon(packageName),
+                        colorSwatch = createPaletteAsync(
+                            context.packageManager.getApplicationIcon(packageName).toBitmap()
+                        ),
                         usageDuration = totalTime,
                         appLaunchCount = appLaunchCount
                     )
@@ -149,7 +164,7 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 .toMutableList()
 
             emit(DataUsageStats(appUsageList = usageList, unlockCount = unlockCount))
-        }
+        }.flowOn(Dispatchers.IO)
     }
 
     fun getIndividualAppUsage(
@@ -162,17 +177,6 @@ class IntimoUsageStatsDataSource @Inject constructor(
             usageStats.appUsageList.firstOrNull { app -> app.packageName == packageName }
                 ?: ApplicationInfoData(packageName = packageName)
         }
-    }
-
-    private fun getAppUsagePercentage(
-        individualUsage: Long,
-        totalTime: Long
-    ): Float {
-        return ((individualUsage / totalTime) * 100).toFloat()
-    }
-
-    private fun getApplicationIcon(packageName: String): Drawable {
-        return context.packageManager.getApplicationIcon(packageName)
     }
 
     private fun isNonSystemApp(packageName: String): Boolean {
@@ -200,5 +204,22 @@ class IntimoUsageStatsDataSource @Inject constructor(
                 continuation.resume(swatch)
             }
         }
+    }
+
+    fun insertDayAndNotifications(dayId: Long, notifId: Long) {
+        dayAndNotificationsDao.insertDayAndNotification(
+            DayAndNotificationsPostedCrossRef(
+                dayId = dayId,
+                notifPrimaryId = notifId
+            )
+        )
+    }
+
+    fun getNotificationsByPackage(packageName: String): Flow<List<NotificationPosted>> {
+        return notificationsDao.getNotificationsByPackage(packageName)
+    }
+
+    fun insertNotificationPosted(notificationPosted: NotificationPosted): Long {
+        return notificationsDao.insertNotification(notificationPosted)
     }
 }
