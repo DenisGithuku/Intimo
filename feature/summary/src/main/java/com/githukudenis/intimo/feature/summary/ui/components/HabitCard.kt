@@ -23,7 +23,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
@@ -149,7 +148,9 @@ fun HabitCard(
 
 
                     Button(
-                        enabled = !habitUiModel.completed.second && startTime.get(Calendar.DAY_OF_YEAR) >= now.get(Calendar.DAY_OF_YEAR),
+                        enabled = !habitUiModel.completed.second && startTime.get(Calendar.DAY_OF_YEAR) >= now.get(
+                            Calendar.DAY_OF_YEAR
+                        ),
                         onClick = { onStart(habitUiModel.habitId) }) {
                         Text(
                             text = if (isRunning) "See progress" else "Start",
