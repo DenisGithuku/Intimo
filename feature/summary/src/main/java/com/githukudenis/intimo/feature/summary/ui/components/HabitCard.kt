@@ -73,7 +73,7 @@ fun HabitCard(
                     color = if (habitUiModel.completed.second) {
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                     } else {
-                        Color.Black.copy(
+                        MaterialTheme.colorScheme.onBackground.copy(
                             alpha = 0.1f
                         )
                     }
@@ -143,7 +143,7 @@ fun HabitCard(
                             )
                         },
                         style = MaterialTheme.typography.labelSmall.copy(
-                            color = Color.Black.copy(alpha = 0.6f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     )
 

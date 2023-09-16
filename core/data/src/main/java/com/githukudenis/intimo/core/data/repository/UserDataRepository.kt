@@ -15,4 +15,7 @@ interface UserDataRepository {
     Set whether user has completed onboarding
      */
     suspend fun setShouldHideOnBoarding(shouldHideOnBoarding: Boolean)
+    suspend fun setShouldAllowDeviceNotifications(shouldAllowDeviceNotifications: Boolean)
+    suspend fun setShouldAllowHabitNotifications(shouldAllowHabitNotifications: Boolean)
+    suspend fun setDarkTheme(systemInDarkTheme: Boolean)
 }

@@ -149,6 +149,7 @@ private fun HabitDetailScreen(
         uiState.habitUiModel?.let {
             HabitContents(habitDetail = it, onUpdate = onUpdate)
         }
+
     }
 }
 

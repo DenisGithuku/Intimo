@@ -15,6 +15,9 @@ class IntimoPrefsDataSource @Inject constructor(
     val userData = userPreferences.data.map { prefs ->
         UserData(
             shouldHideOnBoarding = prefs[PreferenceKeys.shouldHideOnBoarding] ?: false,
+            deviceUsageNotificationsAllowed = prefs[PreferenceKeys.deviceUsageNotificationsAllowed] ?: false,
+            habitNotificationsAllowed = prefs[PreferenceKeys.habitNotificationsAllowed] ?: false,
+            systemInDarkTheme = prefs[PreferenceKeys.systemInDarkTheme] ?: false
         )
     }
 
@@ -23,8 +26,30 @@ class IntimoPrefsDataSource @Inject constructor(
             preferences[PreferenceKeys.shouldHideOnBoarding] = shouldHideOnBoarding
         }
     }
+
+    suspend fun setShouldAllowDeviceNotifications(shouldAllowDeviceNotifications: Boolean) {
+        userPreferences.edit { preferences ->
+            preferences[PreferenceKeys.deviceUsageNotificationsAllowed] = shouldAllowDeviceNotifications
+        }
+    }
+
+    suspend fun setShouldAllowHabitNotifications(shouldAllowHabitNotifications: Boolean) {
+        userPreferences.edit { preferences ->
+            preferences[PreferenceKeys.habitNotificationsAllowed] = shouldAllowHabitNotifications
+        }
+    }
+
+    suspend fun setDarkTheme(systemInDarkTheme: Boolean) {
+        userPreferences.edit { preferences ->
+            preferences[PreferenceKeys.systemInDarkTheme] = systemInDarkTheme
+
+        }
+    }
 }
 
 object PreferenceKeys {
     val shouldHideOnBoarding = booleanPreferencesKey("should_hide_onboarding")
+    val deviceUsageNotificationsAllowed = booleanPreferencesKey("device_notifications_allowed")
+    val habitNotificationsAllowed = booleanPreferencesKey("habit_notifications_allowed")
+    val systemInDarkTheme = booleanPreferencesKey("system_in_dark_theme")
 }

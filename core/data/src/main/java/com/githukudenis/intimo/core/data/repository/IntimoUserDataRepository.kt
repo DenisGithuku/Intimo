@@ -14,4 +14,16 @@ class IntimoUserDataRepository @Inject constructor(
     override suspend fun setShouldHideOnBoarding(shouldHideOnBoarding: Boolean) {
         intimoPrefsDataSource.setShouldHideOnBoarding(shouldHideOnBoarding)
     }
+
+    override suspend fun setShouldAllowDeviceNotifications(shouldAllowDeviceNotifications: Boolean) {
+        intimoPrefsDataSource.setShouldAllowDeviceNotifications(shouldAllowDeviceNotifications)
+    }
+
+    override suspend fun setShouldAllowHabitNotifications(shouldAllowHabitNotifications: Boolean) {
+        intimoPrefsDataSource.setShouldAllowHabitNotifications(shouldAllowHabitNotifications)
+    }
+
+    override suspend fun setDarkTheme(systemInDarkTheme: Boolean) {
+        intimoPrefsDataSource.setDarkTheme(systemInDarkTheme)
+    }
 }

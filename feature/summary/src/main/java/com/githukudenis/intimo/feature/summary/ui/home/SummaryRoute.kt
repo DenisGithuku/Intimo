@@ -480,7 +480,7 @@ fun LazyListScope.appUsageData(
             shape = MaterialTheme.shapes.large,
             border = BorderStroke(
                 width = 1.dp,
-                color = Color.Black.copy(
+                color = MaterialTheme.colorScheme.onBackground.copy(
                     alpha = 0.1f
                 )
             )
@@ -693,8 +693,8 @@ fun LazyListScope.appUsageData(
                             }
                             Divider(
                                 modifier = Modifier
-                                    .height(1.dp)
-                                    .background(color = Color.Black.copy(alpha = 0.1f))
+                                    .height(1.dp),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha =0.1f)
                             )
 
                             Row(

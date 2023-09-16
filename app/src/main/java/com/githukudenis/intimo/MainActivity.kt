@@ -42,10 +42,19 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
-            IntimoTheme {
+            IntimoTheme(
+                useDarkTheme = systemInDarkTheme(uiState = uiState)
+            ) {
+                WindowCompat.getInsetsController(
+                    window,
+                    window.decorView
+                ).isAppearanceLightStatusBars =
+                    systemInDarkTheme(uiState)
+
                 IntimoApp(
                     shouldHideOnBoarding = shouldHideOnBoarding(uiState),
-                    onPopupFailed = { finish() })
+                    onPopupFailed = { finish() },
+                )
             }
         }
     }
@@ -54,6 +63,13 @@ class MainActivity : ComponentActivity() {
         return when (uiState) {
             MainActivityUiState.Loading -> false
             is MainActivityUiState.Success -> uiState.userData.shouldHideOnBoarding
+        }
+    }
+
+    private fun systemInDarkTheme(uiState: MainActivityUiState): Boolean {
+        return when (uiState) {
+            MainActivityUiState.Loading -> false
+            is MainActivityUiState.Success -> uiState.userData.systemInDarkTheme
         }
     }
 }
