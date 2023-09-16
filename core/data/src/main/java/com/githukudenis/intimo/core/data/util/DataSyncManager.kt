@@ -6,12 +6,15 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.githukudenis.intimo.core.data.di.IntimoCoroutineDispatcher
+import com.githukudenis.intimo.core.data.repository.AppsUsageRepository
 import com.githukudenis.intimo.core.data.repository.HabitsRepository
 import com.githukudenis.intimo.core.model.Day
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -25,7 +28,10 @@ class DataSyncManager : BroadcastReceiver() {
     @Inject
     lateinit var habitsRepository: HabitsRepository
 
-    private val scope = CoroutineScope(Job() + Dispatchers.IO)
+    @Inject
+    lateinit var appsUsageRepository: AppsUsageRepository
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val dayId = Calendar.getInstance().apply {
         set(Calendar.HOUR_OF_DAY, 0)
@@ -36,6 +42,7 @@ class DataSyncManager : BroadcastReceiver() {
 
     override fun onReceive(p0: Context?, p1: Intent?) {
         refreshHabitData()
+        resetAppUsageLimit()
     }
 
     private fun refreshHabitData() {
@@ -43,6 +50,15 @@ class DataSyncManager : BroadcastReceiver() {
             habitsRepository.insertDay(
                 Day(dayId = dayId)
             )
+        }
+    }
+
+    private fun resetAppUsageLimit() {
+        scope.launch {
+            val apps = appsUsageRepository.appsInFocusMode.first()
+            apps.forEach {
+                appsUsageRepository.updateAppInFocusMode(it.copy(limitReached = false))
+            }
         }
     }
 
@@ -55,16 +71,5 @@ class DataSyncManager : BroadcastReceiver() {
             AlarmManager.INTERVAL_DAY,
             PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_MUTABLE)
         )
-    }
-}
-
-class BootReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context?, intent: Intent?) {
-        if (intent?.action == Intent.ACTION_BOOT_COMPLETED) {
-            val dataSyncManager = DataSyncManager()
-            if (context != null) {
-                dataSyncManager.setupRefreshAlarm(context)
-            }
-        }
     }
 }

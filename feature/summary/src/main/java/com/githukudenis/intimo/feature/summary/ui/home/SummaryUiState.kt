@@ -3,6 +3,7 @@ package com.githukudenis.intimo.feature.summary.ui.home
 import com.githukudenis.intimo.core.model.Day
 import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitType
+import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
 
 
@@ -13,11 +14,12 @@ data class SummaryUiState(
     val runningHabitState: RunningHabitState = RunningHabitState(),
     val days: List<Day> = emptyList(),
     val habitDataList: List<HabitUiModel> = emptyList(),
-    val userMessageList: List<UserMessage> = emptyList()
+    val userMessageList: List<UserMessage> = emptyList(),
+    val habitHistoryStateList: Map<Date, Float> = emptyMap()
 )
 
 data class HabitUiModel(
-    val completed: Boolean = false,
+    val completed: Pair<Long, Boolean> = Pair(0L, false),
     val remainingTime: Long = 0L,
     val habitId: Long = 0,
     val habitIcon: String,

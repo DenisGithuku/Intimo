@@ -84,43 +84,43 @@ fun UsageStatsCard(
                 )
             }
         }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Divider(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-                modifier = Modifier
-                    .fillMaxHeight(0.8f)
-                    .width(1.dp)
-            )
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                IconButton(onClick = {
-                    onOpenLimitDialog(isSystemApp(applicationInfoData.packageName, context))
-                }) {
-                    Icon(
-                        imageVector = if (isSystemApp(applicationInfoData.packageName, context)) {
-                            Icons.Outlined.Info
-                        } else if (usageLimit > 0) {
-                            Icons.TwoTone.HourglassBottom
-                        } else {
-                            Icons.Default.HourglassEmpty
-                        },
-                        modifier = Modifier.size(24.dp),
-                        contentDescription = stringResource(id = R.string.limit_icon_text),
-                        tint = if (usageLimit > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
-                    )
-                }
-                if (usageLimit > 0) {
-                    Text(
-                        text = TimeFormatter.getHoursAndMinutes(usageLimit),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        }
+//        Row(
+//            horizontalArrangement = Arrangement.spacedBy(8.dp),
+//            verticalAlignment = Alignment.CenterVertically
+//        ) {
+//            Divider(
+//                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+//                modifier = Modifier
+//                    .fillMaxHeight(0.8f)
+//                    .width(1.dp)
+//            )
+//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                IconButton(onClick = {
+//                    onOpenLimitDialog(isSystemApp(applicationInfoData.packageName, context))
+//                }) {
+//                    Icon(
+//                        imageVector = if (isSystemApp(applicationInfoData.packageName, context)) {
+//                            Icons.Outlined.Info
+//                        } else if (usageLimit > 0) {
+//                            Icons.TwoTone.HourglassBottom
+//                        } else {
+//                            Icons.Default.HourglassEmpty
+//                        },
+//                        modifier = Modifier.size(24.dp),
+//                        contentDescription = stringResource(id = R.string.limit_icon_text),
+//                        tint = if (usageLimit > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+//                    )
+//                }
+//                if (usageLimit > 0) {
+//                    Text(
+//                        text = TimeFormatter.getHoursAndMinutes(usageLimit),
+//                        style = MaterialTheme.typography.labelSmall,
+//                        color = MaterialTheme.colorScheme.primary,
+//                        textAlign = TextAlign.Center
+//                    )
+//                }
+//            }
+//        }
     }
 }
 

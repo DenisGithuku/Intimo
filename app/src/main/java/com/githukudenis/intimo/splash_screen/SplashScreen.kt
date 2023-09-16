@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -50,7 +51,9 @@ fun SplashScreenRoute(
     onTimeout: () -> Unit
 ) {
     Box(
-        modifier = Modifier.fillMaxSize().background(color=MaterialTheme.colorScheme.background),
+        modifier = Modifier
+            .navigationBarsPadding()
+            .fillMaxSize(),
     ) {
 
         val scale = remember {

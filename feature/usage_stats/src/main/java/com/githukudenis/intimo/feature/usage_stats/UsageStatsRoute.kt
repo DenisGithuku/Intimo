@@ -1,6 +1,8 @@
 package com.githukudenis.intimo.feature.usage_stats
 
+import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -56,6 +58,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -75,6 +78,83 @@ fun UsageStatsRoute(
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+//    val lifecycle = LocalLifecycleOwner.current.lifecycle
+//
+//    var shouldShowOverlayPermissionsDialog by rememberSaveable {
+//        mutableStateOf(false)
+//    }
+
+//    val overlayPermissionsLauncher = rememberLauncherForActivityResult(
+//        contract = ActivityResultContracts.StartActivityForResult(),
+//        onResult = {
+//            if (!context.hasWindowOverlayPermission()) {
+//                onNavigateUp()
+//            }
+//        })
+
+//    DisposableEffect(lifecycle, shouldShowOverlayPermissionsDialog) {
+//        val observer = LifecycleEventObserver { _, event ->
+//            when (event) {
+//                Lifecycle.Event.ON_START -> {
+//                    shouldShowOverlayPermissionsDialog = !context.hasWindowOverlayPermission()
+//                }
+//
+//                else -> Unit
+//            }
+//        }
+//        lifecycle.addObserver(observer)
+//
+//        onDispose {
+//            lifecycle.removeObserver(observer)
+//        }
+//    }
+
+//    if (shouldShowOverlayPermissionsDialog) {
+//        AlertDialog(onDismissRequest = {
+//            shouldShowOverlayPermissionsDialog = false
+//            onNavigateUp()
+//        },
+//            title = {
+//                Text(
+//                    text = stringResource(id = R.string.overlay_permission_dialog_title),
+//                )
+//            },
+//            text = {
+//                Text(
+//                    text = stringResource(id = R.string.overlay_permission_dialog_text),
+//                )
+//            },
+//            dismissButton = {
+//                TextButton(onClick = {
+//                    if (!context.hasWindowOverlayPermission()) {
+//                        onNavigateUp()
+//                    }
+//                }) {
+//                    Text(
+//                        text = stringResource(id = R.string.dialog_dismiss_button)
+//                    )
+//                }
+//            },
+//            confirmButton = {
+//                TextButton(onClick = {
+//                    Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).run {
+//                        data = Uri.parse("package:" + context.packageName)
+//                        overlayPermissionsLauncher.launch(this)
+//                    }
+//                }) {
+//                    Text(
+//                        text = stringResource(id = R.string.dialog_accept_button)
+//                    )
+//                }
+//            }
+//        )
+//    }
+
+    val activityManager: ActivityManager by lazy {
+        context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    }
 
     UsageStatsScreen(
         usageStatsUiState = uiState,
@@ -86,6 +166,17 @@ fun UsageStatsRoute(
             viewModel.onEvent(
                 UsageStatsUiEvent.LimitApp(packageName, limitDuration)
             )
+            context.startService(Intent(context, AppsUsageRefreshService::class.java))
+
+            //check if app launch service is started and if not start it
+            if (!activityManager.getRunningServices(Integer.MAX_VALUE).any { service ->
+                    service.service.className == AppLaunchService::class.java.name
+                }) {
+                // start app launch monitor service
+                Intent(context, AppLaunchService::class.java).run {
+                    context.startService(this)
+                }
+            }
         },
         onShowMessage = { messageId ->
             viewModel.onEvent(
@@ -289,9 +380,9 @@ fun LoadedScreen(
             },
             onDismissRequest = {
                 if (limitTimeChanged.value) {
-                        val duration: Long =
-                            hourlyLimit * 60 * 60 * 1000L + minutelyLimit * 60 * 1000L
-                        onSetAppLimit(selectedApp.value.packageName, duration)
+                    val duration: Long =
+                        hourlyLimit * 60 * 60 * 1000L + minutelyLimit * 60 * 1000L
+                    onSetAppLimit(selectedApp.value.packageName, duration)
 
                 }
                 hourlyLimit = 0L

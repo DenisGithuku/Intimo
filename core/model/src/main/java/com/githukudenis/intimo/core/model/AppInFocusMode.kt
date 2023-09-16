@@ -9,5 +9,5 @@ data class AppInFocusMode(
     val appId: Long = 0,
     val packageName: String,
     val limitDuration: Long = 0L,
-    val isInFocus: Boolean = false
+    val limitReached: Boolean = false
 )

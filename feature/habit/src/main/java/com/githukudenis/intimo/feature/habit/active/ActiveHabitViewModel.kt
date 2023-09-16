@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.intimo.core.data.repository.HabitsRepository
 import com.githukudenis.intimo.core.model.RunningHabit
+import com.githukudenis.intimo.core.util.UserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -29,10 +31,13 @@ class HabitActiveViewModel @Inject constructor(
         habitsRepository.getHabitById(requireNotNull(savedStateHandle.get<Long>("habitId")))
     }
 
+    val userMessageList: MutableStateFlow<List<UserMessage>> = MutableStateFlow(emptyList())
+
     val uiState: StateFlow<ActiveHabitUiState> = combine(
         habitsRepository.runningHabits,
-        timerState
-    ) { runningHabits, timerState ->
+        timerState,
+        userMessageList
+    ) { runningHabits, timerState, userMessages, ->
 
         val habitData = habitDataDeferred.await()
 
@@ -56,7 +61,8 @@ class HabitActiveViewModel @Inject constructor(
                 /* In init runningHabit is null. On start data becomes available */
                 currentTime = currentTime,
                 isRunning = isRunning
-            )
+            ),
+            userMessages = userMessages
         )
     }
         .stateIn(
@@ -124,11 +130,23 @@ class HabitActiveViewModel @Inject constructor(
                 )
             }
         }
-
     }
 
     fun onCancelHabit() {
         deleteRunningHabit()
+    }
+
+    fun showUserMessage(userMessage: UserMessage) {
+        userMessageList.update {
+            it.apply {
+                this.toMutableList().add(userMessage)
+            }
+        }
+    }
+
+    fun dismissMessage(messageId: Long) {
+        val messages = userMessageList.value.filterNot { it.id == messageId }
+        userMessageList.update { messages }
     }
 
 }

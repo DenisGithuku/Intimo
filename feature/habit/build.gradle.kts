@@ -49,6 +49,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:model"))
     implementation(project(":core:ui"))
+    implementation(project(":core:util"))
     implementation(project(":core:designsystem"))
 
     implementation(libs.core.ktx)

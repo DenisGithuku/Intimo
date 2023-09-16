@@ -1,26 +1,35 @@
 package com.githukudenis.intimo.feature.summary.ui.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.intimo.core.data.repository.HabitsRepository
 import com.githukudenis.intimo.core.data.repository.UsageStatsRepository
 import com.githukudenis.intimo.core.model.DataUsageStats
+import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toKotlinLocalDate
+import kotlinx.datetime.toLocalDateTime
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
 class SummaryViewModel @Inject constructor(
-    usageStatsRepository: UsageStatsRepository,
-    habitsRepository: HabitsRepository,
+    private val usageStatsRepository: UsageStatsRepository,
+    private val habitsRepository: HabitsRepository,
 ) : ViewModel() {
 
     private val today = Calendar.getInstance().apply {
@@ -42,6 +51,22 @@ class SummaryViewModel @Inject constructor(
         Pair(usageStats, dayAndNotifications)
     }
 
+    private val habitHistoryState = combine(
+        habitsRepository.selectedHabitList,
+        habitsRepository.completedHabitList
+    ) { selected, completed ->
+        completed.associate { dayAndHabits ->
+           Pair(
+                Date(
+                    date = Instant.fromEpochMilliseconds(dayAndHabits.day.dayId).toLocalDateTime(
+                        TimeZone.currentSystemDefault()
+                    ).date.toJavaLocalDate()
+                ),
+                (dayAndHabits.habits.size.toFloat() / selected.size) * 1f
+            )
+        }
+    }
+
     private var habitUiModelList = combine(
         habitsRepository.selectedHabitList,
         habitsRepository.completedHabitList,
@@ -56,8 +81,8 @@ class SummaryViewModel @Inject constructor(
             }
 
             HabitUiModel(
-                completed = habitData.habitId in completed.filter { it.day.dayId == today }
-                    .flatMap { it.habits }.map { it.habitId },
+                completed = Pair(completed.first { it.day.dayId == today }.day.dayId, habitData.habitId in completed.filter { it.day.dayId == today }
+                    .flatMap { it.habits }.map { it.habitId }),
                 habitId = habitData.habitId,
                 habitIcon = habitData.habitIcon,
                 habitType = habitData.habitType,
@@ -75,8 +100,9 @@ class SummaryViewModel @Inject constructor(
         usageStats,
         habitUiModelList,
         userMessageList,
-        habitsRepository.runningHabits
-    ) { usageStats, habitList, userMessageList, running ->
+        habitsRepository.runningHabits,
+        habitHistoryState
+    ) { usageStats, habitList, userMessageList, running, history ->
         val summaryData = SummaryData(
             usageStats.first,
             usageStats.first.unlockCount
@@ -91,6 +117,7 @@ class SummaryViewModel @Inject constructor(
             RunningHabitState()
         }
 
+        Log.d("history", history.toString())
         SummaryUiState(
             summaryData = summaryData,
             notificationCount = usageStats.second.filter { it.day.dayId == today }
@@ -98,7 +125,8 @@ class SummaryViewModel @Inject constructor(
             habitDataList = habitList.sortedBy { it.startTime },
             userMessageList = userMessageList,
             isLoading = false,
-            runningHabitState = runningHabitState
+            runningHabitState = runningHabitState,
+            habitHistoryStateList = history
         )
     }
         .stateIn(
@@ -123,9 +151,18 @@ class SummaryViewModel @Inject constructor(
                 val messageList = userMessageList.value.filterNot { it.id == event.messageId }
                 userMessageList.update { messageList }
             }
+
+            is SummaryUiEvent.SelectDayOnHistory -> {
+//                fetchHabitHistory(
+//                    event.date.date.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
+//                )
+            }
         }
     }
 
+//    private fun fetchHabitHistory(dayId: Long) {
+//        habitUiModelList = habitUiModelList.
+//    }
 }
 
 data class SummaryData(

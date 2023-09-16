@@ -65,13 +65,12 @@ fun HabitCard(
 
     Box(
         modifier = modifier
-            .padding(horizontal = 12.dp)
             .clip(MaterialTheme.shapes.large)
             .border(
                 shape = MaterialTheme.shapes.large,
                 border = BorderStroke(
                     width = 1.dp,
-                    color = if (habitUiModel.completed) {
+                    color = if (habitUiModel.completed.second) {
                         MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                     } else {
                         Color.Black.copy(
@@ -109,7 +108,7 @@ fun HabitCard(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     InfoChip(
-                        habitStatus = if (habitUiModel.completed) {
+                        habitStatus = if (habitUiModel.completed.second) {
                             HabitStatus.COMPLETE
                         } else if (isRunning) {
                             HabitStatus.IN_PROGRESS
@@ -150,10 +149,10 @@ fun HabitCard(
 
 
                     Button(
-                        enabled = !habitUiModel.completed,
+                        enabled = !habitUiModel.completed.second && startTime.get(Calendar.DAY_OF_YEAR) >= now.get(Calendar.DAY_OF_YEAR),
                         onClick = { onStart(habitUiModel.habitId) }) {
                         Text(
-                            text = if (isRunning) "Active" else "Start",
+                            text = if (isRunning) "See progress" else "Start",
                             style = MaterialTheme.typography.labelMedium
                         )
                     }
@@ -214,7 +213,7 @@ fun HabitCardPreview() {
     HabitCard(
         isRunning = true,
         habitUiModel = HabitUiModel(
-            completed = false,
+            completed = Pair(0L, false),
             habitIcon = "\uD83E\uDD38",
             habitType = HabitType.EXERCISE,
             startTime = 169023000000,
@@ -230,7 +229,7 @@ fun HabitCardNightPreview() {
     HabitCard(
         isRunning = false,
         habitUiModel = HabitUiModel(
-            completed = false,
+            completed = Pair(0L, false),
             habitIcon = "\uD83E\uDD38",
             habitType = HabitType.EXERCISE,
             startTime = 169023000000,

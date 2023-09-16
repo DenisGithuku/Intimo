@@ -14,4 +14,12 @@
     <string name="scroll_back_up_icon_text">Scroll back up</string>
     <string name="increase_time_icon_text">Increase</string>
     <string name="decrease_time_icon_text">Decrease</string>
+    <string name="app_limit_dialog_title">Productivity Mode\n</string>
+    <string name="app_limit_dialog_text">You\'ve activated focus mode. Some apps are temporarily unavailable.</string>
+    <string name="app_limit_button_text">Ok</string>
+    <string name="overlay_permission_dialog_title">Overlay permission required</string>
+    <string name="overlay_permission_dialog_text">To use certain features, overlay permission is necessary.</string>
+    <string name="dialog_dismiss_button">Cancel</string>
+    <string name="dialog_accept_button">Allow</string>
+    <string name="app_limit_reached">%s\'s limit has been reached</string>
 </resources>

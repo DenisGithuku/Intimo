@@ -125,7 +125,7 @@ class ActiveHabitService : Service() {
                     "intimo://active_habit/${notificationData.habit.habitId}".toUri()
                 )
             )
-            getPendingIntent(pendingIntentId, PendingIntent.FLAG_UPDATE_CURRENT)
+            getPendingIntent(pendingIntentId, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         }
 
 

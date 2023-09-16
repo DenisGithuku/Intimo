@@ -83,8 +83,7 @@ class UsageStatsViewModel @Inject constructor(
             } else {
                 val app = AppInFocusMode(
                     packageName = packageName,
-                    limitDuration = duration,
-                    isInFocus = true
+                    limitDuration = duration
                 )
                 appsUsageRepository.addAppToFocusMode(app)
                 message = "App timer set"

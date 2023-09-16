@@ -6,8 +6,8 @@ import android.content.pm.PackageManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.Spring
@@ -35,13 +35,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -73,6 +73,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -80,15 +81,20 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.intimo.core.designsystem.theme.LocalTonalElevation
+import com.githukudenis.intimo.core.model.ApplicationInfoData
+import com.githukudenis.intimo.core.model.DurationType
+import com.githukudenis.intimo.core.model.HabitType
+import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.MessageType
 import com.githukudenis.intimo.core.util.TimeFormatter
 import com.githukudenis.intimo.core.util.UserMessage
 import com.githukudenis.intimo.feature.summary.R
-import com.githukudenis.intimo.core.model.ApplicationInfoData
 import com.githukudenis.intimo.feature.summary.ui.components.CardInfo
 import com.githukudenis.intimo.feature.summary.ui.components.HabitCard
+import com.githukudenis.intimo.feature.summary.ui.components.HabitHistoryComponent
 import com.githukudenis.intimo.feature.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.intimo.feature.summary.util.hasUsageAccessPermissions
+import java.time.LocalDate
 import java.util.Calendar
 
 
@@ -112,7 +118,7 @@ internal fun SummaryRoute(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            MediumTopAppBar(
+            CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surface
@@ -330,7 +336,7 @@ internal fun SummaryRoute(
             )
         }
 
-        AnimatedContent(
+        Crossfade(
             targetState = uiState.isLoading,
             label = "Screen animation"
         ) {
@@ -343,7 +349,12 @@ internal fun SummaryRoute(
                     SummaryScreen(
                         modifier = Modifier
                             .consumeWindowInsets(paddingValues),
-                        contentPadding = paddingValues,
+                        contentPadding = PaddingValues(
+                            top = paddingValues.calculateTopPadding(),
+                            bottom = paddingValues.calculateBottomPadding(),
+                            start = 16.dp,
+                            end = 16.dp
+                        ),
                         runningHabitState = uiState.runningHabitState,
                         usageStats = uiState.summaryData?.usageStats?.appUsageList ?: emptyList(),
                         unlockCount = uiState.summaryData?.unlockCount ?: 0,
@@ -366,7 +377,11 @@ internal fun SummaryRoute(
                             }
                             onStartHabit(habitId)
                         },
-                        onOpenUsageStats = onOpenUsageStats
+                        onOpenUsageStats = onOpenUsageStats,
+                        habitProgress = uiState.habitHistoryStateList,
+                        onSelectDayOnHistory = { date ->
+                            summaryViewModel.onEvent(SummaryUiEvent.SelectDayOnHistory(date))
+                        }
                     )
                 }
             }
@@ -378,11 +393,13 @@ internal fun SummaryRoute(
 @Composable
 internal fun SummaryScreen(
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
     usageStatsLoading: Boolean,
     runningHabitState: RunningHabitState,
     usageStats: List<ApplicationInfoData>,
     habitDataList: List<HabitUiModel>,
+    habitProgress: Map<Date, Float>,
+    onSelectDayOnHistory: (Date) -> Unit,
     unlockCount: Int,
     notificationCount: Int,
     onOpenHabit: (Long) -> Unit,
@@ -394,13 +411,13 @@ internal fun SummaryScreen(
 
     LazyColumn(
         contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier
             .fillMaxSize()
+            .animateContentSize()
     ) {
         item {
             Text(
-                modifier = Modifier.padding(horizontal = 12.dp),
                 text = stringResource(R.string.screen_time),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(
@@ -418,7 +435,21 @@ internal fun SummaryScreen(
         )
         item {
             Text(
-                modifier = Modifier.padding(horizontal = 12.dp),
+                text = "History",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(
+                    alpha = 0.7f
+                )
+            )
+        }
+        item {
+            HabitHistoryComponent(
+                habitProgress = habitProgress,
+                onSelectDay = onSelectDayOnHistory
+            )
+        }
+        item {
+            Text(
                 text = "Your habits",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(
@@ -445,7 +476,6 @@ fun LazyListScope.appUsageData(
 ) {
     item {
         Surface(
-            modifier = Modifier.padding(horizontal = 12.dp),
             onClick = onOpenUsageStats,
             shape = MaterialTheme.shapes.large,
             border = BorderStroke(
@@ -734,13 +764,71 @@ private fun getTimeStatus(): String {
         hour > 15 -> {
             "Good evening"
         }
+
         hour >= 12 -> {
             "Good afternoon"
         }
+
         else -> {
             "Good morning"
         }
     }
+}
+
+@Preview
+@Composable
+fun SummaryScreenPrev() {
+    SummaryScreen(
+        contentPadding = PaddingValues(12.dp),
+        usageStatsLoading = false,
+        runningHabitState = RunningHabitState(
+            habitId = 2, isRunning = true, remainingTime = 25000L
+        ),
+        usageStats = listOf(),
+        habitDataList = listOf(
+            HabitUiModel(
+                Pair(0L, false),
+                10000L,
+                2,
+                "\uD83E\uDEC1",
+                HabitType.BREATHING,
+                startTime = 1627350000L,
+                duration = 30000L,
+                durationType = DurationType.MINUTE
+            ),
+            HabitUiModel(
+                Pair(0L, true),
+                1000L,
+                3,
+                "\uD83C\uDFC3",
+                HabitType.EXERCISE,
+                startTime = 1627350000L,
+                duration = 30000L,
+                durationType = DurationType.MINUTE
+            ),
+            HabitUiModel(
+                Pair(0L, false),
+                1000L,
+                4,
+                "\uD83D\uDCDA",
+                HabitType.READING,
+                startTime = 1627350000L,
+                duration = 30000L,
+                durationType = DurationType.MINUTE
+            ),
+        ),
+        unlockCount = 2,
+        notificationCount = 9,
+        onOpenHabit = {},
+        onStart = {},
+        onOpenUsageStats = {},
+        habitProgress = mapOf(
+            Date(LocalDate.now().minusDays(2)) to 0.5f,
+            Date(LocalDate.now().minusDays(1)) to 0.6f,
+            Date(LocalDate.now()) to 0.8f,
+        ),
+        onSelectDayOnHistory = {}
+    )
 }
 
 

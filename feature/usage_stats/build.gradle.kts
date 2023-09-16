@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.ui.tooling.preview)
     implementation(libs.ui.tooling)
     implementation(libs.material3)
+    implementation(libs.material)
     implementation(libs.navigation)
 
     implementation(libs.lifecycle.viewmodel.compose)
