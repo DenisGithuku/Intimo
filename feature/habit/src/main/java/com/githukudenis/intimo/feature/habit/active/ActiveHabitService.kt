@@ -37,6 +37,8 @@ class ActiveHabitService : Service() {
     @Inject
     lateinit var habitsRepository: HabitsRepository
 
+    private var notificationId: Int? = null
+
     override fun onCreate() {
         super.onCreate()
         notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -64,17 +66,15 @@ class ActiveHabitService : Service() {
 
                 when (action) {
                     NotificationAction.START.toString() -> start(notificationData)
-                    NotificationAction.STOP.toString() -> {
-                        notificationManager.cancel(notificationData.habit.habitId.toInt())
-                        stop()
-                    }
+                    NotificationAction.STOP.toString() -> stop(notificationData.habit.habitId.toInt())
                 }
             }
         }
-        return START_STICKY
+        return START_NOT_STICKY
     }
 
-    private fun stop() {
+    private fun stop(notificationId: Int) {
+        notificationManager.cancel(notificationId)
         stopForeground(true)
         stopSelf()
     }
@@ -85,19 +85,19 @@ class ActiveHabitService : Service() {
             notificationManager.notify(notificationData.habit.habitId.toInt(), notification.build())
 
             scope.launch {
-                if (notificationData.habit.remainingTime <= 0L) {
-                    stop()
-                    return@launch
-                }
                 var init = notificationData.habit.remainingTime
                 while (init >= 0L) {
                     habitsRepository.updateRunningHabit(notificationData.habit.copy(remainingTime = init))
                     val updatedNotification = notification.setContentText(
                         "Remaining time: ${formatCountdownTime(init)}"
                     )
-
+                    notificationId = notificationData.habit.habitId.toInt()
                     notificationManager.notify(notificationData.habit.habitId.toInt(), updatedNotification.build())
                     init -= 1000L
+                    if (init < 0) {
+                        stop(notificationData.habit.habitId.toInt())
+                        return@launch
+                    }
                     delay(1000L)
                 }
 
@@ -111,6 +111,7 @@ class ActiveHabitService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         scope.cancel()
+        notificationId?.let { notifId -> notificationManager.cancel(notifId) }
     }
 
 
