@@ -3,6 +3,7 @@ package com.githukudenis.intimo.feature.summary.ui.components
 import android.content.Context
 import android.content.res.Configuration
 import android.text.format.DateFormat
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -16,7 +17,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitType
 import com.githukudenis.intimo.core.model.nameToString
+import com.githukudenis.intimo.feature.habit.detail.getTimeFromMillis
 import com.githukudenis.intimo.feature.summary.ui.home.HabitUiModel
 import java.time.Instant
 import java.time.LocalDateTime
@@ -64,6 +69,7 @@ fun HabitCard(
 
     Box(
         modifier = modifier
+            .wrapContentWidth()
             .clip(MaterialTheme.shapes.large)
             .border(
                 shape = MaterialTheme.shapes.large,
@@ -85,23 +91,18 @@ fun HabitCard(
             .clickable {
                 onOpenHabitDetails(habitUiModel.habitId)
             }
+            .animateContentSize()
     )
     {
-        Row(
+        Column(
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
         ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.Top
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = habitUiModel.habitIcon,
-                    style = MaterialTheme.typography.headlineLarge
-                )
                 Column(
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -120,6 +121,10 @@ fun HabitCard(
                         }
                     )
                     Text(
+                        text = habitUiModel.habitIcon,
+                        style = MaterialTheme.typography.headlineLarge
+                    )
+                    Text(
                         text = habitUiModel.habitType.nameToString(),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
@@ -133,62 +138,69 @@ fun HabitCard(
                                     timeInMillis = startTime.timeInMillis
                                 )
                             )
-                            append(" - ")
+                            append(" for ")
                             append(
-                                getTimeString(
-                                    context = context,
-                                    timeInMillis = startTime.timeInMillis + habitUiModel.duration
-                                )
+                                getTimeFromMillis(habitUiModel.duration)
+//                                getTimeString(
+//                                    context = context,
+//                                    timeInMillis = startTime.timeInMillis + habitUiModel.duration
+//                                )
                             )
                         },
                         style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     )
+                }
+                if (isRunning && habitUiModel.remainingTime > 0L) {
+                    val animatedArcValue = animateFloatAsState(
+                        targetValue = ((((habitUiModel.duration - habitUiModel.remainingTime)) * 100 / habitUiModel.duration) * 360f) / 100,
+                        label = "arc value"
+                    )
 
+                    val arcValueColor = MaterialTheme.colorScheme.tertiary
+                    val arcBgColor = MaterialTheme.colorScheme.primary.copy(
+                        alpha = 0.09f
+                    )
 
-                    Button(
-                        enabled = !habitUiModel.completed.second && startTime.get(Calendar.DAY_OF_YEAR) >= now.get(
-                            Calendar.DAY_OF_YEAR
-                        ),
-                        onClick = { onStart(habitUiModel.habitId) }) {
-                        Text(
-                            text = if (isRunning) "See progress" else "Start",
-                            style = MaterialTheme.typography.labelMedium
+                    Canvas(modifier = Modifier.size(60.dp)) {
+                        drawArc(
+                            color = arcBgColor,
+                            startAngle = -90f,
+                            useCenter = false,
+                            sweepAngle = 360f,
+                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                        )
+                        drawArc(
+                            color = arcValueColor,
+                            startAngle = -90f,
+                            sweepAngle = animatedArcValue.value,
+                            useCenter = false,
+                            style = Stroke(
+                                width = 4.dp.toPx(),
+                                cap = StrokeCap.Round
+                            )
                         )
                     }
                 }
             }
-            if (isRunning && habitUiModel.remainingTime > 0L) {
-                val animatedArcValue = animateFloatAsState(
-                    targetValue = ((((habitUiModel.duration - habitUiModel.remainingTime)) * 100 / habitUiModel.duration) * 360f) / 100,
-                    label = "arc value"
+            FilledTonalButton(
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !habitUiModel.completed.second && startTime.get(Calendar.DAY_OF_YEAR) >= now.get(
+                    Calendar.DAY_OF_YEAR
+                ),
+                onClick = { onStart(habitUiModel.habitId) },
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                 )
-
-                val arcValueColor = MaterialTheme.colorScheme.tertiary
-                val arcBgColor = MaterialTheme.colorScheme.primary.copy(
-                    alpha = 0.09f
+            ) {
+                Text(
+                    text = if (isRunning) "Progress details" else "Start",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.8f
+                    )
                 )
-
-                Canvas(modifier = Modifier.size(60.dp)) {
-                    drawArc(
-                        color = arcBgColor,
-                        startAngle = -90f,
-                        useCenter = false,
-                        sweepAngle = 360f,
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
-                    )
-                    drawArc(
-                        color = arcValueColor,
-                        startAngle = -90f,
-                        sweepAngle = animatedArcValue.value,
-                        useCenter = false,
-                        style = Stroke(
-                            width = 4.dp.toPx(),
-                            cap = StrokeCap.Round
-                        )
-                    )
-                }
             }
         }
     }
@@ -219,6 +231,7 @@ fun HabitCardPreview() {
             habitType = HabitType.EXERCISE,
             startTime = 169023000000,
             duration = 1800000,
+            remainingTime = 700000L,
             durationType = DurationType.MINUTE
         ), onOpenHabitDetails = {}, onStart = {}
     )

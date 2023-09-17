@@ -8,6 +8,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.ZoneId
@@ -42,13 +44,18 @@ class HabitDetailViewModel @Inject constructor(
     private fun getHabitDetails(habitId: Long) {
         viewModelScope.launch {
             val completedHabits = habitsRepository.completedHabitList
+            val runningHabits = habitsRepository.runningHabits
             val habit = habitsRepository.getHabitById(habitId)
-            completedHabits.collect { completed ->
+            combine(completedHabits, runningHabits) { completed, running ->
                 _uiState.update { habitDetailState ->
                     habitDetailState.copy(
                         habitUiModel = habit.toHabitUiModel(
-                            completed = habitId in completed.filter { it.day.dayId == today }.flatMap { it.habits }
+                            completed = habitId in completed.filter { it.day.dayId == today }
+                                .flatMap { it.habits }
                                 .map { it.habitId },
+
+                            ).copy(
+                            running = running.any { it.habitId == habit.habitId }
                         ),
                         completedDayList = completed.filter { dayAndHabits ->
                             dayAndHabits.habits.any { it.habitId == habitId }
@@ -60,7 +67,7 @@ class HabitDetailViewModel @Inject constructor(
                         }
                     )
                 }
-            }
+            }.launchIn(viewModelScope)
         }
     }
 

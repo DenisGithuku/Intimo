@@ -14,6 +14,7 @@ import com.githukudenis.intimo.feature.habit.detail.HabitDetailRoute
 const val habitDetailRoute = "detail"
 
 fun NavGraphBuilder.detailScreen(
+    onStartHabit: (Long) -> Unit,
     onNavigateUp: () -> Unit
 ) {
     composable(
@@ -24,15 +25,15 @@ fun NavGraphBuilder.detailScreen(
             }
         ),
         enterTransition = {
-           scaleIn(
-               initialScale = 0.8f,
-               animationSpec = tween(300, easing = EaseOut)
-           ) + fadeIn()
+            scaleIn(
+                initialScale = 0.8f,
+                animationSpec = tween(300, easing = EaseOut)
+            ) + fadeIn()
         },
         exitTransition = {
-                    fadeOut()
+            fadeOut()
         }
     ) {
-        HabitDetailRoute(onNavigateUp = onNavigateUp)
+        HabitDetailRoute(onNavigateUp = onNavigateUp, onStartHabit = onStartHabit)
     }
 }

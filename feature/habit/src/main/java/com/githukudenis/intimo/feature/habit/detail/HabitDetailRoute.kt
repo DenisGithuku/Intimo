@@ -6,7 +6,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,9 +19,11 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Start
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,6 +45,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.githukudenis.intimo.core.model.DurationType
+import com.githukudenis.intimo.core.model.HabitType
+import com.githukudenis.intimo.core.model.nameToString
 import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.ui.components.TimePickerDialog
 import com.githukudenis.intimo.core.ui.components.rememberDateUiState
@@ -49,9 +56,6 @@ import com.githukudenis.intimo.feature.habit.components.DatePill
 import com.githukudenis.intimo.feature.habit.components.HabitDetailListItem
 import com.githukudenis.intimo.feature.habit.components.HabitDurationDialog
 import com.githukudenis.intimo.feature.habit.components.HorizontalDateView
-import com.githukudenis.intimo.core.model.DurationType
-import com.githukudenis.intimo.core.model.HabitType
-import com.githukudenis.intimo.core.model.nameToString
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -62,6 +66,7 @@ import java.util.Locale
 @Composable
 fun HabitDetailRoute(
     habitDetailViewModel: HabitDetailViewModel = hiltViewModel(),
+    onStartHabit: (Long) -> Unit,
     onNavigateUp: () -> Unit
 ) {
     val uiState by habitDetailViewModel.uiState.collectAsStateWithLifecycle()
@@ -91,8 +96,10 @@ fun HabitDetailRoute(
         },
     ) { paddingValues ->
         HabitDetailScreen(
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier
+                .consumeWindowInsets(paddingValues),
             uiState = uiState,
+            onStartHabit = onStartHabit,
             onUpdate = { habitUiModel ->
                 habitDetailViewModel.onUpdate(habitUiModel)
                 onNavigateUp()
@@ -107,47 +114,66 @@ fun HabitDetailRoute(
 private fun HabitDetailScreen(
     modifier: Modifier = Modifier,
     uiState: HabitDetailUiState,
+    onStartHabit: (Long) -> Unit,
     onUpdate: (HabitUiModel) -> Unit
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.SpaceAround
     ) {
         val dateUiState = rememberDateUiState(LocalDate.now())
 
-        Text(
-            text = "History",
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+        Column {
+            Text(
+                text = "History",
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(top = 4.dp, start = 16.dp, end = 16.dp)
+            )
 
-        HorizontalDateView(
-            selectedDate = dateUiState.currentSelectedDate,
-            dates = dateUiState.dateUiModel.availableDates,
-            onNextWeekListener = { localDate ->
-                if (dateUiState.currentSelectedDate < LocalDate.now()) {
-                    dateUiState.setData(
-                        localDate.plusDays(1)
-                    )
-                    dateUiState.updateDate(localDate.plusDays(1))
-                }
-            },
-            onPrevWeekListener = { localDate ->
-                dateUiState.setData(localDate.minusDays(2))
-                dateUiState.updateDate(localDate.minusDays(2))
-            },
-            onChangeDate = {
-                dateUiState.updateDate(it)
-            },
-            completedDates = uiState.completedDayList
-        )
-        Divider(
-            thickness = 0.7.dp,
-            modifier = Modifier.fillMaxWidth()
-        )
-        uiState.habitUiModel?.let {
-            HabitContents(habitDetail = it, onUpdate = onUpdate)
+            HorizontalDateView(
+                selectedDate = dateUiState.currentSelectedDate,
+                dates = dateUiState.dateUiModel.availableDates,
+                onNextWeekListener = { localDate ->
+                    if (dateUiState.currentSelectedDate < LocalDate.now()) {
+                        dateUiState.setData(
+                            localDate.plusDays(1)
+                        )
+                        dateUiState.updateDate(localDate.plusDays(1))
+                    }
+                },
+                onPrevWeekListener = { localDate ->
+                    dateUiState.setData(localDate.minusDays(2))
+                    dateUiState.updateDate(localDate.minusDays(2))
+                },
+                onChangeDate = {
+                    dateUiState.updateDate(it)
+                },
+                completedDates = uiState.completedDayList
+            )
+            Divider(
+                thickness = 0.7.dp,
+                modifier = Modifier.fillMaxWidth()
+            )
+            uiState.habitUiModel?.let {
+                HabitContents(habitDetail = it, onUpdate = onUpdate)
+            }
+        }
+        if (uiState.habitUiModel?.completed == false) {
+            FilledTonalButton(
+                onClick = { uiState.habitId?.let { onStartHabit(it) } },
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                )
+            ) {
+                Text(
+                    text = if (uiState.habitUiModel.running) "See progress" else "Start habit"
+                )
+            }
         }
 
     }

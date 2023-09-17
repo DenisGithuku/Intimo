@@ -15,6 +15,7 @@ data class HabitDetailUiState(
 
 data class HabitUiModel(
     val completed: Boolean = false,
+    val running: Boolean = false,
     val habitId: Long = 0,
     val habitIcon: String,
     val habitType: HabitType,
