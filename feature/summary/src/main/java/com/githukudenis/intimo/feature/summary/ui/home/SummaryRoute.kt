@@ -10,11 +10,18 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +37,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
@@ -56,15 +65,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.Center
-import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -92,8 +101,11 @@ import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.intimo.feature.summary.ui.components.CardInfo
 import com.githukudenis.intimo.feature.summary.ui.components.HabitCard
 import com.githukudenis.intimo.feature.summary.ui.components.HabitHistoryComponent
+import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
+import com.githukudenis.intimo.feature.summary.ui.components.NotificationCard
 import com.githukudenis.intimo.feature.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.intimo.feature.summary.util.hasUsageAccessPermissions
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.Calendar
 
@@ -119,10 +131,6 @@ internal fun SummaryRoute(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface
-                ),
                 title = {
                     Text(
                         text = getTimeStatus(),
@@ -183,6 +191,9 @@ internal fun SummaryRoute(
         val usageAccessPermissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult(),
             onResult = {
+                if (shouldShowNotificationPermissionsDialog || shouldShowNotificationPermissionsDialog) {
+                    return@rememberLauncherForActivityResult
+                }
                 if (context.hasUsageAccessPermissions()) {
                     summaryViewModel.onEvent(SummaryUiEvent.Refresh)
                 } else {
@@ -204,7 +215,8 @@ internal fun SummaryRoute(
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
                     Lifecycle.Event.ON_START -> {
-                        shouldShowUsagePermissionsDialog = !context.hasUsageAccessPermissions()
+                        shouldShowUsagePermissionsDialog =
+                            !context.hasUsageAccessPermissions() && shouldShowNotificationPermissionsDialog == false
                         shouldShowNotificationPermissionsDialog =
                             !context.hasNotificationAccessPermissions()
                     }
@@ -342,7 +354,15 @@ internal fun SummaryRoute(
         ) {
             when (it) {
                 true -> {
-                    LoadingScreen()
+                    LoadingScreen(
+                        modifier = Modifier.consumeWindowInsets(paddingValues),
+                        contentPadding = PaddingValues(
+                            top = paddingValues.calculateTopPadding(),
+                            bottom = paddingValues.calculateBottomPadding(),
+                            start = 16.dp,
+                            end = 16.dp
+                        )
+                    )
                 }
 
                 false -> {
@@ -360,6 +380,7 @@ internal fun SummaryRoute(
                         unlockCount = uiState.summaryData?.unlockCount ?: 0,
                         notificationCount = uiState.notificationCount,
                         habitDataList = uiState.habitDataList,
+                        habitPerformance = uiState.habitPerformance,
                         onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
                         usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
                         onStart = { habitId ->
@@ -398,6 +419,7 @@ internal fun SummaryScreen(
     runningHabitState: RunningHabitState,
     usageStats: List<ApplicationInfoData>,
     habitDataList: List<HabitUiModel>,
+    habitPerformance: HabitPerformance,
     habitProgress: Map<Date, Float>,
     onSelectDayOnHistory: (Date) -> Unit,
     unlockCount: Int,
@@ -408,8 +430,11 @@ internal fun SummaryScreen(
 ) {
 
     val context = LocalContext.current
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     LazyColumn(
+        state = listState,
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier
@@ -435,7 +460,7 @@ internal fun SummaryScreen(
         )
         item {
             Text(
-                text = "History",
+                text = stringResource(R.string.habit_history_title),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(
                     alpha = 0.7f
@@ -449,20 +474,37 @@ internal fun SummaryScreen(
             )
         }
         item {
+            NotificationCard(
+                habitPerformance = habitPerformance,
+                onTakeAction = {
+                    scope.launch {
+                        listState.animateScrollToItem(7)
+                    }
+                }
+            )
+        }
+        item {
             Text(
-                text = "Your habits",
+                text = stringResource(R.string.active_habits_section_title),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(
                     alpha = 0.7f
                 )
             )
         }
-        habitList(
-            habitDataList = habitDataList,
-            onOpenHabit = onOpenHabit,
-            runningHabitState = runningHabitState,
-            onStart = onStart
-        )
+        item {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                habitList(
+                    habitDataList = habitDataList,
+                    onOpenHabit = onOpenHabit,
+                    runningHabitState = runningHabitState,
+                    onStart = onStart
+                )
+            }
+        }
+
     }
 }
 
@@ -480,7 +522,7 @@ fun LazyListScope.appUsageData(
             shape = MaterialTheme.shapes.large,
             border = BorderStroke(
                 width = 1.dp,
-                color = Color.Black.copy(
+                color = MaterialTheme.colorScheme.onBackground.copy(
                     alpha = 0.1f
                 )
             )
@@ -498,7 +540,7 @@ fun LazyListScope.appUsageData(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(200.dp),
-                            contentAlignment = Center
+                            contentAlignment = Alignment.Center
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 CircularProgressIndicator()
@@ -518,7 +560,7 @@ fun LazyListScope.appUsageData(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(12.dp),
-                                verticalAlignment = CenterVertically,
+                                verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceAround
                             ) {
                                 /*
@@ -615,7 +657,7 @@ fun LazyListScope.appUsageData(
                                                         startAngle = startAngle * animateArchValue.value,
                                                         sweepAngle = angles[i],
                                                         useCenter = false,
-                                                        style = Stroke(width = 16.dp.value),
+                                                        style = Stroke(width = 12.dp.toPx()),
                                                     )
                                                     startAngle += angles[i]
                                                 }
@@ -665,7 +707,7 @@ fun LazyListScope.appUsageData(
                                         Row(
                                             modifier = Modifier.padding(vertical = 4.dp),
                                             horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                            verticalAlignment = CenterVertically
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Spacer(
                                                 modifier = Modifier
@@ -693,8 +735,8 @@ fun LazyListScope.appUsageData(
                             }
                             Divider(
                                 modifier = Modifier
-                                    .height(1.dp)
-                                    .background(color = Color.Black.copy(alpha = 0.1f))
+                                    .height(1.dp),
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                             )
 
                             Row(
@@ -722,15 +764,320 @@ fun LazyListScope.appUsageData(
 }
 
 @Composable
-fun LoadingScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            CircularProgressIndicator()
-            Text(
-                text = "Fetching data...",
-                style = MaterialTheme.typography.labelMedium
+fun LoadingScreen(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(16.dp)
+) {
+
+    val colors = remember {
+        listOf(
+            Color.LightGray.copy(alpha = 0.4f),
+            Color.LightGray.copy(alpha = 0.1f),
+            Color.LightGray.copy(alpha = 0.4f),
+        )
+    }
+
+    val infiniteTransition =
+        rememberInfiniteTransition(label = "infinite transition loading skeleton")
+    val transitionAnimation = infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 1000,
+                delayMillis = 500,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Restart
+        ), label = "loading skeleton"
+    )
+    val brush = Brush.linearGradient(
+        colors = colors,
+        start = Offset.Zero,
+        end = Offset(x = transitionAnimation.value, y = transitionAnimation.value)
+    )
+    LazyColumn(
+        contentPadding = contentPadding,
+        modifier = modifier
+            .fillMaxSize()
+            .animateContentSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+                    .fillMaxWidth(0.2f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(brush)
             )
         }
+        item {
+            UsageStatsShimmerCard(brush = brush)
+        }
+        item {
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+                    .fillMaxWidth(0.2f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(brush)
+            )
+        }
+        item {
+            HistorySectionShimmer(brush = brush)
+        }
+        item {
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+                    .fillMaxWidth(0.2f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(brush)
+            )
+        }
+        item {
+            Box(
+                modifier = Modifier
+                    .border(
+                        shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(
+                            width = 1.dp,
+                            brush = brush
+                        )
+                    )
+                    .padding(12.dp)
+                    .fillMaxWidth(),
+            ) {
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Spacer(
+                                modifier = Modifier
+                                    .height(12.dp)
+                                    .fillMaxWidth(0.8f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(
+                                modifier = Modifier
+                                    .height(12.dp)
+                                    .fillMaxWidth(0.8f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(
+                                modifier = Modifier
+                                    .height(12.dp)
+                                    .fillMaxWidth(0.3f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Spacer(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(MaterialTheme.shapes.medium)
+                                .background(brush = brush)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(30.dp).fillMaxWidth(0.2f).clip(RoundedCornerShape(12.dp)).background(brush = brush))
+                }
+            }
+        }
+        item {
+            Spacer(
+                modifier = Modifier
+                    .height(8.dp)
+                    .fillMaxWidth(0.2f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(brush)
+            )
+        }
+        item {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(count = 12) {
+                    LoadingShimmerListView(brush = brush)
+                }
+            }
+        }
+
+    }
+}
+
+@Composable
+fun UsageStatsShimmerCard(brush: Brush) {
+    Box(
+        modifier = Modifier
+            .border(brush = brush, shape = MaterialTheme.shapes.medium, width = 1.dp)
+            .fillMaxWidth()
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxWidth(),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Canvas(modifier = Modifier.size(120.dp)) {
+                        drawArc(
+                            brush = brush,
+                            startAngle = -90f,
+                            sweepAngle = 360f,
+                            useCenter = false,
+                            style = Stroke(
+                                width = 12.dp.toPx()
+                            )
+                        )
+                    }
+                        Spacer(
+                            modifier = Modifier
+                                .height(8.dp)
+                                .fillMaxWidth(0.2f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush)
+                        )
+
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Column {
+                    (0..4).forEach { _ ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(2.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Spacer(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(MaterialTheme.shapes.small)
+                                    .background(brush)
+                            )
+                            Spacer(
+                                modifier = Modifier
+                                    .height(10.dp)
+                                    .fillMaxWidth(0.6f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush)
+                            )
+                        }
+                    }
+                }
+            }
+            Divider(thickness = 1.dp, color = Color.LightGray.copy(0.4f))
+
+            Row(
+                modifier = Modifier
+                    .padding(12.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Spacer(
+                        modifier = Modifier
+                            .size(30.dp, 10.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(brush)
+                    )
+                    Spacer(
+                        modifier = Modifier
+                            .size(80.dp, 20.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(brush)
+                    )
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Spacer(
+                        modifier = Modifier
+                            .size(30.dp, 10.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(brush)
+                    )
+                    Spacer(
+                        modifier = Modifier
+                            .size(80.dp, 20.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(brush)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HistorySectionShimmer(
+    brush: Brush
+) {
+    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        items(count = 10) {
+            Canvas(modifier = Modifier.size(40.dp)) {
+                drawArc(
+                    brush = brush,
+                    startAngle = -90f,
+                    sweepAngle = 360f,
+                    useCenter = false,
+                    style = Stroke(width = 2.dp.toPx())
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LoadingShimmerListView(brush: Brush) {
+    Column(
+        modifier = Modifier
+            .border(brush = brush, shape = MaterialTheme.shapes.medium, width = 1.dp)
+            .padding(12.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+
+        }
+        Spacer(
+            modifier = Modifier
+                .size(100.dp, 20.dp)
+                .clip(MaterialTheme.shapes.small)
+                .background(brush)
+        )
+        Spacer(
+            modifier = Modifier
+                .size(120.dp, 15.dp)
+                .clip(MaterialTheme.shapes.large)
+                .background(brush)
+        )
+        Spacer(
+            modifier = Modifier
+                .size(150.dp, 10.dp)
+                .clip(MaterialTheme.shapes.large)
+                .background(brush)
+        )
+        Spacer(
+            modifier = Modifier
+                .size(100.dp, 40.dp)
+                .clip(MaterialTheme.shapes.extraLarge)
+                .background(brush)
+        )
     }
 }
 
@@ -827,8 +1174,14 @@ fun SummaryScreenPrev() {
             Date(LocalDate.now().minusDays(1)) to 0.6f,
             Date(LocalDate.now()) to 0.8f,
         ),
-        onSelectDayOnHistory = {}
+        onSelectDayOnHistory = {},
+        habitPerformance = HabitPerformance.EXCELLENT
     )
 }
 
 
+@Preview
+@Composable
+fun LoadingScreenPrev() {
+    LoadingScreen()
+}

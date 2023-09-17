@@ -1,6 +1,5 @@
 package com.githukudenis.intimo.feature.summary.ui.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.intimo.core.data.repository.HabitsRepository
@@ -8,21 +7,19 @@ import com.githukudenis.intimo.core.data.repository.UsageStatsRepository
 import com.githukudenis.intimo.core.model.DataUsageStats
 import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
+import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toKotlinLocalDate
 import kotlinx.datetime.toLocalDateTime
 import java.time.LocalDate
-import java.time.ZoneOffset
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -56,7 +53,7 @@ class SummaryViewModel @Inject constructor(
         habitsRepository.completedHabitList
     ) { selected, completed ->
         completed.associate { dayAndHabits ->
-           Pair(
+            Pair(
                 Date(
                     date = Instant.fromEpochMilliseconds(dayAndHabits.day.dayId).toLocalDateTime(
                         TimeZone.currentSystemDefault()
@@ -72,7 +69,11 @@ class SummaryViewModel @Inject constructor(
         habitsRepository.completedHabitList,
         habitsRepository.runningHabits
     ) { active, completed, running ->
-        active.map { habitData ->
+        active
+            .filterNot {  activeHabit ->
+                activeHabit in completed.filter { it.day.dayId == today }.flatMap { it.habits }
+            }
+            .map { habitData ->
 
             val remTime = if (running.isNotEmpty()) {
                 running.find { it.habitId == habitData.habitId }?.remainingTime ?: 0L
@@ -81,8 +82,10 @@ class SummaryViewModel @Inject constructor(
             }
 
             HabitUiModel(
-                completed = Pair(completed.first { it.day.dayId == today }.day.dayId, habitData.habitId in completed.filter { it.day.dayId == today }
-                    .flatMap { it.habits }.map { it.habitId }),
+                completed = Pair(
+                    completed.first { it.day.dayId == today }.day.dayId,
+                    habitData.habitId in completed.filter { it.day.dayId == today }
+                        .flatMap { it.habits }.map { it.habitId }),
                 habitId = habitData.habitId,
                 habitIcon = habitData.habitIcon,
                 habitType = habitData.habitType,
@@ -117,21 +120,33 @@ class SummaryViewModel @Inject constructor(
             RunningHabitState()
         }
 
-        Log.d("history", history.toString())
         SummaryUiState(
+            isLoading = false,
             summaryData = summaryData,
             notificationCount = usageStats.second.filter { it.day.dayId == today }
                 .flatMap { it.notifications }.size,
-            habitDataList = habitList.sortedBy { it.startTime },
-            userMessageList = userMessageList,
-            isLoading = false,
             runningHabitState = runningHabitState,
-            habitHistoryStateList = history
+            habitDataList = habitList.sortedBy { it.startTime },
+            habitPerformance = when {
+                history.getValue(
+                    Date(
+                        queryDetails.value.date ?: LocalDate.now()
+                    )
+                ) >= 0.75f -> HabitPerformance.EXCELLENT
+                history.getValue(
+                    Date(
+                        queryDetails.value.date ?: LocalDate.now()
+                    )
+                ) >= 0.45f -> HabitPerformance.GOOD
+                else -> HabitPerformance.POOR
+            },
+            userMessageList = userMessageList,
+            habitHistoryStateList = history,
         )
     }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
+            started = SharingStarted.Lazily,
             initialValue = SummaryUiState(isLoading = true)
         )
 

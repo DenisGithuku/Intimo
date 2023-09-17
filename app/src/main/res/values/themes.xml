@@ -3,7 +3,6 @@
     <style name="Theme.Intimo" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:navigationBarColor">@android:color/transparent</item>
          <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowDisablePreview">true</item>
     </style>
 </resources>

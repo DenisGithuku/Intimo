@@ -1,6 +1,5 @@
 package com.githukudenis.intimo.navigation
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import com.githukudenis.intimo.IntimoAppState
@@ -8,16 +7,18 @@ import com.githukudenis.intimo.feature.habit.navigation.activeHabitRoute
 import com.githukudenis.intimo.feature.habit.navigation.activeHabitScreen
 import com.githukudenis.intimo.feature.habit.navigation.detailScreen
 import com.githukudenis.intimo.feature.habit.navigation.habitDetailRoute
-import com.githukudenis.intimo.feature.settings.navigation.settingsRoute
-import com.githukudenis.intimo.feature.settings.navigation.settingsScreen
-import com.githukudenis.intimo.splash_screen.splashScreen
-import com.githukudenis.intimo.splash_screen.splashScreenRoute
-import com.githukudenis.intimo.feature.usage_stats.usageStatsRoute
-import com.githukudenis.intimo.feature.usage_stats.usageStatsScreen
 import com.githukudenis.intimo.feature.onboarding.navigation.onBoardingNavigationRoute
 import com.githukudenis.intimo.feature.onboarding.navigation.onBoardingScreen
+import com.githukudenis.intimo.feature.settings.navigation.settingsRoute
+import com.githukudenis.intimo.feature.settings.navigation.settingsScreen
 import com.githukudenis.intimo.feature.summary.navigation.summaryNavigationRoute
 import com.githukudenis.intimo.feature.summary.navigation.summaryScreen
+import com.githukudenis.intimo.feature.usage_stats.usageStatsRoute
+import com.githukudenis.intimo.feature.usage_stats.usageStatsScreen
+import com.githukudenis.intimo.licenses.licensesRoute
+import com.githukudenis.intimo.licenses.licensesScreen
+import com.githukudenis.intimo.splash_screen.splashScreen
+import com.githukudenis.intimo.splash_screen.splashScreenRoute
 
 @Composable
 fun IntimoNavHost(
@@ -55,6 +56,9 @@ fun IntimoNavHost(
         )
 
         detailScreen(
+            onStartHabit = { habitId ->
+                appState.navigate("$activeHabitRoute/$habitId")
+            },
             onNavigateUp = {
                 appState.popBackStack()
             }
@@ -65,14 +69,23 @@ fun IntimoNavHost(
                 appState.navigate(summaryNavigationRoute)
             }
         }, onNavigateUp = {
-            Log.d("dest", appState.navController.currentDestination?.route.toString())
             if (!appState.navController.popBackStack()) {
                 appState.navigate(summaryNavigationRoute)
             }
         })
 
-        usageStatsScreen( onNavigateUp = { appState.navController.navigateUp() } )
+        usageStatsScreen(onNavigateUp = { appState.navController.navigateUp() })
 
-        settingsScreen()
+        settingsScreen(
+            onNavigateUp = {
+                appState.popBackStack()
+            },
+            onOpenLicenses = {
+                appState.navigate(licensesRoute)
+            }
+        )
+        licensesScreen(onNavigateUp = {
+            appState.popBackStack()
+        })
     }
 }

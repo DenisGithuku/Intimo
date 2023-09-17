@@ -7,12 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -26,7 +21,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,21 +48,11 @@ fun ActiveHabitRoute(
     Scaffold(
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
-        },
-        topBar = {
-            CenterAlignedTopAppBar(title = { }, navigationIcon = {
-                IconButton(onClick = onNavigateUp) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = stringResource(id = R.string.navigate_up)
-                    )
-                }
-            })
         }
     ) { paddingValues ->
 
         LaunchedEffect(snackbarHostState, state.userMessages) {
-            if (state.userMessages.isNotEmpty()){
+            if (state.userMessages.isNotEmpty()) {
                 val userMessage = state.userMessages.first()
                 val snackbarResult = snackbarHostState.showSnackbar(
                     message = userMessage.message ?: return@LaunchedEffect,
@@ -76,10 +60,11 @@ fun ActiveHabitRoute(
                         is MessageType.ERROR -> {
                             SnackbarDuration.Indefinite
                         }
+
                         MessageType.INFO -> SnackbarDuration.Short
                     }
                 )
-                when(snackbarResult) {
+                when (snackbarResult) {
                     SnackbarResult.Dismissed -> Unit
                     SnackbarResult.ActionPerformed -> {
                         //TODO Implement retry

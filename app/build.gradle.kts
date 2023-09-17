@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.googleServices)
     alias(libs.plugins.daggerHilt)
     alias(libs.plugins.kotlinKapt)
+    alias(libs.plugins.aboutLibraries)
 }
 
 android {
@@ -72,6 +73,7 @@ dependencies {
     implementation(project(":feature:usage_stats"))
 
     implementation(libs.core.ktx)
+    implementation(libs.appcompat)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.activity.compose)
@@ -82,6 +84,7 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.navigation)
     implementation(libs.material.extended.icons)
+    implementation(libs.about.libraries)
 
     //hilt
     implementation(libs.hilt.android)

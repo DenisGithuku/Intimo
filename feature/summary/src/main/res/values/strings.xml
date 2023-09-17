@@ -17,5 +17,7 @@
     <string name="permission_request_dialog_title">Permission Request</string>
     <string name="permission_request_dialog_icon">Info\n</string>
     <string name="multiple_habit_running_error_text">Only one habit can be run at a given time</string>
+    <string name="habit_history_title">Habit history</string>
+    <string name="active_habits_section_title">Active habits</string>
 
 </resources>

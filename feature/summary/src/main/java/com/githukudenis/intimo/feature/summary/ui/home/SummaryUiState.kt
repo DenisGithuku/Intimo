@@ -5,6 +5,7 @@ import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitType
 import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
+import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
 
 
 data class SummaryUiState(
@@ -15,7 +16,8 @@ data class SummaryUiState(
     val days: List<Day> = emptyList(),
     val habitDataList: List<HabitUiModel> = emptyList(),
     val userMessageList: List<UserMessage> = emptyList(),
-    val habitHistoryStateList: Map<Date, Float> = emptyMap()
+    val habitHistoryStateList: Map<Date, Float> = emptyMap(),
+    val habitPerformance: HabitPerformance = HabitPerformance.GOOD
 )
 
 data class HabitUiModel(

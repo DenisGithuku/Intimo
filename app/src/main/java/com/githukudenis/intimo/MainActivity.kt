@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,6 +13,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.githukudenis.intimo.core.designsystem.theme.IntimoTheme
+import com.githukudenis.intimo.core.model.Theme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -42,10 +44,20 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
-            IntimoTheme {
+            IntimoTheme(
+                useDarkTheme = systemInDarkTheme(uiState = uiState)
+            ) {
+                setSystemTheme(uiState = uiState)
+                WindowCompat.getInsetsController(
+                    window,
+                    window.decorView
+                ).isAppearanceLightStatusBars =
+                    !systemInDarkTheme(uiState)
+
                 IntimoApp(
                     shouldHideOnBoarding = shouldHideOnBoarding(uiState),
-                    onPopupFailed = { finish() })
+                    onPopupFailed = { finish() },
+                )
             }
         }
     }
@@ -54,6 +66,24 @@ class MainActivity : ComponentActivity() {
         return when (uiState) {
             MainActivityUiState.Loading -> false
             is MainActivityUiState.Success -> uiState.userData.shouldHideOnBoarding
+        }
+    }
+
+    private fun systemInDarkTheme(uiState: MainActivityUiState): Boolean {
+        return when (uiState) {
+            MainActivityUiState.Loading -> false
+            is MainActivityUiState.Success -> uiState.userData.theme == Theme.DARK
+        }
+    }
+
+    private fun setSystemTheme(uiState: MainActivityUiState) {
+        when(uiState) {
+            MainActivityUiState.Loading -> Unit
+            is MainActivityUiState.Success -> {
+                if (uiState.userData.theme == Theme.SYSTEM) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+                }
+            }
         }
     }
 }

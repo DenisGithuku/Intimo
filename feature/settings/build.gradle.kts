@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":core:designsystem"))
 
     implementation(libs.core.ktx)
+    implementation(libs.appcompat)
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.activity.compose)

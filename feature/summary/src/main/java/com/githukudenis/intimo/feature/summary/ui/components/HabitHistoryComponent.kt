@@ -28,7 +28,8 @@ fun HabitHistoryComponent(
        items(habitProgress.keys.toList(), key = {it.date}) { date ->
            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                Text(
-                   text = date.date.dayOfWeek.name.first().uppercase()
+                   text = date.date.dayOfWeek.name.first().uppercase(),
+                   style = MaterialTheme.typography.labelSmall
                )
                Box(
                    modifier = Modifier
