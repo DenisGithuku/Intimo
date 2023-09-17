@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.accompanist.drawable.painter)
     implementation(libs.kotlinx.datetime)
     implementation(libs.material.extended.icons)
+    implementation(libs.work)
 
     // hilt
     implementation(libs.hilt.android)
@@ -77,4 +78,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.work.testing)
 }
