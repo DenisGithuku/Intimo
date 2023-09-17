@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -66,7 +68,7 @@ fun SettingsRoute(
                 }, navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = stringResource(id = R.string.navigate_up_icon)
                         )
                     }
@@ -188,6 +190,14 @@ fun SettingsScreen(
             )
         }
         item {
+            Divider(
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .fillMaxWidth(),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
+            )
+        }
+        item {
             SettingsSectionTitle(text = stringResource(R.string.notifications_section_title))
         }
         item {
@@ -201,7 +211,10 @@ fun SettingsScreen(
                 },
                 description = {
                     Text(
-                        text = stringResource(R.string.device_usage_description, if (!usageNotificationsAllowed) "Enable" else "Disable"),
+                        text = stringResource(
+                            R.string.device_usage_description,
+                            if (!usageNotificationsAllowed) "Enable" else "Disable"
+                        ),
                         color = MaterialTheme.colorScheme.onBackground.copy(
                             alpha = 0.8f
                         ),
@@ -226,7 +239,10 @@ fun SettingsScreen(
                 },
                 description = {
                     Text(
-                        text = stringResource(R.string.periodic_updates_description, if (!habitNotificationsAllowed) "Enable" else "Disable"),
+                        text = stringResource(
+                            R.string.periodic_updates_description,
+                            if (!habitNotificationsAllowed) "Enable" else "Disable"
+                        ),
                         color = MaterialTheme.colorScheme.onBackground.copy(
                             alpha = 0.8f
                         ),
@@ -238,6 +254,14 @@ fun SettingsScreen(
                     habitNotificationsAllowed = isAllowed
                     onToggleHabitAlerts(isAllowed)
                 }
+            )
+        }
+        item {
+            Divider(
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .fillMaxWidth(),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.1f)
             )
         }
         item {
