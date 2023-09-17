@@ -5,6 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.githukudenis.intimo.core.model.Theme
 import com.githukudenis.intimo.core.model.UserData
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -17,7 +19,7 @@ class IntimoPrefsDataSource @Inject constructor(
             shouldHideOnBoarding = prefs[PreferenceKeys.shouldHideOnBoarding] ?: false,
             deviceUsageNotificationsAllowed = prefs[PreferenceKeys.deviceUsageNotificationsAllowed] ?: false,
             habitNotificationsAllowed = prefs[PreferenceKeys.habitNotificationsAllowed] ?: false,
-            systemInDarkTheme = prefs[PreferenceKeys.systemInDarkTheme] ?: false
+            theme = Theme.valueOf(prefs[PreferenceKeys.theme] ?: Theme.SYSTEM.name.uppercase())
         )
     }
 
@@ -39,10 +41,9 @@ class IntimoPrefsDataSource @Inject constructor(
         }
     }
 
-    suspend fun setDarkTheme(systemInDarkTheme: Boolean) {
+    suspend fun setAppTheme(theme: Theme) {
         userPreferences.edit { preferences ->
-            preferences[PreferenceKeys.systemInDarkTheme] = systemInDarkTheme
-
+            preferences[PreferenceKeys.theme] = theme.name
         }
     }
 }
@@ -51,5 +52,5 @@ object PreferenceKeys {
     val shouldHideOnBoarding = booleanPreferencesKey("should_hide_onboarding")
     val deviceUsageNotificationsAllowed = booleanPreferencesKey("device_notifications_allowed")
     val habitNotificationsAllowed = booleanPreferencesKey("habit_notifications_allowed")
-    val systemInDarkTheme = booleanPreferencesKey("system_in_dark_theme")
+    val theme = stringPreferencesKey("app_theme")
 }

@@ -10,4 +10,6 @@
     <string name="other_settings_section_tittle">Other</string>
     <string name="app_version_description">Version %s</string>
     <string name="app_version_title">App version</string>
+    <string name="open_source_licenses_settings_list_item">Open source licenses</string>
+    <string name="oss_licenses_activity_title">Intimo open source licenses</string>
 </resources>

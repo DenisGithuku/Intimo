@@ -1,7 +1,10 @@
 package com.githukudenis.intimo.feature.settings.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -10,6 +13,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -17,7 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
@@ -25,13 +32,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.githukudenis.intimo.core.model.Theme
+import com.githukudenis.intimo.core.ui.components.IntimoAlertDialog
 import com.githukudenis.intimo.feature.settings.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsRoute(
     viewModel: SettingsViewModel = hiltViewModel(),
-    onNavigateUp: () -> Unit
+    onNavigateUp: () -> Unit,
+    onOpenLicenses: () -> Unit
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -42,6 +52,7 @@ fun SettingsRoute(
     val scrollBehaviour =
         TopAppBarDefaults.enterAlwaysScrollBehavior()
 
+    LocalContext.current
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -63,6 +74,7 @@ fun SettingsRoute(
             )
         }
     ) { paddingValues ->
+
         SettingsScreen(
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
@@ -70,12 +82,13 @@ fun SettingsRoute(
                 start = 16.dp,
                 end = 16.dp
             ),
-            isSystemInDarkTheme = uiState.isSystemInDarkTheme,
+            theme = uiState.theme,
             onChangeTheme = { viewModel.onToggleTheme(it) },
             isDeviceUsageNotificationsAllowed = uiState.deviceUsageNotificationsAllowed,
             onToggleDeviceUsageNotifications = { viewModel.setShouldAllowDeviceUsageNotifications(it) },
             isHabitRemindersAllowed = uiState.habitNotificationsAllowed,
             onToggleHabitAlerts = { viewModel.setShouldAllowHabitsNotifications(it) },
+            onOpenLicenses = onOpenLicenses
         )
     }
 }
@@ -83,25 +96,74 @@ fun SettingsRoute(
 @Composable
 fun SettingsScreen(
     contentPadding: PaddingValues = PaddingValues(16.dp),
-    isSystemInDarkTheme: Boolean,
-    onChangeTheme: (Boolean) -> Unit,
+    theme: Theme,
+    onChangeTheme: (Theme) -> Unit,
     isDeviceUsageNotificationsAllowed: Boolean,
     onToggleDeviceUsageNotifications: (Boolean) -> Unit,
     isHabitRemindersAllowed: Boolean,
     onToggleHabitAlerts: (Boolean) -> Unit,
+    onOpenLicenses: () -> Unit,
 ) {
     val context = LocalContext.current
 
+    val availableThemes = remember {
+        listOf(
+            Theme.SYSTEM,
+            Theme.LIGHT,
+            Theme.DARK
+        )
+    }
+
+    var themeDialogVisible by remember {
+        mutableStateOf(false)
+    }
+
+    if (themeDialogVisible) {
+        IntimoAlertDialog(
+            title = {
+                Text(
+                    text = "App theme",
+                    style = MaterialTheme.typography.displaySmall
+                )
+            },
+            content = {
+                Column {
+                    availableThemes.forEach { availableTheme ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            RadioButton(
+                                selected = availableTheme == theme,
+                                onClick = { onChangeTheme(availableTheme) })
+                            Text(
+                                text = availableTheme.name.lowercase()
+                                    .replaceFirstChar { it.uppercase() },
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            },
+            onDismissRequest = {
+                themeDialogVisible = false
+            }
+        )
+    }
+
     LazyColumn(
         contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
             SettingsSectionTitle(text = stringResource(R.string.settings_general_section_title))
         }
         item {
-            ToggleableSettingsListView(
-                isToggledOn = isSystemInDarkTheme,
+            SettingsListView(
+                clickable = true,
+                onClick = {
+                    themeDialogVisible = true
+                },
                 title = {
                     Text(
                         text = "Theme",
@@ -110,14 +172,13 @@ fun SettingsScreen(
                 },
                 description = {
                     Text(
-                        text = if (isSystemInDarkTheme) "Dark" else "Light",
+                        text = theme.name.lowercase().replaceFirstChar { it.uppercase() },
                         color = MaterialTheme.colorScheme.onBackground.copy(
                             alpha = 0.8f
                         ),
                         style = MaterialTheme.typography.labelMedium
                     )
                 },
-                onToggle = onChangeTheme
             )
         }
         item {
@@ -144,6 +205,8 @@ fun SettingsScreen(
                 },
                 onToggle = onToggleDeviceUsageNotifications
             )
+        }
+        item {
             ToggleableSettingsListView(
                 isToggledOn = isHabitRemindersAllowed,
                 title = {
@@ -189,6 +252,17 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onBackground.copy(
                             alpha = 0.8f
                         )
+                    )
+                }
+            )
+        }
+        item {
+            SettingsListView(
+                clickable = true,
+                onClick = onOpenLicenses,
+                title = {
+                    Text(
+                        text = "Licenses"
                     )
                 }
             )

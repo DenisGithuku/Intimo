@@ -11,4 +11,5 @@
     <string name="restart_habit">Restart</string>
     <string name="habit_remaining_time_text">Remaining</string>
     <string name="habit_completed">Habit completed. Onwards and onwards 🎊</string>
+    <string name="start_habit">Start</string>
 </resources>

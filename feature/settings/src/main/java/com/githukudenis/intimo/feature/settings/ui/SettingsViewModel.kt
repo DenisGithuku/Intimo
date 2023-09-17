@@ -3,6 +3,7 @@ package com.githukudenis.intimo.feature.settings.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.intimo.core.data.repository.UserDataRepository
+import com.githukudenis.intimo.core.model.Theme
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +19,7 @@ class SettingsViewModel @Inject constructor(
 
     val uiState: StateFlow<SettingsUiState> = userDataRepository.userData.map { userData ->
         SettingsUiState(
-            isSystemInDarkTheme = userData.systemInDarkTheme,
+            theme = userData.theme,
             deviceUsageNotificationsAllowed = userData.deviceUsageNotificationsAllowed,
             habitNotificationsAllowed = userData.habitNotificationsAllowed
         )
@@ -28,9 +29,9 @@ class SettingsViewModel @Inject constructor(
         SettingsUiState()
     )
 
-    fun onToggleTheme(systemInDarkTheme: Boolean) {
+    fun onToggleTheme(theme: Theme) {
         viewModelScope.launch {
-            userDataRepository.setDarkTheme(systemInDarkTheme)
+            userDataRepository.setAppTheme(theme)
         }
     }
 
@@ -48,7 +49,7 @@ class SettingsViewModel @Inject constructor(
 }
 
 data class SettingsUiState(
-    val isSystemInDarkTheme: Boolean = false,
+    val theme: Theme = Theme.SYSTEM,
     val deviceUsageNotificationsAllowed: Boolean = false,
     val habitNotificationsAllowed: Boolean = false,
 )

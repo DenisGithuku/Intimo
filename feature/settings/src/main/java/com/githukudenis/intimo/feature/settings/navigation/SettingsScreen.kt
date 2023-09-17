@@ -12,7 +12,8 @@ import com.githukudenis.intimo.feature.settings.ui.SettingsRoute
 const val settingsRoute = "settings"
 
 fun NavGraphBuilder.settingsScreen(
-    onNavigateUp: () -> Unit
+    onNavigateUp: () -> Unit,
+    onOpenLicenses: () -> Unit
 ) {
     composable(route = settingsRoute,
         enterTransition = {
@@ -25,7 +26,9 @@ fun NavGraphBuilder.settingsScreen(
             fadeOut()
         }
     ) {
-        SettingsRoute(onNavigateUp = onNavigateUp
+        SettingsRoute(
+            onNavigateUp = onNavigateUp,
+            onOpenLicenses = onOpenLicenses
         )
     }
 }
