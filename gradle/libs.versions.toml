@@ -16,7 +16,7 @@ firebase-bom = "32.2.2"
 appcompat = "1.6.1"
 material = "1.9.0"
 material-extended-icons = "1.6.0-alpha04"
-navigation = "2.7.1"
+navigation = "2.7.2"
 datastore-prefs = "1.0.0"
 hilt = "2.47"
 ksp = "1.9.0-1.0.11"
@@ -27,6 +27,7 @@ kotlinx-time = "0.4.0"
 compose-material="1.6.0-alpha04"
 palette = "28.0.0"
 support = "28.0.0"
+about-libraries = "10.8.3"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -65,6 +66,7 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-time"}
 palette = { group = "com.android.support", name = "palette-v7", version.ref = "palette"}
 support-core = { group = "com.android.support", name = "support-core-utils", version.ref = "support" }
+about-libraries = { group = "com.mikepenz", name = "aboutlibraries-compose", version.ref = "about-libraries"}
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -75,4 +77,5 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 daggerHilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt"}
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
 kotlinKapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin"}
+aboutLibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "about-libraries"}
 

@@ -4,5 +4,5 @@ data class UserData(
     val shouldHideOnBoarding: Boolean,
     val deviceUsageNotificationsAllowed: Boolean,
     val habitNotificationsAllowed: Boolean,
-    val systemInDarkTheme: Boolean = false
+    val theme: Theme = Theme.SYSTEM
 )

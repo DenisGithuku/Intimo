@@ -15,6 +15,8 @@ import com.githukudenis.intimo.feature.summary.navigation.summaryNavigationRoute
 import com.githukudenis.intimo.feature.summary.navigation.summaryScreen
 import com.githukudenis.intimo.feature.usage_stats.usageStatsRoute
 import com.githukudenis.intimo.feature.usage_stats.usageStatsScreen
+import com.githukudenis.intimo.licenses.licensesRoute
+import com.githukudenis.intimo.licenses.licensesScreen
 import com.githukudenis.intimo.splash_screen.splashScreen
 import com.githukudenis.intimo.splash_screen.splashScreenRoute
 
@@ -54,6 +56,9 @@ fun IntimoNavHost(
         )
 
         detailScreen(
+            onStartHabit = { habitId ->
+                appState.navigate("$activeHabitRoute/$habitId")
+            },
             onNavigateUp = {
                 appState.popBackStack()
             }
@@ -74,7 +79,13 @@ fun IntimoNavHost(
         settingsScreen(
             onNavigateUp = {
                 appState.popBackStack()
+            },
+            onOpenLicenses = {
+                appState.navigate(licensesRoute)
             }
         )
+        licensesScreen(onNavigateUp = {
+            appState.popBackStack()
+        })
     }
 }

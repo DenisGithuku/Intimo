@@ -5,24 +5,35 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -30,7 +41,6 @@ import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,10 +67,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -185,6 +200,7 @@ fun UsageStatsRoute(
         })
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun UsageStatsScreen(
     usageStatsUiState: UsageStatsUiState,
@@ -193,36 +209,82 @@ internal fun UsageStatsScreen(
     onSetAppLimit: (String, Long) -> Unit,
     onShowMessage: (Long) -> Unit
 ) {
-    when (usageStatsUiState) {
-        UsageStatsUiState.Loading -> {
-            LoadingScreen()
+    val snackbarHostState = remember {
+        SnackbarHostState()
+    }
+
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
+        },
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Text(
+                        text = "Usage"
+                    )
+                },
+                scrollBehavior = scrollBehavior,
+                navigationIcon = {
+                    IconButton(onClick = onNavigateUp) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(id = R.string.back_button),
+                        )
+                    }
+                }
+            )
         }
+    ) { innerPadding ->
+        when (usageStatsUiState) {
+            UsageStatsUiState.Loading -> {
+                LoadingScreen(
+                    contentPadding = PaddingValues(
+                        top = innerPadding.calculateTopPadding(),
+                        bottom = innerPadding.calculateBottomPadding(),
+                        end = 16.dp,
+                        start = 16.dp
+                    ),
+                    modifier = Modifier.consumeWindowInsets(innerPadding)
+                )
+            }
 
-        is UsageStatsUiState.Loaded -> LoadedScreen(
-            dataUsageStats = usageStatsUiState.usageStats,
-            appUsageLimits = usageStatsUiState.appsInFocusMode,
-            onNavigateUp = onNavigateUp,
-            onSetAppLimit = onSetAppLimit,
-            userMessages = usageStatsUiState.userMessages,
-            onShowMessage = onShowMessage
-        )
+            is UsageStatsUiState.Loaded -> LoadedScreen(
+                modifier = Modifier.consumeWindowInsets(innerPadding),
+                userMessages = usageStatsUiState.userMessages,
+                dataUsageStats = usageStatsUiState.usageStats,
+                appUsageLimits = usageStatsUiState.appsInFocusMode,
+                onSetAppLimit = onSetAppLimit,
+                onShowMessage = onShowMessage,
+                innerPadding = PaddingValues(
+                    top = innerPadding.calculateTopPadding(),
+                    bottom = innerPadding.calculateBottomPadding(),
+                    end = 16.dp,
+                    start = 16.dp
+                ),
+                snackbarHostState = snackbarHostState
+            )
 
-        is UsageStatsUiState.Error -> ErrorScreen(
-            usageStatsUiState.userMessageList.first(),
-            onRetry = onRetry
-        )
+            is UsageStatsUiState.Error -> ErrorScreen(
+                usageStatsUiState.userMessageList.first(),
+                onRetry = onRetry
+            )
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoadedScreen(
+    modifier: Modifier = Modifier,
     userMessages: List<UserMessage>,
     dataUsageStats: DataUsageStats,
     appUsageLimits: List<AppInFocusMode>,
-    onNavigateUp: () -> Unit,
     onSetAppLimit: (String, Long) -> Unit,
-    onShowMessage: (Long) -> Unit
+    onShowMessage: (Long) -> Unit,
+    innerPadding: PaddingValues = PaddingValues(16.dp),
+    snackbarHostState: SnackbarHostState
 ) {
     val appLimitDialogIsVisible = rememberSaveable {
         mutableStateOf(false)
@@ -422,130 +484,158 @@ fun LoadedScreen(
 
     }
 
-    val snackbarHostState = remember {
-        SnackbarHostState()
+    LaunchedEffect(snackbarHostState, userMessages) {
+        if (userMessages.isNotEmpty()) {
+            val userMessage = userMessages.first()
+            snackbarHostState.showSnackbar(
+                message = userMessage.message ?: "",
+                duration = SnackbarDuration.Short
+            )
+            onShowMessage(userMessage.id)
+        }
     }
 
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    scrolledContainerColor = MaterialTheme.colorScheme.surface,
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                title = {
-                    Text(
-                        text = "Usage"
-                    )
-                },
-                scrollBehavior = scrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onNavigateUp) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = stringResource(id = R.string.back_button),
-                        )
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-
-        LaunchedEffect(snackbarHostState, userMessages) {
-            if (userMessages.isNotEmpty()) {
-                val userMessage = userMessages.first()
-                snackbarHostState.showSnackbar(
-                    message = userMessage.message ?: "",
-                    duration = SnackbarDuration.Short
-                )
-                onShowMessage(userMessage.id)
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
+        val listState = rememberLazyListState()
+        val scrollButtonIsVisible = remember {
+            derivedStateOf {
+                listState.firstVisibleItemIndex > 0
             }
         }
-
-        Box(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
+        val scope = rememberCoroutineScope()
+        LazyColumn(
+            contentPadding = innerPadding,
+            state = listState,
         ) {
-            val listState = rememberLazyListState()
-            val scrollButtonIsVisible = remember {
-                derivedStateOf {
-                    listState.firstVisibleItemIndex > 0
-                }
-            }
-            val scope = rememberCoroutineScope()
-            LazyColumn(
-                state = listState,
-            ) {
-                items(
-                    dataUsageStats.appUsageList,
-                    key = { it.packageName }) { applicationInfoData ->
-                    val usageLimit =
-                        appUsageLimits.find { it.packageName == applicationInfoData.packageName }?.limitDuration
-                            ?: 0L
-                    UsageStatsCard(
-                        applicationInfoData = applicationInfoData,
-                        usageLimit = usageLimit,
-                        onOpenLimitDialog = { isSystem ->
-                            if (isSystem) {
-                                infoDialogIsVisible.value = true
-                            } else {
-                                selectedApp.value = applicationInfoData
-                                if (usageLimit > 0) {
-                                    hourlyLimit = usageLimit / 1000 / 60 / 60
-                                    minutelyLimit = usageLimit / 1000 / 60 % 60
-                                }
-                                appLimitDialogIsVisible.value = true
+            items(
+                dataUsageStats.appUsageList,
+                key = { it.packageName }) { applicationInfoData ->
+                val usageLimit =
+                    appUsageLimits.find { it.packageName == applicationInfoData.packageName }?.limitDuration
+                        ?: 0L
+                UsageStatsCard(
+                    applicationInfoData = applicationInfoData,
+                    usageLimit = usageLimit,
+                    onOpenLimitDialog = { isSystem ->
+                        if (isSystem) {
+                            infoDialogIsVisible.value = true
+                        } else {
+                            selectedApp.value = applicationInfoData
+                            if (usageLimit > 0) {
+                                hourlyLimit = usageLimit / 1000 / 60 / 60
+                                minutelyLimit = usageLimit / 1000 / 60 % 60
                             }
+                            appLimitDialogIsVisible.value = true
                         }
-                    )
-                }
-            }
-
-            AnimatedVisibility(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(
-                        bottom = 8.dp
-                    ),
-                visible = scrollButtonIsVisible.value,
-                enter = fadeIn() + slideInVertically(initialOffsetY = {
-                    10
-                }),
-                exit = fadeOut() + slideOutVertically(targetOffsetY = { 10 })
-            ) {
-                FilledTonalButton(onClick = {
-                    scope.launch {
-                        listState.animateScrollToItem(0)
                     }
-                }) {
-                    Text(
-                        text = stringResource(R.string.back_to_top_button_text)
-                    )
-                    Icon(
-                        imageVector = Icons.Outlined.KeyboardArrowUp,
-                        contentDescription = stringResource(id = R.string.scroll_back_up_icon_text)
-                    )
-                }
+                )
             }
-
         }
+
+        AnimatedVisibility(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(
+                    bottom = 8.dp
+                ),
+            visible = scrollButtonIsVisible.value,
+            enter = fadeIn() + slideInVertically(initialOffsetY = {
+                10
+            }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { 10 })
+        ) {
+            FilledTonalButton(onClick = {
+                scope.launch {
+                    listState.animateScrollToItem(0)
+                }
+            }) {
+                Text(
+                    text = stringResource(R.string.back_to_top_button_text)
+                )
+                Icon(
+                    imageVector = Icons.Outlined.KeyboardArrowUp,
+                    contentDescription = stringResource(id = R.string.scroll_back_up_icon_text)
+                )
+            }
+        }
+
     }
 }
 
+
 @Composable
-fun LoadingScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        CircularProgressIndicator()
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Loading stats.."
+fun LoadingScreen(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
+) {
+    val colors = remember {
+        listOf(
+            Color.LightGray.copy(alpha = 0.4f),
+            Color.LightGray.copy(alpha = 0.1f),
+            Color.LightGray.copy(alpha = 0.4f),
         )
+    }
+
+    val infiniteTransition =
+        rememberInfiniteTransition(label = "infinite transition loading skeleton")
+    val transitionAnimation = infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 1000,
+                delayMillis = 500,
+                easing = FastOutSlowInEasing
+            ),
+            repeatMode = RepeatMode.Restart
+        ), label = "loading skeleton"
+    )
+    val brush = Brush.linearGradient(
+        colors = colors,
+        start = Offset.Zero,
+        end = Offset(x = transitionAnimation.value, y = transitionAnimation.value)
+    )
+    LazyColumn(
+        contentPadding = contentPadding,
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(count = 20) {
+            Row(
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(brush = brush)
+                )
+                Column {
+                    Spacer(
+                        modifier = Modifier
+                            .height(8.dp)
+                            .fillMaxWidth(0.5f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(brush = brush)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(
+                        modifier = Modifier
+                            .height(8.dp)
+                            .fillMaxWidth(0.3f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(brush = brush)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -573,4 +663,10 @@ fun getApplicationLabel(packageName: String, context: Context): String {
     val appInfo =
         context.packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
     return context.packageManager.getApplicationLabel(appInfo).toString()
+}
+
+@Preview
+@Composable
+fun LoadingScreenPrev() {
+    LoadingScreen()
 }
