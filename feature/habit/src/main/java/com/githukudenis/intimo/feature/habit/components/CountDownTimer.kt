@@ -73,6 +73,7 @@ fun CountDownTimer(
     LaunchedEffect(key1 = isTimerRunning, key2 = currentTime) {
         if (currentTime > 0 && isTimerRunning) {
             timerValue = currentTime / totalTime.toFloat()
+            timerStarted = true
         }
 
         if (currentTime <= 0) {
