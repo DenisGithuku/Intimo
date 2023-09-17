@@ -79,8 +79,6 @@ fun SettingsRoute(
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
                 bottom = paddingValues.calculateBottomPadding(),
-                start = 16.dp,
-                end = 16.dp
             ),
             theme = uiState.theme,
             onChangeTheme = { viewModel.onToggleTheme(it) },
@@ -116,6 +114,14 @@ fun SettingsScreen(
 
     var themeDialogVisible by remember {
         mutableStateOf(false)
+    }
+
+    var usageNotificationsAllowed by remember {
+        mutableStateOf(isDeviceUsageNotificationsAllowed)
+    }
+
+    var habitNotificationsAllowed by remember {
+        mutableStateOf(isHabitRemindersAllowed)
     }
 
     if (themeDialogVisible) {
@@ -186,7 +192,7 @@ fun SettingsScreen(
         }
         item {
             ToggleableSettingsListView(
-                isToggledOn = isDeviceUsageNotificationsAllowed,
+                isToggledOn = usageNotificationsAllowed,
                 title = {
                     Text(
                         text = stringResource(R.string.device_usage_title),
@@ -195,7 +201,7 @@ fun SettingsScreen(
                 },
                 description = {
                     Text(
-                        text = stringResource(R.string.device_usage_description),
+                        text = stringResource(R.string.device_usage_description, if (!usageNotificationsAllowed) "Enable" else "Disable"),
                         color = MaterialTheme.colorScheme.onBackground.copy(
                             alpha = 0.8f
                         ),
@@ -203,12 +209,15 @@ fun SettingsScreen(
 
                     )
                 },
-                onToggle = onToggleDeviceUsageNotifications
+                onToggle = { isAllowed ->
+                    usageNotificationsAllowed = isAllowed
+                    onToggleDeviceUsageNotifications(isAllowed)
+                }
             )
         }
         item {
             ToggleableSettingsListView(
-                isToggledOn = isHabitRemindersAllowed,
+                isToggledOn = habitNotificationsAllowed,
                 title = {
                     Text(
                         text = stringResource(R.string.habit_reminders_title),
@@ -217,7 +226,7 @@ fun SettingsScreen(
                 },
                 description = {
                     Text(
-                        text = stringResource(R.string.periodic_updates_description),
+                        text = stringResource(R.string.periodic_updates_description, if (!habitNotificationsAllowed) "Enable" else "Disable"),
                         color = MaterialTheme.colorScheme.onBackground.copy(
                             alpha = 0.8f
                         ),
@@ -225,7 +234,10 @@ fun SettingsScreen(
                     )
 
                 },
-                onToggle = onToggleHabitAlerts
+                onToggle = { isAllowed ->
+                    habitNotificationsAllowed = isAllowed
+                    onToggleHabitAlerts(isAllowed)
+                }
             )
         }
         item {
