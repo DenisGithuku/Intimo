@@ -35,11 +35,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
@@ -85,6 +86,7 @@ import com.githukudenis.intimo.core.ui.components.IntimoActionDialog
 import com.githukudenis.intimo.core.ui.components.IntimoAlertDialog
 import com.githukudenis.intimo.core.util.UserMessage
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 @Composable
 fun UsageStatsRoute(
@@ -230,7 +232,7 @@ internal fun UsageStatsScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
-                            Icons.Default.ArrowBack,
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.back_button),
                         )
                     }
@@ -255,6 +257,7 @@ internal fun UsageStatsScreen(
                 modifier = Modifier.consumeWindowInsets(innerPadding),
                 userMessages = usageStatsUiState.userMessages,
                 dataUsageStats = usageStatsUiState.usageStats,
+                dailyUsage = usageStatsUiState.chartData,
                 appUsageLimits = usageStatsUiState.appsInFocusMode,
                 onSetAppLimit = onSetAppLimit,
                 onShowMessage = onShowMessage,
@@ -280,6 +283,7 @@ fun LoadedScreen(
     modifier: Modifier = Modifier,
     userMessages: List<UserMessage>,
     dataUsageStats: DataUsageStats,
+    dailyUsage: Map<LocalDate, Pair<Float, Long>>,
     appUsageLimits: List<AppInFocusMode>,
     onSetAppLimit: (String, Long) -> Unit,
     onShowMessage: (Long) -> Unit,
@@ -497,6 +501,7 @@ fun LoadedScreen(
 
     Box(
         modifier = modifier
+            .padding(top = innerPadding.calculateTopPadding(), bottom = innerPadding.calculateBottomPadding())
             .fillMaxSize()
     ) {
         val listState = rememberLazyListState()
@@ -507,9 +512,14 @@ fun LoadedScreen(
         }
         val scope = rememberCoroutineScope()
         LazyColumn(
-            contentPadding = innerPadding,
             state = listState,
         ) {
+            item {
+                UsageChart(
+                    data = dailyUsage,
+                    height = 250.dp,
+                )
+            }
             items(
                 dataUsageStats.appUsageList,
                 key = { it.packageName }) { applicationInfoData ->
@@ -551,7 +561,7 @@ fun LoadedScreen(
                 scope.launch {
                     listState.animateScrollToItem(0)
                 }
-            }) {
+            }, colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))) {
                 Text(
                     text = stringResource(R.string.back_to_top_button_text)
                 )
@@ -613,8 +623,8 @@ fun LoadingScreen(
             ) {
                 Spacer(
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(MaterialTheme.shapes.medium)
+                        .size(28.dp)
+                        .clip(MaterialTheme.shapes.small)
                         .background(brush = brush)
                 )
                 Column {

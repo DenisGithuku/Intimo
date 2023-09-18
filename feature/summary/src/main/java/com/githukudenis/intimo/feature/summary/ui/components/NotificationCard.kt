@@ -1,5 +1,6 @@
 package com.githukudenis.intimo.feature.summary.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,24 +10,31 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.githukudenis.intimo.core.ui.components.MultipleClicksCutter
+import com.githukudenis.intimo.core.ui.components.get
 
 @Composable
 fun NotificationCard(
+    notificationButtonVisible: Boolean = true,
     habitPerformance: HabitPerformance,
     onTakeAction: () -> Unit,
 ) {
+    val multipleClicksCutter = remember {
+        MultipleClicksCutter.get()
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -76,20 +84,22 @@ fun NotificationCard(
 
             }
             Spacer(modifier = Modifier.height(4.dp))
-            FilledTonalButton(
-                onClick = onTakeAction,
-                contentPadding = PaddingValues(
-                    vertical = 8.dp,
-                    horizontal = 12.dp
-                ), colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                )
-            ) {
-                Text(
-                    text = "Take action",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
+            AnimatedVisibility(visible = notificationButtonVisible) {
+                Button(
+                    onClick = { multipleClicksCutter.processEvent(onTakeAction) },
+                    contentPadding = PaddingValues(
+                        vertical = 8.dp,
+                        horizontal = 12.dp
+                    ), colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    )
+                ) {
+                    Text(
+                        text = "Take action",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    )
+                }
             }
         }
     }

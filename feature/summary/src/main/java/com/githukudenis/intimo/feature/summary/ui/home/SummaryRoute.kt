@@ -65,7 +65,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -94,6 +93,8 @@ import com.githukudenis.intimo.core.model.ApplicationInfoData
 import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitType
 import com.githukudenis.intimo.core.ui.components.Date
+import com.githukudenis.intimo.core.ui.components.MultipleClicksCutter
+import com.githukudenis.intimo.core.ui.components.get
 import com.githukudenis.intimo.core.util.MessageType
 import com.githukudenis.intimo.core.util.TimeFormatter
 import com.githukudenis.intimo.core.util.UserMessage
@@ -105,7 +106,6 @@ import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
 import com.githukudenis.intimo.feature.summary.ui.components.NotificationCard
 import com.githukudenis.intimo.feature.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.intimo.feature.summary.util.hasUsageAccessPermissions
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.Calendar
 
@@ -126,6 +126,11 @@ internal fun SummaryRoute(
     val snackbarHostState = remember {
         SnackbarHostState()
     }
+
+    val multipleClicksCutter = remember {
+        MultipleClicksCutter.get()
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -139,7 +144,7 @@ internal fun SummaryRoute(
                 },
                 actions = {
                     IconButton(
-                        onClick = onOpenSettings
+                        onClick = { multipleClicksCutter.processEvent(onOpenSettings) }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -375,14 +380,18 @@ internal fun SummaryRoute(
                             start = 16.dp,
                             end = 16.dp
                         ),
+                        usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
                         runningHabitState = uiState.runningHabitState,
                         usageStats = uiState.summaryData?.usageStats?.appUsageList ?: emptyList(),
-                        unlockCount = uiState.summaryData?.unlockCount ?: 0,
-                        notificationCount = uiState.notificationCount,
                         habitDataList = uiState.habitDataList,
                         habitPerformance = uiState.habitPerformance,
+                        habitProgress = uiState.habitHistoryStateList,
+                        onSelectDayOnHistory = { date ->
+                            summaryViewModel.onEvent(SummaryUiEvent.SelectDayOnHistory(date))
+                        },
+                        unlockCount = uiState.summaryData?.unlockCount ?: 0,
+                        notificationCount = uiState.notificationCount,
                         onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
-                        usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
                         onStart = { habitId ->
                             if (uiState.runningHabitState.habitId != null && uiState.runningHabitState.habitId != habitId) {
                                 summaryViewModel.onEvent(
@@ -399,10 +408,7 @@ internal fun SummaryRoute(
                             onStartHabit(habitId)
                         },
                         onOpenUsageStats = onOpenUsageStats,
-                        habitProgress = uiState.habitHistoryStateList,
-                        onSelectDayOnHistory = { date ->
-                            summaryViewModel.onEvent(SummaryUiEvent.SelectDayOnHistory(date))
-                        }
+                        multipleClicksCutter = multipleClicksCutter
                     )
                 }
             }
@@ -426,12 +432,12 @@ internal fun SummaryScreen(
     notificationCount: Int,
     onOpenHabit: (Long) -> Unit,
     onStart: (Long) -> Unit,
-    onOpenUsageStats: () -> Unit
+    onOpenUsageStats: () -> Unit,
+    multipleClicksCutter: MultipleClicksCutter
 ) {
 
     val context = LocalContext.current
     val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
 
     LazyColumn(
         state = listState,
@@ -456,6 +462,7 @@ internal fun SummaryScreen(
             notificationCount = notificationCount,
             context = context,
             isLoading = usageStatsLoading,
+            multipleClicksCutter = multipleClicksCutter,
             onOpenUsageStats = onOpenUsageStats
         )
         item {
@@ -476,10 +483,9 @@ internal fun SummaryScreen(
         item {
             NotificationCard(
                 habitPerformance = habitPerformance,
+                notificationButtonVisible = habitDataList.isNotEmpty(),
                 onTakeAction = {
-                    scope.launch {
-                        listState.animateScrollToItem(7)
-                    }
+                        onOpenHabit(habitDataList.first().habitId)
                 }
             )
         }
@@ -514,11 +520,12 @@ fun LazyListScope.appUsageData(
     unlockCount: Int,
     notificationCount: Int,
     context: Context,
+    multipleClicksCutter: MultipleClicksCutter,
     onOpenUsageStats: () -> Unit
 ) {
     item {
         Surface(
-            onClick = onOpenUsageStats,
+            onClick = { multipleClicksCutter.processEvent(onOpenUsageStats) },
             shape = MaterialTheme.shapes.large,
             border = BorderStroke(
                 width = 1.dp,
@@ -887,7 +894,11 @@ fun LoadingScreen(
                                 .background(brush = brush)
                         )
                     }
-                    Spacer(modifier = Modifier.height(30.dp).fillMaxWidth(0.2f).clip(RoundedCornerShape(12.dp)).background(brush = brush))
+                    Spacer(modifier = Modifier
+                        .height(30.dp)
+                        .fillMaxWidth(0.2f)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(brush = brush))
                 }
             }
         }
@@ -1164,18 +1175,21 @@ fun SummaryScreenPrev() {
                 durationType = DurationType.MINUTE
             ),
         ),
-        unlockCount = 2,
-        notificationCount = 9,
-        onOpenHabit = {},
-        onStart = {},
-        onOpenUsageStats = {},
+        habitPerformance = HabitPerformance.EXCELLENT,
         habitProgress = mapOf(
             Date(LocalDate.now().minusDays(2)) to 0.5f,
             Date(LocalDate.now().minusDays(1)) to 0.6f,
             Date(LocalDate.now()) to 0.8f,
         ),
         onSelectDayOnHistory = {},
-        habitPerformance = HabitPerformance.EXCELLENT
+        unlockCount = 2,
+        notificationCount = 9,
+        onOpenHabit = {},
+        onStart = {},
+        onOpenUsageStats = {},
+        multipleClicksCutter = remember {
+            MultipleClicksCutter.get()
+        }
     )
 }
 

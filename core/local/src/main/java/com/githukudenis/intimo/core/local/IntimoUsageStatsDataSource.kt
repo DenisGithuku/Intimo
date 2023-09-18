@@ -167,6 +167,85 @@ class IntimoUsageStatsDataSource @Inject constructor(
         }.flowOn(Dispatchers.IO)
     }
 
+    fun getTotalWeeklyUsage(date: LocalDate): Flow<Long> = flow {
+        // set id to utc - api works with utc
+        val utc = ZoneId.of("UTC")
+        val defaultZone = ZoneId.systemDefault()
+
+        // set the and end time to utc midnight time
+        val startTime = date.atStartOfDay(defaultZone).withZoneSameInstant(utc)
+        val start = startTime.toInstant().toEpochMilli()
+        val end = startTime.plusDays(6).toInstant().toEpochMilli()
+
+        var allAppsUsageTime = 0L
+
+        // sorted events
+        val sortedEvents = mutableMapOf<String, MutableList<UsageEvents.Event>>()
+
+
+        val keyguardManager =
+            context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+
+        //query events only if device is unlocked
+        val systemEvents = if (!keyguardManager.isKeyguardLocked) {
+            usageStatsManager.queryEvents(start, end)
+        } else {
+            null
+        }
+
+        while (systemEvents?.hasNextEvent() == true) {
+            val event = UsageEvents.Event()
+            systemEvents.getNextEvent(event)
+
+
+            // get event list - create one if none exists
+            val packageEvents = sortedEvents[event.packageName] ?: mutableListOf()
+            packageEvents.add(event)
+            sortedEvents[event.packageName] = packageEvents
+        }
+
+
+        sortedEvents.forEach { (packageName, events) ->
+            //keep track of current event start time and end times
+            var eventStartTime = 0L
+            var eventEndTime = 0L
+            var totalTime = 0L
+
+
+            events.forEach { event ->
+                // register time when first shown
+                if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND && isScreenOn()) {
+                    eventStartTime = event.timeStamp
+
+                } else if (event.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND) {
+                    eventEndTime = event.timeStamp
+                }
+
+                /* if there's an end time and no start time
+                then the app was started the previous day
+                register midnight as the start time
+                 */
+                if (eventStartTime == 0L && eventEndTime != 0L) {
+                    eventStartTime = start
+                }
+
+                /*
+                Both start and end times are defined - this
+                means we have a session
+                 */
+                if (eventStartTime != 0L && eventEndTime != 0L) {
+                    // add session to total time
+                    totalTime += eventEndTime - eventStartTime
+                    allAppsUsageTime += totalTime
+                    // reset start and end times
+                    eventStartTime = 0L
+                    eventEndTime = 0L
+                }
+            }
+        }
+        emit(allAppsUsageTime)
+    }
+
     fun getIndividualAppUsage(
         packageName: String
     ): Flow<ApplicationInfoData> {

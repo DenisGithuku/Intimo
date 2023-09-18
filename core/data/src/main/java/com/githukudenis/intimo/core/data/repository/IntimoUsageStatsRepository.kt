@@ -50,4 +50,8 @@ class IntimoUsageStatsRepository @Inject constructor(
             packageName
         )
     }
+
+    override fun getTotalWeeklyUsage(date: LocalDate): Flow<Long> {
+        return intimoUsageStatsDataSource.getTotalWeeklyUsage(date).flowOn(intimoCoroutineDispatcher.ioDispatcher)
+    }
 }

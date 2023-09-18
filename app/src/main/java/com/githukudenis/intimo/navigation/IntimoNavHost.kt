@@ -25,6 +25,7 @@ fun IntimoNavHost(
     appState: IntimoAppState,
     startDestination: String,
     onPopupFailed: () -> Unit,
+    onRequestInAppReview: () -> Unit,
 ) {
 
     NavHost(navController = appState.navController, startDestination = splashScreenRoute) {
@@ -82,7 +83,8 @@ fun IntimoNavHost(
             },
             onOpenLicenses = {
                 appState.navigate(licensesRoute)
-            }
+            },
+            onRequestInAppReview = onRequestInAppReview
         )
         licensesScreen(onNavigateUp = {
             appState.popBackStack()

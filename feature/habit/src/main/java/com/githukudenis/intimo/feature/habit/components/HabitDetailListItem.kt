@@ -1,6 +1,5 @@
 package com.githukudenis.intimo.feature.habit.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.githukudenis.intimo.core.ui.components.clickableOnce
 
 @Composable
 fun HabitDetailListItem(
@@ -34,7 +34,7 @@ fun HabitDetailListItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
+            .clickableOnce {
                 onClick()
             }
             .padding(horizontal = 16.dp, vertical = 20.dp),
@@ -60,9 +60,9 @@ fun HabitDetailListItem(
                 }
             }
         }
-            if (action != null) {
-                action()
-            }
+        if (action != null) {
+            action()
+        }
 
     }
 }

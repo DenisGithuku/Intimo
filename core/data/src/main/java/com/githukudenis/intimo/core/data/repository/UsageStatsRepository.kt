@@ -25,4 +25,8 @@ interface UsageStatsRepository {
     fun getIndividualAppUsage(
         packageName: String
     ): Flow<ApplicationInfoData>
+
+    fun getTotalWeeklyUsage(
+        date: LocalDate
+    ): Flow<Long>
 }

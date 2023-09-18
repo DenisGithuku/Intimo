@@ -7,7 +7,7 @@ enum class HabitType {
     REFLECTION,
     EXERCISE,
     STRETCHING,
-    DECLUTTERRING,
+    NAP,
     FLOSSING,
     BREATHING
 }
