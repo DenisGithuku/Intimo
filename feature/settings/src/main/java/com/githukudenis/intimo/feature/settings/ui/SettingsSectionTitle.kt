@@ -15,7 +15,7 @@ fun SettingsSectionTitle(
     Text(
         modifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth(),
         text = text,
-        style = MaterialTheme.typography.titleMedium,
+        style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
     )
 

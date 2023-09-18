@@ -13,7 +13,8 @@ const val settingsRoute = "settings"
 
 fun NavGraphBuilder.settingsScreen(
     onNavigateUp: () -> Unit,
-    onOpenLicenses: () -> Unit
+    onOpenLicenses: () -> Unit,
+    onRequestInAppReview: () -> Unit
 ) {
     composable(route = settingsRoute,
         enterTransition = {
@@ -28,7 +29,8 @@ fun NavGraphBuilder.settingsScreen(
     ) {
         SettingsRoute(
             onNavigateUp = onNavigateUp,
-            onOpenLicenses = onOpenLicenses
+            onOpenLicenses = onOpenLicenses,
+            onRequestInAppReview = onRequestInAppReview
         )
     }
 }

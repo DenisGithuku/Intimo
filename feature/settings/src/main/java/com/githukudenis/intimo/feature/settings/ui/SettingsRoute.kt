@@ -36,6 +36,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.intimo.core.model.Theme
 import com.githukudenis.intimo.core.ui.components.IntimoAlertDialog
+import com.githukudenis.intimo.core.ui.components.MultipleClicksCutter
+import com.githukudenis.intimo.core.ui.components.clickableOnce
+import com.githukudenis.intimo.core.ui.components.get
 import com.githukudenis.intimo.feature.settings.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +46,8 @@ import com.githukudenis.intimo.feature.settings.R
 fun SettingsRoute(
     viewModel: SettingsViewModel = hiltViewModel(),
     onNavigateUp: () -> Unit,
-    onOpenLicenses: () -> Unit
+    onOpenLicenses: () -> Unit,
+    onRequestInAppReview: () -> Unit
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -54,7 +58,9 @@ fun SettingsRoute(
     val scrollBehaviour =
         TopAppBarDefaults.enterAlwaysScrollBehavior()
 
-    LocalContext.current
+    val multipleClicksCutter = remember {
+        MultipleClicksCutter.get()
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
@@ -66,7 +72,7 @@ fun SettingsRoute(
                         text = "Settings"
                     )
                 }, navigationIcon = {
-                    IconButton(onClick = onNavigateUp) {
+                    IconButton(onClick = { multipleClicksCutter.processEvent(onNavigateUp) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.ArrowBack,
                             contentDescription = stringResource(id = R.string.navigate_up_icon)
@@ -88,7 +94,8 @@ fun SettingsRoute(
             onToggleDeviceUsageNotifications = { viewModel.setShouldAllowDeviceUsageNotifications(it) },
             isHabitRemindersAllowed = uiState.habitNotificationsAllowed,
             onToggleHabitAlerts = { viewModel.setShouldAllowHabitsNotifications(it) },
-            onOpenLicenses = onOpenLicenses
+            onOpenLicenses = onOpenLicenses,
+            onRequestInAppReview = onRequestInAppReview
         )
     }
 }
@@ -103,6 +110,7 @@ fun SettingsScreen(
     isHabitRemindersAllowed: Boolean,
     onToggleHabitAlerts: (Boolean) -> Unit,
     onOpenLicenses: () -> Unit,
+    onRequestInAppReview: () -> Unit,
 ) {
     val context = LocalContext.current
 
@@ -113,6 +121,8 @@ fun SettingsScreen(
             Theme.DARK
         )
     }
+
+    var selectedTheme by remember(theme) { mutableStateOf(theme) }
 
     var themeDialogVisible by remember {
         mutableStateOf(false)
@@ -131,20 +141,28 @@ fun SettingsScreen(
             title = {
                 Text(
                     text = "App theme",
-                    style = MaterialTheme.typography.displaySmall
+                    style = MaterialTheme.typography.titleLarge
                 )
             },
             content = {
                 Column {
                     availableThemes.forEach { availableTheme ->
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .clickableOnce {
+                                    selectedTheme = availableTheme
+                                    onChangeTheme(availableTheme)
+                                }
+                                .fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             RadioButton(
-                                selected = availableTheme == theme,
-                                onClick = { onChangeTheme(availableTheme) })
+                                selected = availableTheme == selectedTheme,
+                                onClick = {
+                                    selectedTheme = availableTheme
+                                    onChangeTheme(availableTheme)
+                                })
                             Text(
                                 text = availableTheme.name.lowercase()
                                     .replaceFirstChar { it.uppercase() },
@@ -175,7 +193,7 @@ fun SettingsScreen(
                 title = {
                     Text(
                         text = "Theme",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.titleSmall
                     )
                 },
                 description = {
@@ -206,7 +224,7 @@ fun SettingsScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.device_usage_title),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.titleSmall
                     )
                 },
                 description = {
@@ -234,7 +252,7 @@ fun SettingsScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.habit_reminders_title),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.titleSmall
                     )
                 },
                 description = {
@@ -271,8 +289,26 @@ fun SettingsScreen(
             SettingsListView(
                 title = {
                     Text(
+                        text = stringResource(id = R.string.rate_app_title),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                },
+                description = {
+                    Text(
+                        text = stringResource(id = R.string.rate_app_description),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                },
+                clickable = true,
+                onClick = onRequestInAppReview
+            )
+        }
+        item {
+            SettingsListView(
+                title = {
+                    Text(
                         text = stringResource(R.string.app_version_title),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.titleSmall
                     )
                 },
                 description = {
@@ -298,7 +334,8 @@ fun SettingsScreen(
                 onClick = onOpenLicenses,
                 title = {
                     Text(
-                        text = "Licenses"
+                        text = "Licenses",
+                        style = MaterialTheme.typography.titleSmall
                     )
                 }
             )

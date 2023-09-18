@@ -1,6 +1,5 @@
 package com.githukudenis.intimo.feature.settings.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.githukudenis.intimo.core.ui.components.clickableOnce
 
 
 @Composable
@@ -29,12 +29,12 @@ fun ToggleableSettingsListView(
     }
     Row(
         modifier = Modifier
-            .clickable {
+            .clickableOnce {
                 isToggleOn = !isToggleOn
                 onToggle(isToggleOn)
             }
             .fillMaxWidth()
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            .padding(16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -65,11 +65,11 @@ fun SettingsListView(
 ) {
     Column(
         modifier = modifier
-            .clickable(clickable) {
+            .clickableOnce(clickable) {
                 onClick()
             }
             .fillMaxWidth()
-            .padding(vertical = 12.dp, horizontal = 16.dp),
+            .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         title()
