@@ -16,6 +16,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -501,7 +503,10 @@ fun LoadedScreen(
 
     Box(
         modifier = modifier
-            .padding(top = innerPadding.calculateTopPadding(), bottom = innerPadding.calculateBottomPadding())
+            .padding(
+                top = innerPadding.calculateTopPadding(),
+                bottom = innerPadding.calculateBottomPadding()
+            )
             .fillMaxSize()
     ) {
         val listState = rememberLazyListState()
@@ -557,11 +562,16 @@ fun LoadedScreen(
             }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { 10 })
         ) {
-            FilledTonalButton(onClick = {
-                scope.launch {
-                    listState.animateScrollToItem(0)
-                }
-            }, colors = ButtonDefaults.filledTonalButtonColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))) {
+            FilledTonalButton(
+                onClick = {
+                    scope.launch {
+                        listState.animateScrollToItem(0)
+                    }
+                },
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                )
+            ) {
                 Text(
                     text = stringResource(R.string.back_to_top_button_text)
                 )
@@ -613,6 +623,139 @@ fun LoadingScreen(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .border(width = 1.dp, brush = brush, shape = MaterialTheme.shapes.medium)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.padding(16.dp).matchParentSize()) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxHeight(0.6f)
+                                .width(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(
+                            modifier = Modifier
+                                .height(8.dp)
+                                .width(24.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxHeight(0.5f)
+                                .width(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(
+                            modifier = Modifier
+                                .height(8.dp)
+                                .width(24.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxHeight(0.2f)
+                                .width(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(
+                            modifier = Modifier
+                                .height(8.dp)
+                                .width(24.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxHeight(0.4f)
+                                .width(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(
+                            modifier = Modifier
+                                .height(8.dp)
+                                .width(24.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxHeight(0.2f)
+                                .width(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(
+                            modifier = Modifier
+                                .height(8.dp)
+                                .width(24.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxHeight(0.8f)
+                                .width(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(
+                            modifier = Modifier
+                                .height(8.dp)
+                                .width(24.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxHeight(0.45f)
+                                .width(16.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(
+                            modifier = Modifier
+                                .height(8.dp)
+                                .width(24.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(brush = brush)
+                        )
+                    }
+                }
+            }
+        }
         items(count = 20) {
             Row(
                 modifier = Modifier

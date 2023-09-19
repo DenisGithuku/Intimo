@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.time.LocalDate
 import javax.inject.Inject
 
@@ -32,11 +33,11 @@ class UsageStatsViewModel @Inject constructor(
 
     private val selectedDate = MutableStateFlow(LocalDate.now())
 
-    private val weeklyUsage = (0..6).map { LocalDate.now().plusDays(it.toLong()) }
+    private val weeklyUsage = (0..6).map { LocalDate.now().with(DayOfWeek.MONDAY).plusDays(it.toLong()) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val usageByDay: Flow<List<Pair<LocalDate, Pair<Float, Long>>>>
-        get() = usageStatsRepository.getTotalWeeklyUsage(LocalDate.now().minusDays(6))
+        get() = usageStatsRepository.getTotalWeeklyUsage(LocalDate.now().with(DayOfWeek.MONDAY).minusDays(6))
             .flatMapLatest { totalWeeklyUsage ->
                 combine(
                     weeklyUsage.map { date ->
