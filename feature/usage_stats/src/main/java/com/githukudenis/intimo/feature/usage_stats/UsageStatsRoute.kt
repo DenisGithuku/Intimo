@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -87,6 +88,10 @@ import com.githukudenis.intimo.core.model.DataUsageStats
 import com.githukudenis.intimo.core.ui.components.IntimoActionDialog
 import com.githukudenis.intimo.core.ui.components.IntimoAlertDialog
 import com.githukudenis.intimo.core.util.UserMessage
+import com.githukudenis.intimo.feature.usage_stats.components.UsageChart
+import com.githukudenis.intimo.feature.usage_stats.components.UsageStatsCard
+import com.githukudenis.intimo.feature.usage_stats.services.AppLaunchService
+import com.githukudenis.intimo.feature.usage_stats.services.AppsUsageRefreshService
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -176,7 +181,7 @@ fun UsageStatsRoute(
     }
 
     UsageStatsScreen(
-        usageStatsUiState = uiState,
+        uiState = uiState,
         onRetry = {
             viewModel.onRetry()
         },
@@ -201,17 +206,26 @@ fun UsageStatsRoute(
             viewModel.onEvent(
                 UsageStatsUiEvent.DismissUserMessage(messageId)
             )
-        })
+        },
+        onPrevWeekListener = { date ->
+            viewModel.onEvent(UsageStatsUiEvent.ChangeDate(date))
+        },
+        onNextWeekListener = { date ->
+            viewModel.onEvent(UsageStatsUiEvent.ChangeDate(date))
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun UsageStatsScreen(
-    usageStatsUiState: UsageStatsUiState,
+    uiState: UsageStatsUiState,
     onRetry: () -> Unit,
     onNavigateUp: () -> Unit,
     onSetAppLimit: (String, Long) -> Unit,
-    onShowMessage: (Long) -> Unit
+    onShowMessage: (Long) -> Unit,
+    onNextWeekListener: (LocalDate) -> Unit,
+    onPrevWeekListener: (LocalDate) -> Unit
 ) {
     val snackbarHostState = remember {
         SnackbarHostState()
@@ -242,7 +256,7 @@ internal fun UsageStatsScreen(
             )
         }
     ) { innerPadding ->
-        when (usageStatsUiState) {
+        when (uiState) {
             UsageStatsUiState.Loading -> {
                 LoadingScreen(
                     contentPadding = PaddingValues(
@@ -257,10 +271,10 @@ internal fun UsageStatsScreen(
 
             is UsageStatsUiState.Loaded -> LoadedScreen(
                 modifier = Modifier.consumeWindowInsets(innerPadding),
-                userMessages = usageStatsUiState.userMessages,
-                dataUsageStats = usageStatsUiState.usageStats,
-                dailyUsage = usageStatsUiState.chartData,
-                appUsageLimits = usageStatsUiState.appsInFocusMode,
+                userMessages = uiState.userMessages,
+                dataUsageStats = uiState.usageStats,
+                chartState = uiState.chartState,
+                appUsageLimits = uiState.appsInFocusMode,
                 onSetAppLimit = onSetAppLimit,
                 onShowMessage = onShowMessage,
                 innerPadding = PaddingValues(
@@ -269,11 +283,13 @@ internal fun UsageStatsScreen(
                     end = 16.dp,
                     start = 16.dp
                 ),
-                snackbarHostState = snackbarHostState
+                snackbarHostState = snackbarHostState,
+                onNextWeekListener = onNextWeekListener,
+                onPrevWeekListener = onPrevWeekListener
             )
 
             is UsageStatsUiState.Error -> ErrorScreen(
-                usageStatsUiState.userMessageList.first(),
+                uiState.userMessageList.first(),
                 onRetry = onRetry
             )
         }
@@ -285,12 +301,14 @@ fun LoadedScreen(
     modifier: Modifier = Modifier,
     userMessages: List<UserMessage>,
     dataUsageStats: DataUsageStats,
-    dailyUsage: Map<LocalDate, Pair<Float, Long>>,
+    chartState: ChartState,
     appUsageLimits: List<AppInFocusMode>,
     onSetAppLimit: (String, Long) -> Unit,
     onShowMessage: (Long) -> Unit,
     innerPadding: PaddingValues = PaddingValues(16.dp),
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    onNextWeekListener: (LocalDate) -> Unit,
+    onPrevWeekListener: (LocalDate) -> Unit
 ) {
     val appLimitDialogIsVisible = rememberSaveable {
         mutableStateOf(false)
@@ -518,11 +536,14 @@ fun LoadedScreen(
         val scope = rememberCoroutineScope()
         LazyColumn(
             state = listState,
+            modifier = Modifier.animateContentSize()
         ) {
             item {
                 UsageChart(
-                    data = dailyUsage,
+                    chartState = chartState,
                     height = 250.dp,
+                    onNextWeekListener = onNextWeekListener,
+                    onPrevWeekListener = onPrevWeekListener
                 )
             }
             items(
@@ -627,132 +648,149 @@ fun LoadingScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(300.dp)
                     .border(width = 1.dp, brush = brush, shape = MaterialTheme.shapes.medium)
             ) {
-                Row(
-                    verticalAlignment = Alignment.Bottom,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.padding(16.dp).matchParentSize()) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxHeight(0.6f)
-                                .width(16.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Spacer(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .width(24.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .matchParentSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp).fillMaxWidth(0.5f).clip(RoundedCornerShape(32.dp)).background(brush))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.75f),
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.6f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.5f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.2f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.4f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.2f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.8f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.45f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
                     }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxHeight(0.5f)
-                                .width(16.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Spacer(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .width(24.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxHeight(0.2f)
-                                .width(16.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Spacer(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .width(24.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxHeight(0.4f)
-                                .width(16.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Spacer(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .width(24.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxHeight(0.2f)
-                                .width(16.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Spacer(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .width(24.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxHeight(0.8f)
-                                .width(16.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Spacer(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .width(24.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxHeight(0.45f)
-                                .width(16.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Spacer(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .width(24.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush = brush)
-                        )
-                    }
+                    Spacer(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .fillMaxWidth(0.6f)
+                            .clip(RoundedCornerShape(32.dp))
+                            .background(brush)
+                    )
                 }
             }
         }
