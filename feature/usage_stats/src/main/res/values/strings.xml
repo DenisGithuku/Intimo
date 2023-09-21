@@ -22,4 +22,6 @@
     <string name="dialog_dismiss_button">Cancel</string>
     <string name="dialog_accept_button">Allow</string>
     <string name="app_limit_reached">%s\'s limit has been reached</string>
+    <string name="prev_week_icon_text">Previous week</string>
+    <string name="next_week_icon_text">Next week</string>
 </resources>

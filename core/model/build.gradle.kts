@@ -42,6 +42,8 @@ dependencies {
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+    implementation(libs.immutable.collections)
+
 
     implementation(libs.core.ktx)
     implementation(libs.appcompat)

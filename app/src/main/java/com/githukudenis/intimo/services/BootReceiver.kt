@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.githukudenis.intimo.core.data.util.DataSyncManager
-import com.githukudenis.intimo.feature.usage_stats.AppLaunchService
+import com.githukudenis.intimo.feature.usage_stats.services.AppLaunchService
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {

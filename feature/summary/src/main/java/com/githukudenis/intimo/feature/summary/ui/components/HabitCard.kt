@@ -9,7 +9,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +17,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +34,9 @@ import androidx.compose.ui.unit.dp
 import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitType
 import com.githukudenis.intimo.core.model.nameToString
+import com.githukudenis.intimo.core.ui.components.MultipleClicksCutter
+import com.githukudenis.intimo.core.ui.components.clickableOnce
+import com.githukudenis.intimo.core.ui.components.get
 import com.githukudenis.intimo.feature.habit.detail.getTimeFromMillis
 import com.githukudenis.intimo.feature.summary.ui.home.HabitUiModel
 import java.time.Instant
@@ -52,6 +55,9 @@ fun HabitCard(
     onStart: (Long) -> Unit
 ) {
     val context = LocalContext.current
+    val multipleClicksCutter = remember {
+        MultipleClicksCutter.get()
+    }
 
     val now = Calendar.getInstance()
     val habitTime = Calendar.getInstance().apply { timeInMillis = habitUiModel.startTime }
@@ -87,7 +93,7 @@ fun HabitCard(
                 MaterialTheme.colorScheme.surface,
             )
 
-            .clickable {
+            .clickableOnce {
                 onOpenHabitDetails(habitUiModel.habitId)
             }
             .animateContentSize()
@@ -183,20 +189,21 @@ fun HabitCard(
                     }
                 }
             }
-            FilledTonalButton(
+
+            Button(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !habitUiModel.completed.second && startTime.get(Calendar.DAY_OF_YEAR) >= now.get(
                     Calendar.DAY_OF_YEAR
                 ),
-                onClick = { onStart(habitUiModel.habitId) },
-                colors = ButtonDefaults.filledTonalButtonColors(
+                onClick = { multipleClicksCutter.processEvent { onStart(habitUiModel.habitId) } },
+                colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                 )
             ) {
                 Text(
                     text = if (isRunning) "Progress details" else "Start",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(
+                    color = MaterialTheme.colorScheme.primary.copy(
                         alpha = 0.8f
                     )
                 )

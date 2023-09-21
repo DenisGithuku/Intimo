@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -15,6 +16,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,11 +38,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DividerDefaults
@@ -84,7 +88,12 @@ import com.githukudenis.intimo.core.model.DataUsageStats
 import com.githukudenis.intimo.core.ui.components.IntimoActionDialog
 import com.githukudenis.intimo.core.ui.components.IntimoAlertDialog
 import com.githukudenis.intimo.core.util.UserMessage
+import com.githukudenis.intimo.feature.usage_stats.components.UsageChart
+import com.githukudenis.intimo.feature.usage_stats.components.UsageStatsCard
+import com.githukudenis.intimo.feature.usage_stats.services.AppLaunchService
+import com.githukudenis.intimo.feature.usage_stats.services.AppsUsageRefreshService
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 @Composable
 fun UsageStatsRoute(
@@ -172,7 +181,7 @@ fun UsageStatsRoute(
     }
 
     UsageStatsScreen(
-        usageStatsUiState = uiState,
+        uiState = uiState,
         onRetry = {
             viewModel.onRetry()
         },
@@ -197,17 +206,22 @@ fun UsageStatsRoute(
             viewModel.onEvent(
                 UsageStatsUiEvent.DismissUserMessage(messageId)
             )
-        })
+        },
+        onChangeDateListener = { date ->
+            viewModel.onEvent(UsageStatsUiEvent.ChangeDate(date))
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun UsageStatsScreen(
-    usageStatsUiState: UsageStatsUiState,
+    uiState: UsageStatsUiState,
     onRetry: () -> Unit,
     onNavigateUp: () -> Unit,
     onSetAppLimit: (String, Long) -> Unit,
-    onShowMessage: (Long) -> Unit
+    onShowMessage: (Long) -> Unit,
+    onChangeDateListener: (LocalDate) -> Unit,
 ) {
     val snackbarHostState = remember {
         SnackbarHostState()
@@ -230,7 +244,7 @@ internal fun UsageStatsScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateUp) {
                         Icon(
-                            Icons.Default.ArrowBack,
+                            Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.back_button),
                         )
                     }
@@ -238,7 +252,7 @@ internal fun UsageStatsScreen(
             )
         }
     ) { innerPadding ->
-        when (usageStatsUiState) {
+        when (uiState) {
             UsageStatsUiState.Loading -> {
                 LoadingScreen(
                     contentPadding = PaddingValues(
@@ -253,9 +267,10 @@ internal fun UsageStatsScreen(
 
             is UsageStatsUiState.Loaded -> LoadedScreen(
                 modifier = Modifier.consumeWindowInsets(innerPadding),
-                userMessages = usageStatsUiState.userMessages,
-                dataUsageStats = usageStatsUiState.usageStats,
-                appUsageLimits = usageStatsUiState.appsInFocusMode,
+                userMessages = uiState.userMessages,
+                dataUsageStats = uiState.usageStats,
+                chartState = uiState.chartState,
+                appUsageLimits = uiState.appsInFocusMode,
                 onSetAppLimit = onSetAppLimit,
                 onShowMessage = onShowMessage,
                 innerPadding = PaddingValues(
@@ -264,27 +279,31 @@ internal fun UsageStatsScreen(
                     end = 16.dp,
                     start = 16.dp
                 ),
-                snackbarHostState = snackbarHostState
+                snackbarHostState = snackbarHostState,
+                onChangeDateListener = onChangeDateListener,
             )
 
             is UsageStatsUiState.Error -> ErrorScreen(
-                usageStatsUiState.userMessageList.first(),
+                uiState.userMessageList.first(),
                 onRetry = onRetry
             )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LoadedScreen(
     modifier: Modifier = Modifier,
     userMessages: List<UserMessage>,
     dataUsageStats: DataUsageStats,
+    chartState: ChartState,
     appUsageLimits: List<AppInFocusMode>,
     onSetAppLimit: (String, Long) -> Unit,
     onShowMessage: (Long) -> Unit,
     innerPadding: PaddingValues = PaddingValues(16.dp),
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    onChangeDateListener: (LocalDate) -> Unit
 ) {
     val appLimitDialogIsVisible = rememberSaveable {
         mutableStateOf(false)
@@ -497,6 +516,10 @@ fun LoadedScreen(
 
     Box(
         modifier = modifier
+            .padding(
+                top = innerPadding.calculateTopPadding(),
+                bottom = innerPadding.calculateBottomPadding()
+            )
             .fillMaxSize()
     ) {
         val listState = rememberLazyListState()
@@ -507,9 +530,15 @@ fun LoadedScreen(
         }
         val scope = rememberCoroutineScope()
         LazyColumn(
-            contentPadding = innerPadding,
             state = listState,
+            modifier = Modifier.animateContentSize()
         ) {
+            item {
+                UsageChart(
+                    chartState = chartState,
+                    onChangeDateListener = onChangeDateListener,
+                )
+            }
             items(
                 dataUsageStats.appUsageList,
                 key = { it.packageName }) { applicationInfoData ->
@@ -517,6 +546,7 @@ fun LoadedScreen(
                     appUsageLimits.find { it.packageName == applicationInfoData.packageName }?.limitDuration
                         ?: 0L
                 UsageStatsCard(
+                    modifier = Modifier.animateItemPlacement(),
                     applicationInfoData = applicationInfoData,
                     usageLimit = usageLimit,
                     onOpenLimitDialog = { isSystem ->
@@ -547,11 +577,16 @@ fun LoadedScreen(
             }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { 10 })
         ) {
-            FilledTonalButton(onClick = {
-                scope.launch {
-                    listState.animateScrollToItem(0)
-                }
-            }) {
+            FilledTonalButton(
+                onClick = {
+                    scope.launch {
+                        listState.animateScrollToItem(0)
+                    }
+                },
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                )
+            ) {
                 Text(
                     text = stringResource(R.string.back_to_top_button_text)
                 )
@@ -603,6 +638,155 @@ fun LoadingScreen(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .matchParentSize(),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp).fillMaxWidth(0.5f).clip(RoundedCornerShape(32.dp)).background(brush))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.75f),
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.6f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.5f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.2f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.4f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.2f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.8f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(
+                                modifier = Modifier
+                                    .fillMaxHeight(0.45f)
+                                    .width(16.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(
+                                modifier = Modifier
+                                    .height(8.dp)
+                                    .width(24.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(brush = brush)
+                            )
+                        }
+                    }
+                    Spacer(
+                        modifier = Modifier
+                            .height(40.dp)
+                            .fillMaxWidth(0.6f)
+                            .clip(RoundedCornerShape(32.dp))
+                            .background(brush)
+                    )
+                }
+            }
+        }
         items(count = 20) {
             Row(
                 modifier = Modifier
@@ -613,8 +797,8 @@ fun LoadingScreen(
             ) {
                 Spacer(
                     modifier = Modifier
-                        .size(32.dp)
-                        .clip(MaterialTheme.shapes.medium)
+                        .size(28.dp)
+                        .clip(MaterialTheme.shapes.small)
                         .background(brush = brush)
                 )
                 Column {

@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.Start
 import androidx.compose.material3.Button
@@ -23,7 +23,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +48,9 @@ import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitType
 import com.githukudenis.intimo.core.model.nameToString
 import com.githukudenis.intimo.core.ui.components.Date
+import com.githukudenis.intimo.core.ui.components.MultipleClicksCutter
 import com.githukudenis.intimo.core.ui.components.TimePickerDialog
+import com.githukudenis.intimo.core.ui.components.get
 import com.githukudenis.intimo.core.ui.components.rememberDateUiState
 import com.githukudenis.intimo.feature.habit.R
 import com.githukudenis.intimo.feature.habit.components.DatePill
@@ -73,6 +74,10 @@ fun HabitDetailRoute(
 
     val topAppBarScrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
 
+    val multipleClicksCutter = remember {
+        MultipleClicksCutter.get()
+    }
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -84,9 +89,9 @@ fun HabitDetailRoute(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onNavigateUp() }) {
+                    IconButton(onClick = { multipleClicksCutter.processEvent(onNavigateUp) }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.navigate_up)
                         )
                     }
@@ -103,7 +108,8 @@ fun HabitDetailRoute(
             onUpdate = { habitUiModel ->
                 habitDetailViewModel.onUpdate(habitUiModel)
                 onNavigateUp()
-            }
+            },
+            multipleClicksCutter = multipleClicksCutter
         )
     }
 
@@ -115,6 +121,9 @@ private fun HabitDetailScreen(
     modifier: Modifier = Modifier,
     uiState: HabitDetailUiState,
     onStartHabit: (Long) -> Unit,
+    multipleClicksCutter: MultipleClicksCutter = remember {
+        MultipleClicksCutter.get()
+    },
     onUpdate: (HabitUiModel) -> Unit
 ) {
     Column(
@@ -161,17 +170,27 @@ private fun HabitDetailScreen(
             }
         }
         if (uiState.habitUiModel?.completed == false) {
-            FilledTonalButton(
-                onClick = { uiState.habitId?.let { onStartHabit(it) } },
+            Button(
+                onClick = {
+                    multipleClicksCutter.processEvent {
+                        uiState.habitId?.let {
+                            onStartHabit(
+                                it
+                            )
+                        }
+                    }
+                },
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
-                colors = ButtonDefaults.filledTonalButtonColors(
+                colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
                 )
             ) {
                 Text(
-                    text = if (uiState.habitUiModel.running) "See progress" else "Start habit"
+                    text = if (uiState.habitUiModel.running) "See progress" else "Start habit",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
                 )
             }
         }

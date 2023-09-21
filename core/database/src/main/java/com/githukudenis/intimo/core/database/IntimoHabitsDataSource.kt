@@ -103,12 +103,11 @@ class IntimoHabitsDataSource @Inject constructor(
 
             ),
             DefaultHabit(
-                icon = "\uD83D\uDDD1️",
-                startTime = generateHabitTime(8),
-                duration = generateDuration(2, DurationType.HOUR),
-                habitType = HabitType.DECLUTTERRING,
-                durationType = DurationType.HOUR
-
+                icon = "\uD83D\uDE34",
+                startTime = generateHabitTime(hour = 13, minute = 40),
+                duration = generateDuration(20, DurationType.MINUTE),
+                habitType = HabitType.NAP,
+                durationType = DurationType.MINUTE
             ),
             DefaultHabit(
                 icon = "\uD83E\uDD38",

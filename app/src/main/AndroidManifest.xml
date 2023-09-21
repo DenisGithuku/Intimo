@@ -37,7 +37,7 @@
                     android:host="active_habit" />
             </intent-filter>
         </activity>
-        <service android:exported="false" android:name=".feature.usage_stats.AppsUsageRefreshService"/>
+        <service android:exported="false" android:name=".feature.usage_stats.services.AppsUsageRefreshService"/>
         <service android:exported="false" android:name=".feature.habit.active.ActiveHabitService" />
         <service android:name=".core.data.repository.IntimoNotificationsListener"
             android:label="@string/app_name"
@@ -47,7 +47,7 @@
                 <action android:name="android.service.notification.NotificationListenerService"/>
             </intent-filter>
         </service>
-        <service android:exported="false" android:name=".feature.usage_stats.AppLaunchService"/>
+        <service android:exported="false" android:name=".feature.usage_stats.services.AppLaunchService"/>
         <receiver android:exported="false" android:name=".core.data.util.DataSyncManager" />
         <receiver android:name=".services.BootReceiver"
             android:exported="false">

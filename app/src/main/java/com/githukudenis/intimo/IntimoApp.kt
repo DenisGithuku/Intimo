@@ -9,7 +9,8 @@ import com.githukudenis.intimo.feature.summary.navigation.summaryNavigationRoute
 fun IntimoApp(
     shouldHideOnBoarding: Boolean,
     onPopupFailed: () -> Unit,
-    appState: IntimoAppState = rememberIntimoAppState()
+    appState: IntimoAppState = rememberIntimoAppState(),
+    onRequestInAppReview: () -> Unit
 ) {
     val startDestination =
         if (shouldHideOnBoarding) summaryNavigationRoute else onBoardingNavigationRoute
@@ -18,6 +19,7 @@ fun IntimoApp(
         appState = appState,
         startDestination = startDestination,
         onPopupFailed = onPopupFailed,
+        onRequestInAppReview = onRequestInAppReview
     )
 
 }

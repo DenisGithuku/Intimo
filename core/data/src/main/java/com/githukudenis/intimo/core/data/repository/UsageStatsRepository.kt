@@ -19,10 +19,18 @@ interface UsageStatsRepository {
 
     suspend fun insertDayAndNotifications(dayId: Long, notifId: Long)
 
-    fun queryAndAggregateUsageStats(
-        date: LocalDate
-    ): Flow<DataUsageStats>
-    fun getIndividualAppUsage(
-        packageName: String
-    ): Flow<ApplicationInfoData>
+    suspend fun queryAndAggregateUsageStats(
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): DataUsageStats
+    suspend fun getIndividualAppUsage(
+        packageName: String,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): ApplicationInfoData
+
+    suspend fun getTotalWeeklyUsage(
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): Long
 }

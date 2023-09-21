@@ -65,7 +65,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -90,10 +89,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.intimo.core.designsystem.theme.LocalTonalElevation
-import com.githukudenis.intimo.core.model.ApplicationInfoData
-import com.githukudenis.intimo.core.model.DurationType
-import com.githukudenis.intimo.core.model.HabitType
 import com.githukudenis.intimo.core.ui.components.Date
+import com.githukudenis.intimo.core.ui.components.MultipleClicksCutter
+import com.githukudenis.intimo.core.ui.components.get
 import com.githukudenis.intimo.core.util.MessageType
 import com.githukudenis.intimo.core.util.TimeFormatter
 import com.githukudenis.intimo.core.util.UserMessage
@@ -101,12 +99,9 @@ import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.intimo.feature.summary.ui.components.CardInfo
 import com.githukudenis.intimo.feature.summary.ui.components.HabitCard
 import com.githukudenis.intimo.feature.summary.ui.components.HabitHistoryComponent
-import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
 import com.githukudenis.intimo.feature.summary.ui.components.NotificationCard
 import com.githukudenis.intimo.feature.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.intimo.feature.summary.util.hasUsageAccessPermissions
-import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.util.Calendar
 
 
@@ -126,6 +121,11 @@ internal fun SummaryRoute(
     val snackbarHostState = remember {
         SnackbarHostState()
     }
+
+    val multipleClicksCutter = remember {
+        MultipleClicksCutter.get()
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
@@ -139,7 +139,7 @@ internal fun SummaryRoute(
                 },
                 actions = {
                     IconButton(
-                        onClick = onOpenSettings
+                        onClick = { multipleClicksCutter.processEvent(onOpenSettings) }
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -375,33 +375,23 @@ internal fun SummaryRoute(
                             start = 16.dp,
                             end = 16.dp
                         ),
-                        runningHabitState = uiState.runningHabitState,
-                        usageStats = uiState.summaryData?.usageStats?.appUsageList ?: emptyList(),
-                        unlockCount = uiState.summaryData?.unlockCount ?: 0,
-                        notificationCount = uiState.notificationCount,
-                        habitDataList = uiState.habitDataList,
-                        habitPerformance = uiState.habitPerformance,
+                        usageStatsState = uiState.usageStatsState,
+                        habitsState = uiState.habitsState,
+                        onSelectDayOnHistory = { date ->
+                            summaryViewModel.onEvent(SummaryUiEvent.SelectDayOnHistory(date))
+                        },
                         onOpenHabit = { habitId -> onOpenHabitDetails(habitId) },
-                        usageStatsLoading = uiState.summaryData?.usageStats?.appUsageList?.isEmpty() == true,
                         onStart = { habitId ->
-                            if (uiState.runningHabitState.habitId != null && uiState.runningHabitState.habitId != habitId) {
-                                summaryViewModel.onEvent(
-                                    SummaryUiEvent.ShowMessage(
-                                        UserMessage(
-                                            id = 1,
-                                            message = context.getString(R.string.multiple_habit_running_error_text),
-                                            messageType = MessageType.ERROR(dismissable = true)
-                                        )
-                                    )
-                                )
-                                return@SummaryScreen
-                            }
                             onStartHabit(habitId)
                         },
                         onOpenUsageStats = onOpenUsageStats,
-                        habitProgress = uiState.habitHistoryStateList,
-                        onSelectDayOnHistory = { date ->
-                            summaryViewModel.onEvent(SummaryUiEvent.SelectDayOnHistory(date))
+                        multipleClicksCutter = multipleClicksCutter,
+                        onShowMessage = { message ->
+                            summaryViewModel.onEvent(
+                                SummaryUiEvent.ShowMessage(
+                                    message
+                                )
+                            )
                         }
                     )
                 }
@@ -415,23 +405,18 @@ internal fun SummaryRoute(
 internal fun SummaryScreen(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(16.dp),
-    usageStatsLoading: Boolean,
-    runningHabitState: RunningHabitState,
-    usageStats: List<ApplicationInfoData>,
-    habitDataList: List<HabitUiModel>,
-    habitPerformance: HabitPerformance,
-    habitProgress: Map<Date, Float>,
+    usageStatsState: UsageStatsState,
+    habitsState: HabitsState,
     onSelectDayOnHistory: (Date) -> Unit,
-    unlockCount: Int,
-    notificationCount: Int,
     onOpenHabit: (Long) -> Unit,
     onStart: (Long) -> Unit,
-    onOpenUsageStats: () -> Unit
+    onOpenUsageStats: () -> Unit,
+    multipleClicksCutter: MultipleClicksCutter,
+    onShowMessage: (UserMessage) -> Unit
 ) {
 
     val context = LocalContext.current
     val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
 
     LazyColumn(
         state = listState,
@@ -451,11 +436,8 @@ internal fun SummaryScreen(
             )
         }
         appUsageData(
-            appUsageStats = usageStats,
-            unlockCount = unlockCount,
-            notificationCount = notificationCount,
-            context = context,
-            isLoading = usageStatsLoading,
+            usageStatsState = usageStatsState,
+            multipleClicksCutter = multipleClicksCutter,
             onOpenUsageStats = onOpenUsageStats
         )
         item {
@@ -468,20 +450,39 @@ internal fun SummaryScreen(
             )
         }
         item {
-            HabitHistoryComponent(
-                habitProgress = habitProgress,
-                onSelectDay = onSelectDayOnHistory
-            )
+            when (habitsState) {
+                HabitsState.Empty -> {}
+                HabitsState.Loading -> {
+                    CircularProgressIndicator()
+                }
+
+                is HabitsState.Success -> {
+                    HabitHistoryComponent(
+                        habitProgress = habitsState.habitHistoryStateList,
+                        onSelectDay = onSelectDayOnHistory
+                    )
+                }
+            }
+
         }
         item {
-            NotificationCard(
-                habitPerformance = habitPerformance,
-                onTakeAction = {
-                    scope.launch {
-                        listState.animateScrollToItem(7)
-                    }
+            when (habitsState) {
+                HabitsState.Empty -> {}
+                HabitsState.Loading -> {
+                    CircularProgressIndicator()
                 }
-            )
+
+                is HabitsState.Success -> {
+                    NotificationCard(
+                        habitPerformance = habitsState.habitPerformance,
+                        notificationButtonVisible = habitsState.habitDataList.isNotEmpty(),
+                        onTakeAction = {
+                            onOpenHabit(habitsState.habitDataList.first().habitId)
+                        }
+                    )
+                }
+            }
+
         }
         item {
             Text(
@@ -497,9 +498,10 @@ internal fun SummaryScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 habitList(
-                    habitDataList = habitDataList,
+                    habitsState = habitsState,
                     onOpenHabit = onOpenHabit,
-                    runningHabitState = runningHabitState,
+                    context = context,
+                    onShowMessage = onShowMessage,
                     onStart = onStart
                 )
             }
@@ -509,16 +511,13 @@ internal fun SummaryScreen(
 }
 
 fun LazyListScope.appUsageData(
-    isLoading: Boolean,
-    appUsageStats: List<ApplicationInfoData>,
-    unlockCount: Int,
-    notificationCount: Int,
-    context: Context,
+    usageStatsState: UsageStatsState,
+    multipleClicksCutter: MultipleClicksCutter,
     onOpenUsageStats: () -> Unit
 ) {
     item {
         Surface(
-            onClick = onOpenUsageStats,
+            onClick = { multipleClicksCutter.processEvent(onOpenUsageStats) },
             shape = MaterialTheme.shapes.large,
             border = BorderStroke(
                 width = 1.dp,
@@ -528,14 +527,14 @@ fun LazyListScope.appUsageData(
             )
         ) {
             Crossfade(
-                targetState = isLoading, label = "usage_stats",
+                targetState = usageStatsState, label = "usage_stats",
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
                     stiffness = Spring.StiffnessLow
                 )
-            ) {
-                when (it) {
-                    true -> {
+            ) { state ->
+                when (state) {
+                    UsageStatsState.Loading -> {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -552,7 +551,8 @@ fun LazyListScope.appUsageData(
                         }
                     }
 
-                    false -> {
+                    is UsageStatsState.Loaded -> {
+                        val context = LocalContext.current
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
@@ -566,8 +566,8 @@ fun LazyListScope.appUsageData(
                                 /*
                                     Get total app usage
                                      */
-                                val totalAppUsage = remember(appUsageStats) {
-                                    appUsageStats.sumOf { usageStat -> usageStat.usageDuration.toInt() }
+                                val totalAppUsage = remember(state.usageStats) {
+                                    state.usageStats.sumOf { usageStat -> usageStat.usageDuration.toInt() }
                                         .toFloat()
                                 }
 
@@ -575,7 +575,8 @@ fun LazyListScope.appUsageData(
                                     splice most four used apps
                                      */
                                 val fourMostUsedAppDurations =
-                                    appUsageStats.take(4).map { app -> app.usageDuration.toFloat() }
+                                    state.usageStats.take(4)
+                                        .map { app -> app.usageDuration.toFloat() }
                                         .toMutableList()
 
 
@@ -583,7 +584,7 @@ fun LazyListScope.appUsageData(
                                     get sum of remaining values
                                      */
                                 val remainingTotalUsage =
-                                    appUsageStats.drop(4)
+                                    state.usageStats.drop(4)
                                         .sumOf { usage -> usage.usageDuration.toInt() }.toFloat()
 
 
@@ -626,7 +627,7 @@ fun LazyListScope.appUsageData(
 
                                 val textMeasurer = rememberTextMeasurer()
                                 val totalAppTime =
-                                    appUsageStats.sumOf { appUsage -> appUsage.usageDuration }
+                                    state.usageStats.sumOf { appUsage -> appUsage.usageDuration }
                                 val totalAppTimeText = TimeFormatter.getTimeFromMillis(totalAppTime)
 
 
@@ -649,13 +650,13 @@ fun LazyListScope.appUsageData(
                                                         */
                                                     val arcColor =
                                                         fourMostUsedAppDurations.map { duration ->
-                                                            appUsageStats.find { usageStat -> usageStat.usageDuration.toFloat() == duration }
+                                                            state.usageStats.find { usageStat -> usageStat.usageDuration.toFloat() == duration }
                                                         }[i]?.colorSwatch ?: (0xFF3A5BAB).toInt()
 
                                                     drawArc(
                                                         color = Color(arcColor),
-                                                        startAngle = startAngle * animateArchValue.value,
-                                                        sweepAngle = angles[i],
+                                                        startAngle = startAngle ,
+                                                        sweepAngle = angles[i]* animateArchValue.value,
                                                         useCenter = false,
                                                         style = Stroke(width = 12.dp.toPx()),
                                                     )
@@ -677,7 +678,7 @@ fun LazyListScope.appUsageData(
                                 Column {
                                     fourMostUsedAppDurations.forEach { usage ->
                                         val appName =
-                                            appUsageStats
+                                            state.usageStats
                                                 .find { app -> app.usageDuration.toFloat() == usage }?.packageName?.let { packageName ->
                                                     getApplicationLabel(
                                                         packageName,
@@ -690,7 +691,7 @@ fun LazyListScope.appUsageData(
                                         Use the value of other summed apps
                                          */
                                         val upTime =
-                                            appUsageStats.find { app -> app.usageDuration.toFloat() == usage }?.usageDuration
+                                            state.usageStats.find { app -> app.usageDuration.toFloat() == usage }?.usageDuration
                                                 ?: fourMostUsedAppDurations.last().toLong()
 
                                         val formattedTime = TimeFormatter.getTimeFromMillis(upTime)
@@ -700,7 +701,7 @@ fun LazyListScope.appUsageData(
                                         Retrieve color generated from icon or use secondary app color
                                          */
                                         val color =
-                                            appUsageStats.find { app -> app.usageDuration.toFloat() == usage }?.colorSwatch
+                                            state.usageStats.find { app -> app.usageDuration.toFloat() == usage }?.colorSwatch
                                                 ?: (0xFF3A5BAB).toInt()
 
 
@@ -747,15 +748,17 @@ fun LazyListScope.appUsageData(
                             ) {
                                 CardInfo(
                                     title = "Unlocks",
-                                    value = "$unlockCount"
+                                    value = "${state.unlockCount}"
                                 )
                                 CardInfo(
                                     title = "Notifications",
-                                    value = "$notificationCount"
+                                    value = "${state.notificationCount}"
                                 )
                             }
                         }
                     }
+
+                    UsageStatsState.Empty -> {}
                 }
             }
 
@@ -849,7 +852,10 @@ fun LoadingScreen(
                     .padding(12.dp)
                     .fillMaxWidth(),
             ) {
-                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -887,7 +893,13 @@ fun LoadingScreen(
                                 .background(brush = brush)
                         )
                     }
-                    Spacer(modifier = Modifier.height(30.dp).fillMaxWidth(0.2f).clip(RoundedCornerShape(12.dp)).background(brush = brush))
+                    Spacer(
+                        modifier = Modifier
+                            .height(30.dp)
+                            .fillMaxWidth(0.2f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(brush = brush)
+                    )
                 }
             }
         }
@@ -936,13 +948,13 @@ fun UsageStatsShimmerCard(brush: Brush) {
                             )
                         )
                     }
-                        Spacer(
-                            modifier = Modifier
-                                .height(8.dp)
-                                .fillMaxWidth(0.2f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(brush)
-                        )
+                    Spacer(
+                        modifier = Modifier
+                            .height(8.dp)
+                            .fillMaxWidth(0.2f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(brush)
+                    )
 
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -1083,20 +1095,51 @@ fun LoadingShimmerListView(brush: Brush) {
 
 
 fun LazyListScope.habitList(
-    runningHabitState: RunningHabitState,
-    habitDataList: List<HabitUiModel>,
+    habitsState: HabitsState,
+    context: Context,
     onOpenHabit: (Long) -> Unit,
+    onShowMessage: (UserMessage) -> Unit,
     onStart: (Long) -> Unit
 ) {
-    items(items = habitDataList, key = { it.habitId }) { habitUiModel ->
-        HabitCard(
-            habitUiModel = habitUiModel,
-            isRunning = runningHabitState.habitId == habitUiModel.habitId,
-            onOpenHabitDetails = { habitId ->
-                onOpenHabit(habitId)
-            }, onStart = onStart
-        )
+
+    when (habitsState) {
+        HabitsState.Empty -> {}
+        HabitsState.Loading -> {
+            item {
+                Box(
+                    modifier = Modifier.height(120.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+
+        is HabitsState.Success -> {
+            items(items = habitsState.habitDataList, key = { it.habitId }) { habitUiModel ->
+                HabitCard(
+                    habitUiModel = habitUiModel,
+                    isRunning = habitsState.runningHabitState.habitId == habitUiModel.habitId,
+                    onOpenHabitDetails = { habitId ->
+                        onOpenHabit(habitId)
+                    }, onStart = { habitId ->
+                        if (habitsState.runningHabitState.habitId != null && habitsState.runningHabitState.habitId != habitId) {
+                            onShowMessage(
+                                UserMessage(
+                                    id = 1,
+                                    message = context.getString(R.string.multiple_habit_running_error_text),
+                                    messageType = MessageType.ERROR(dismissable = true)
+                                )
+                            )
+                            return@HabitCard
+                        }
+                        onStart(habitId)
+                    }
+                )
+            }
+        }
     }
+
 }
 
 fun getApplicationLabel(packageName: String, context: Context): String {
@@ -1122,62 +1165,54 @@ private fun getTimeStatus(): String {
     }
 }
 
-@Preview
-@Composable
-fun SummaryScreenPrev() {
-    SummaryScreen(
-        contentPadding = PaddingValues(12.dp),
-        usageStatsLoading = false,
-        runningHabitState = RunningHabitState(
-            habitId = 2, isRunning = true, remainingTime = 25000L
-        ),
-        usageStats = listOf(),
-        habitDataList = listOf(
-            HabitUiModel(
-                Pair(0L, false),
-                10000L,
-                2,
-                "\uD83E\uDEC1",
-                HabitType.BREATHING,
-                startTime = 1627350000L,
-                duration = 30000L,
-                durationType = DurationType.MINUTE
-            ),
-            HabitUiModel(
-                Pair(0L, true),
-                1000L,
-                3,
-                "\uD83C\uDFC3",
-                HabitType.EXERCISE,
-                startTime = 1627350000L,
-                duration = 30000L,
-                durationType = DurationType.MINUTE
-            ),
-            HabitUiModel(
-                Pair(0L, false),
-                1000L,
-                4,
-                "\uD83D\uDCDA",
-                HabitType.READING,
-                startTime = 1627350000L,
-                duration = 30000L,
-                durationType = DurationType.MINUTE
-            ),
-        ),
-        unlockCount = 2,
-        notificationCount = 9,
-        onOpenHabit = {},
-        onStart = {},
-        onOpenUsageStats = {},
-        habitProgress = mapOf(
-            Date(LocalDate.now().minusDays(2)) to 0.5f,
-            Date(LocalDate.now().minusDays(1)) to 0.6f,
-            Date(LocalDate.now()) to 0.8f,
-        ),
-        onSelectDayOnHistory = {},
-        habitPerformance = HabitPerformance.EXCELLENT
-    )
-}
+//@Preview
+//@Composable
+//fun SummaryScreenPrev() {
+//    SummaryScreen(
+//        contentPadding = PaddingValues(12.dp),
+//        habitDataList = listOf(
+//            HabitUiModel(
+//                Pair(0L, false),
+//                10000L,
+//                2,
+//                "\uD83E\uDEC1",
+//                HabitType.BREATHING,
+//                startTime = 1627350000L,
+//                duration = 30000L,
+//                durationType = DurationType.MINUTE
+//            ),
+//            HabitUiModel(
+//                Pair(0L, true),
+//                1000L,
+//                3,
+//                "\uD83C\uDFC3",
+//                HabitType.EXERCISE,
+//                startTime = 1627350000L,
+//                duration = 30000L,
+//                durationType = DurationType.MINUTE
+//            ),
+//            HabitUiModel(
+//                Pair(0L, false),
+//                1000L,
+//                4,
+//                "\uD83D\uDCDA",
+//                HabitType.READING,
+//                startTime = 1627350000L,
+//                duration = 30000L,
+//                durationType = DurationType.MINUTE
+//            ),
+//        ),
+//        onSelectDayOnHistory = {},
+//        onOpenHabit = {},
+//        onStart = {},
+//        onOpenUsageStats = {},
+//        habitsState = HabitsState.Loading,
+//        usageStatsState = UsageStatsState.Loading,
+//        multipleClicksCutter = remember {
+//            MultipleClicksCutter.get()
+//        }
+//    )
+//}
 
 
 @Preview

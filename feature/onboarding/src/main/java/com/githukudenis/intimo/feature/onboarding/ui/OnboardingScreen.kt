@@ -113,7 +113,7 @@ fun OnBoardingRoutePrev() {
         defaultHabitList = listOf(
             DefaultHabit(
                 icon = "\uD83D\uDE0E",
-                habitType = HabitType.DECLUTTERRING,
+                habitType = HabitType.NAP,
                 selected = true,
                 durationType = DurationType.MINUTE
 

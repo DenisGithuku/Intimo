@@ -3,7 +3,6 @@ package com.githukudenis.intimo.feature.habit.components
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +43,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.githukudenis.intimo.core.ui.components.clickableOnce
 import com.githukudenis.intimo.feature.habit.R
 
 @Composable
@@ -204,6 +204,7 @@ fun CountDownTimer(
                     } else {
                         onPauseTimer()
                     }
+
                 })
             CountDownButton(
                 icon = {
@@ -233,7 +234,7 @@ fun CountDownButton(
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                 shape = MaterialTheme.shapes.medium
             )
-            .clickable(enabled = enabled) { onClick() }
+            .clickableOnce(enabled = enabled) { onClick() }
             .padding(12.dp)
     ) {
         icon()
@@ -258,16 +259,15 @@ fun CountDownTimerPrev() {
     CountDownTimer(
         modifier = Modifier.size(200.dp),
         totalTime = 1000L * 60,
-        currentTime = 9000L * 60,
         habitName = "Sleeping",
+        currentTime = 9000L * 60,
         isTimerRunning = false,
         onStartTimer = {},
         onPauseTimer = {},
         onResumeTimer = {},
-        onCancelHabit = {},
         onRestartHabit = {},
-        onTimerFinished = {}
-    )
+        onCancelHabit = {}
+    ) {}
 }
 
 @Preview

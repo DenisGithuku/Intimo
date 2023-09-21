@@ -4,15 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.intimo.core.data.repository.HabitsRepository
 import com.githukudenis.intimo.core.data.repository.UsageStatsRepository
-import com.githukudenis.intimo.core.model.DataUsageStats
 import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
 import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.Instant
@@ -36,23 +37,35 @@ class SummaryViewModel @Inject constructor(
         set(Calendar.MILLISECOND, 0)
     }.timeInMillis
 
+    private val usageStatsState: MutableStateFlow<UsageStatsState>
+        get() = MutableStateFlow(UsageStatsState.Loading)
+
     private var queryDetails =
         MutableStateFlow(QueryTime(date = LocalDate.now()))
 
-    private val usageStats = combine(
-        usageStatsRepository.queryAndAggregateUsageStats(
-            date = queryDetails.value.date ?: LocalDate.now()
-        ),
-        usageStatsRepository.dayAndNotificationList,
-    ) { usageStats, dayAndNotifications ->
-        Pair(usageStats, dayAndNotifications)
-    }
+    private var userMessageList = MutableStateFlow(emptyList<UserMessage>())
+
+
+    private var usageStatsJob: Job? = null
 
     private val habitHistoryState = combine(
         habitsRepository.selectedHabitList,
-        habitsRepository.completedHabitList
-    ) { selected, completed ->
-        completed.associate { dayAndHabits ->
+        habitsRepository.completedHabitList,
+        habitsRepository.runningHabits
+    ) { selected, completed, running ->
+
+        val runningHabitState = if (running.isNotEmpty()) {
+            val habit = running.first()
+            RunningHabitState(
+                habitId = habit.habitId,
+                isRunning = habit.isRunning,
+                remainingTime = habit.remainingTime
+            )
+        } else {
+            RunningHabitState()
+        }
+
+        val historyState = completed.associate { dayAndHabits ->
             Pair(
                 Date(
                     date = Instant.fromEpochMilliseconds(dayAndHabits.day.dayId).toLocalDateTime(
@@ -62,86 +75,80 @@ class SummaryViewModel @Inject constructor(
                 (dayAndHabits.habits.size.toFloat() / selected.size) * 1f
             )
         }
+
+        val habitPerformance = when {
+            historyState.getValue(
+                Date(
+                    queryDetails.value.date ?: LocalDate.now()
+                )
+            ) >= 0.75f -> HabitPerformance.EXCELLENT
+
+            historyState.getValue(
+                Date(
+                    queryDetails.value.date ?: LocalDate.now()
+                )
+            ) >= 0.45f -> HabitPerformance.GOOD
+
+            else -> HabitPerformance.POOR
+        }
+
+        HabitsState.Success(
+            runningHabitState = runningHabitState,
+            habitDataList = selected
+                .filterNot { habit ->
+                    habit.habitId in completed.filter { it.day.dayId == today }
+                        .flatMap { it.habits }.map { it.habitId }
+                }
+                .sortedBy { habit -> habit.startTime }
+                .map { habit ->
+                    HabitUiModel(
+                        completed = Pair(
+                            completed.first { it.day.dayId == today }.day.dayId,
+                            habit.habitId in completed.filter { it.day.dayId == today }
+                                .flatMap { it.habits }.map { it.habitId }),
+                        habitId = habit.habitId,
+                        habitIcon = habit.habitIcon,
+                        habitType = habit.habitType,
+                        startTime = habit.startTime,
+                        duration = habit.duration,
+                        durationType = habit.durationType,
+                        remainingTime = runningHabitState.remainingTime
+                    )
+                },
+            habitHistoryStateList = historyState,
+            habitPerformance = habitPerformance
+        )
     }
 
-    private var habitUiModelList = combine(
-        habitsRepository.selectedHabitList,
-        habitsRepository.completedHabitList,
-        habitsRepository.runningHabits
-    ) { active, completed, running ->
-        active
-            .filterNot {  activeHabit ->
-                activeHabit in completed.filter { it.day.dayId == today }.flatMap { it.habits }
-            }
-            .map { habitData ->
+    private val usageStats = queryDetails.mapLatest {
+        val usageStats = usageStatsRepository.queryAndAggregateUsageStats(
+            startDate = queryDetails.value.date ?: LocalDate.now(),
+            endDate = queryDetails.value.date ?: LocalDate.now()
+        )
 
-            val remTime = if (running.isNotEmpty()) {
-                running.find { it.habitId == habitData.habitId }?.remainingTime ?: 0L
-            } else {
-                0L
-            }
-
-            HabitUiModel(
-                completed = Pair(
-                    completed.first { it.day.dayId == today }.day.dayId,
-                    habitData.habitId in completed.filter { it.day.dayId == today }
-                        .flatMap { it.habits }.map { it.habitId }),
-                habitId = habitData.habitId,
-                habitIcon = habitData.habitIcon,
-                habitType = habitData.habitType,
-                startTime = habitData.startTime,
-                duration = habitData.duration,
-                durationType = habitData.durationType,
-                remainingTime = remTime
+        if (usageStats.appUsageList.isEmpty()) {
+            UsageStatsState.Empty
+        } else {
+            UsageStatsState.Loaded(
+                usageStats = usageStats.appUsageList,
+                unlockCount = usageStats.unlockCount,
+                notificationCount = usageStats.notificationCount
             )
         }
     }
 
-    private var userMessageList = MutableStateFlow(emptyList<UserMessage>())
 
     var uiState: StateFlow<SummaryUiState> = combine(
         usageStats,
-        habitUiModelList,
+        habitHistoryState,
         userMessageList,
-        habitsRepository.runningHabits,
-        habitHistoryState
-    ) { usageStats, habitList, userMessageList, running, history ->
-        val summaryData = SummaryData(
-            usageStats.first,
-            usageStats.first.unlockCount
-        )
-        val runningHabitState = if (running.isNotEmpty()) {
-            running.first().run {
-                RunningHabitState(
-                    habitId, isRunning, remainingTime
-                )
-            }
-        } else {
-            RunningHabitState()
-        }
+    ) { usageStats, habitsState, userMessageList ->
 
         SummaryUiState(
             isLoading = false,
-            summaryData = summaryData,
-            notificationCount = usageStats.second.filter { it.day.dayId == today }
-                .flatMap { it.notifications }.size,
-            runningHabitState = runningHabitState,
-            habitDataList = habitList.sortedBy { it.startTime },
-            habitPerformance = when {
-                history.getValue(
-                    Date(
-                        queryDetails.value.date ?: LocalDate.now()
-                    )
-                ) >= 0.75f -> HabitPerformance.EXCELLENT
-                history.getValue(
-                    Date(
-                        queryDetails.value.date ?: LocalDate.now()
-                    )
-                ) >= 0.45f -> HabitPerformance.GOOD
-                else -> HabitPerformance.POOR
-            },
+            usageStatsState = usageStats,
+            habitsState = habitsState,
             userMessageList = userMessageList,
-            habitHistoryStateList = history,
         )
     }
         .stateIn(
@@ -179,11 +186,6 @@ class SummaryViewModel @Inject constructor(
 //        habitUiModelList = habitUiModelList.
 //    }
 }
-
-data class SummaryData(
-    val usageStats: DataUsageStats,
-    val unlockCount: Int,
-)
 
 data class QueryTime(
     val date: LocalDate?

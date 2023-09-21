@@ -68,6 +68,8 @@ dependencies {
     implementation(libs.accompanist.drawable.painter)
     implementation(libs.kotlinx.datetime)
     implementation(libs.material.extended.icons)
+    implementation(libs.immutable.collections)
+
 
     // hilt
     implementation(libs.hilt.android)

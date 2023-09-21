@@ -14,6 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.githukudenis.intimo.core.designsystem.theme.IntimoTheme
 import com.githukudenis.intimo.core.model.Theme
+import com.githukudenis.intimo.util.InAppReviewProvider
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
@@ -57,6 +58,18 @@ class MainActivity : ComponentActivity() {
                 IntimoApp(
                     shouldHideOnBoarding = shouldHideOnBoarding(uiState),
                     onPopupFailed = { finish() },
+                    onRequestInAppReview = {
+                        val inAppReviewProvider = InAppReviewProvider(this)
+                        lifecycleScope.launch {
+                            val reviewInfo = inAppReviewProvider.requestReviewInfo()
+                            reviewInfo?.let {
+                                inAppReviewProvider.launchReviewFlow(
+                                    this@MainActivity,
+                                    reviewInfo
+                                )
+                            }
+                        }
+                    }
                 )
             }
         }
@@ -77,7 +90,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setSystemTheme(uiState: MainActivityUiState) {
-        when(uiState) {
+        when (uiState) {
             MainActivityUiState.Loading -> Unit
             is MainActivityUiState.Success -> {
                 if (uiState.userData.theme == Theme.SYSTEM) {

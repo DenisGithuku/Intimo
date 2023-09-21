@@ -4,11 +4,9 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
 import android.media.AudioAttributes
 import android.net.Uri
 import com.githukudenis.intimo.core.data.util.DataSyncManager
-import com.githukudenis.intimo.feature.usage_stats.AppLaunchService
 import dagger.hilt.android.HiltAndroidApp
 
 const val notificationChannelId = "intimo_notifications"

@@ -3,7 +3,6 @@ package com.githukudenis.intimo.feature.habit.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.githukudenis.intimo.core.ui.components.Date
+import com.githukudenis.intimo.core.ui.components.clickableOnce
 import java.time.LocalDate
 
 @Composable
@@ -45,9 +45,9 @@ fun DatePill(
                 ) else BorderStroke(width = 0.dp, color = Color.Transparent)
             )
             .background(
-                color = if (selected) MaterialTheme.colorScheme.tertiaryContainer else MaterialTheme.colorScheme.background
+                color = if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else MaterialTheme.colorScheme.background
             )
-            .clickable { onChangeDate(dateItem.date) }, contentAlignment = Alignment.TopCenter
+            .clickableOnce { onChangeDate(dateItem.date) }, contentAlignment = Alignment.TopCenter
     ) {
         Column(
             modifier = Modifier.padding(8.dp),
