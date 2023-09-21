@@ -64,6 +64,8 @@ dependencies {
     implementation(libs.ui.tooling)
     implementation(libs.material3)
     implementation(libs.navigation)
+    implementation(libs.immutable.collections)
+
 
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.hilt.navigation.compose)

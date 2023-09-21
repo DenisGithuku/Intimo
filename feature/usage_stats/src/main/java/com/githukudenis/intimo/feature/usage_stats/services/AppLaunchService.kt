@@ -1,4 +1,4 @@
-package com.githukudenis.intimo.feature.usage_stats
+package com.githukudenis.intimo.feature.usage_stats.services
 
 import android.app.NotificationManager
 import android.app.Service
@@ -11,6 +11,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.githukudenis.intimo.core.data.repository.AppsUsageRepository
+import com.githukudenis.intimo.feature.usage_stats.R
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -3,7 +3,6 @@ package com.githukudenis.intimo.feature.usage_stats
 import com.githukudenis.intimo.core.model.AppInFocusMode
 import com.githukudenis.intimo.core.model.DataUsageStats
 import com.githukudenis.intimo.core.util.UserMessage
-import java.time.DayOfWeek
 import java.time.LocalDate
 
 sealed class UsageStatsUiState {
@@ -12,13 +11,17 @@ sealed class UsageStatsUiState {
         val usageStats: DataUsageStats = DataUsageStats(),
         val userMessages: List<UserMessage> = emptyList(),
         val appsInFocusMode: List<AppInFocusMode> = emptyList(),
-        val chartState: ChartState = ChartState()
+        val chartState: ChartState = ChartState.Loading
     ) : UsageStatsUiState()
 
     data class Error(val userMessageList: List<UserMessage> = emptyList()) : UsageStatsUiState()
 }
 
-data class ChartState(
-    val selectedDate: LocalDate = LocalDate.now(),
-    val data: Map<LocalDate, Pair<Float, Long>> = emptyMap()
-)
+
+sealed class ChartState {
+    data object Loading : ChartState()
+    data class Loaded(
+        val selectedDate: LocalDate = LocalDate.now(),
+        val data: HashMap<LocalDate, Pair<Float, Long>> = linkedMapOf()
+    ) : ChartState()
+}

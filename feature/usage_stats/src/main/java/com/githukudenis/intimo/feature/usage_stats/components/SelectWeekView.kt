@@ -32,8 +32,7 @@ import java.time.LocalDate
 fun SelectedWeekView(
     selectedDate: LocalDate,
     multipleClicksCutter: MultipleClicksCutter = remember { MultipleClicksCutter.get() },
-    onNextWeekListener: (LocalDate) -> Unit,
-    onPrevWeekListener: (LocalDate) -> Unit,
+    onChangeDateListener: (LocalDate) -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -51,7 +50,7 @@ fun SelectedWeekView(
             IconButton(
                 onClick = {
                     multipleClicksCutter.processEvent {
-                        onPrevWeekListener(
+                        onChangeDateListener(
                             selectedDate.minusDays(1)
                         )
                     }
@@ -84,7 +83,7 @@ fun SelectedWeekView(
                 enabled = selectedDate < LocalDate.now(),
                 onClick = {
                     multipleClicksCutter.processEvent {
-                        onNextWeekListener(
+                        onChangeDateListener(
                             selectedDate.plusDays(
                                 1
                             )
@@ -114,7 +113,6 @@ fun SelectedWeekView(
 fun SelectedWeekViewPrev() {
     SelectedWeekView(
         selectedDate = LocalDate.now(),
-        onNextWeekListener = {},
-        onPrevWeekListener = {},
+        onChangeDateListener = {}
     )
 }

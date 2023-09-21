@@ -16,8 +16,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -207,10 +207,7 @@ fun UsageStatsRoute(
                 UsageStatsUiEvent.DismissUserMessage(messageId)
             )
         },
-        onPrevWeekListener = { date ->
-            viewModel.onEvent(UsageStatsUiEvent.ChangeDate(date))
-        },
-        onNextWeekListener = { date ->
+        onChangeDateListener = { date ->
             viewModel.onEvent(UsageStatsUiEvent.ChangeDate(date))
         }
     )
@@ -224,8 +221,7 @@ internal fun UsageStatsScreen(
     onNavigateUp: () -> Unit,
     onSetAppLimit: (String, Long) -> Unit,
     onShowMessage: (Long) -> Unit,
-    onNextWeekListener: (LocalDate) -> Unit,
-    onPrevWeekListener: (LocalDate) -> Unit
+    onChangeDateListener: (LocalDate) -> Unit,
 ) {
     val snackbarHostState = remember {
         SnackbarHostState()
@@ -284,8 +280,7 @@ internal fun UsageStatsScreen(
                     start = 16.dp
                 ),
                 snackbarHostState = snackbarHostState,
-                onNextWeekListener = onNextWeekListener,
-                onPrevWeekListener = onPrevWeekListener
+                onChangeDateListener = onChangeDateListener,
             )
 
             is UsageStatsUiState.Error -> ErrorScreen(
@@ -296,6 +291,7 @@ internal fun UsageStatsScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LoadedScreen(
     modifier: Modifier = Modifier,
@@ -307,8 +303,7 @@ fun LoadedScreen(
     onShowMessage: (Long) -> Unit,
     innerPadding: PaddingValues = PaddingValues(16.dp),
     snackbarHostState: SnackbarHostState,
-    onNextWeekListener: (LocalDate) -> Unit,
-    onPrevWeekListener: (LocalDate) -> Unit
+    onChangeDateListener: (LocalDate) -> Unit
 ) {
     val appLimitDialogIsVisible = rememberSaveable {
         mutableStateOf(false)
@@ -541,9 +536,7 @@ fun LoadedScreen(
             item {
                 UsageChart(
                     chartState = chartState,
-                    height = 250.dp,
-                    onNextWeekListener = onNextWeekListener,
-                    onPrevWeekListener = onPrevWeekListener
+                    onChangeDateListener = onChangeDateListener,
                 )
             }
             items(
@@ -553,6 +546,7 @@ fun LoadedScreen(
                     appUsageLimits.find { it.packageName == applicationInfoData.packageName }?.limitDuration
                         ?: 0L
                 UsageStatsCard(
+                    modifier = Modifier.animateItemPlacement(),
                     applicationInfoData = applicationInfoData,
                     usageLimit = usageLimit,
                     onOpenLimitDialog = { isSystem ->
@@ -649,7 +643,6 @@ fun LoadingScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
-                    .border(width = 1.dp, brush = brush, shape = MaterialTheme.shapes.medium)
             ) {
                 Column(
                     modifier = Modifier

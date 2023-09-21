@@ -47,6 +47,7 @@ dependencies {
     kapt(libs.hilt.compiler)
     implementation(libs.support.core)
     implementation(libs.palette)
+    implementation(libs.immutable.collections)
 
     implementation(libs.core.ktx)
     implementation(libs.appcompat)

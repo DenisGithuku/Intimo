@@ -1,4 +1,4 @@
-package com.githukudenis.intimo.feature.usage_stats
+package com.githukudenis.intimo.feature.usage_stats.components
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
@@ -21,10 +21,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.githukudenis.intimo.core.model.ApplicationInfoData
 import com.githukudenis.intimo.core.util.TimeFormatter
+import com.githukudenis.intimo.feature.usage_stats.getApplicationLabel
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 
 @Composable
 fun UsageStatsCard(
+    modifier: Modifier = Modifier,
     usageLimit: Long = 0L,
     applicationInfoData: ApplicationInfoData,
     onOpenLimitDialog: (systemApp: Boolean) -> Unit
@@ -32,7 +34,7 @@ fun UsageStatsCard(
     val context = LocalContext.current
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clickable { }
             .padding(vertical = 8.dp, horizontal = 16.dp)
             .fillMaxWidth()

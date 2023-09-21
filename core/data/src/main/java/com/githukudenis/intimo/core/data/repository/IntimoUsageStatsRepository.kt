@@ -37,21 +37,29 @@ class IntimoUsageStatsRepository @Inject constructor(
         }
     }
 
-    override fun queryAndAggregateUsageStats(
-        date: LocalDate
-    ): Flow<DataUsageStats> {
-        return intimoUsageStatsDataSource.queryAndAggregateUsageStats(date)
+    override suspend fun queryAndAggregateUsageStats(
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): DataUsageStats {
+        return withContext(intimoCoroutineDispatcher.ioDispatcher) { intimoUsageStatsDataSource.queryAndAggregateUsageStats(startDate, endDate) }
     }
 
-    override fun getIndividualAppUsage(
-        packageName: String
-    ): Flow<ApplicationInfoData> {
-        return intimoUsageStatsDataSource.getIndividualAppUsage(
-            packageName
-        )
+    override suspend fun getIndividualAppUsage(
+        packageName: String,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): ApplicationInfoData {
+        return withContext(intimoCoroutineDispatcher.ioDispatcher) {
+            intimoUsageStatsDataSource.getIndividualAppUsage(
+                packageName,
+                startDate, endDate
+            )
+        }
     }
 
-    override fun getTotalWeeklyUsage(date: LocalDate): Flow<Long> {
-        return intimoUsageStatsDataSource.getTotalWeeklyUsage(date).flowOn(intimoCoroutineDispatcher.ioDispatcher)
+    override suspend fun getTotalWeeklyUsage(startDate: LocalDate, endDate: LocalDate): Long {
+        return withContext(intimoCoroutineDispatcher.ioDispatcher) {
+            intimoUsageStatsDataSource.getTotalWeeklyUsage(startDate, endDate)
+        }
     }
 }

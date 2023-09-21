@@ -5,8 +5,10 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.NameNotFoundException
 import android.graphics.Bitmap
 import android.hardware.display.DisplayManager
+import android.util.Log
 import android.view.Display
 import androidx.core.graphics.drawable.toBitmap
 import androidx.palette.graphics.Palette
@@ -17,15 +19,10 @@ import com.githukudenis.intimo.core.model.DataUsageStats
 import com.githukudenis.intimo.core.model.DayAndNotifications
 import com.githukudenis.intimo.core.model.DayAndNotificationsPostedCrossRef
 import com.githukudenis.intimo.core.model.NotificationPosted
-import kotlinx.coroutines.Dispatchers
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -41,146 +38,27 @@ class IntimoUsageStatsDataSource @Inject constructor(
     val notificationPostedData: Flow<List<DayAndNotifications>>
         get() = dayAndNotificationsDao.getDayAndNotifications()
 
-    fun queryAndAggregateUsageStats(
-        date: LocalDate = LocalDate.now()
-    ): Flow<DataUsageStats> {
-        return flow {
-            // set id to utc - api works with utc
-            val utc = ZoneId.of("UTC")
-            val defaultZone = ZoneId.systemDefault()
-
-            // set the and end time to utc midnight time
-            val startTime = date.atStartOfDay(defaultZone).withZoneSameInstant(utc)
-            val start = startTime.toInstant().toEpochMilli()
-            val end = startTime.plusDays(1).toInstant().toEpochMilli()
-
-            var unlockCount = 0
-            var allAppsUsageTime = 0L
-
-            // sorted events
-            val sortedEvents = mutableMapOf<String, MutableList<UsageEvents.Event>>()
-
-
-            val keyguardManager =
-                context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-
-            //query events only if device is unlocked
-            val systemEvents = if (!keyguardManager.isKeyguardLocked) {
-                usageStatsManager.queryEvents(start, end)
-            } else {
-                null
-            }
-
-            while (systemEvents?.hasNextEvent() == true) {
-                val event = UsageEvents.Event()
-                systemEvents.getNextEvent(event)
-
-                // get unclock count
-                if (event.eventType == UsageEvents.Event.KEYGUARD_HIDDEN) {
-                    unlockCount++
-                }
-
-                // get event list - create one if none exists
-                val packageEvents = sortedEvents[event.packageName] ?: mutableListOf()
-                packageEvents.add(event)
-                sortedEvents[event.packageName] = packageEvents
-            }
-
-
-            var usageList = mutableListOf<ApplicationInfoData>()
-
-
-            sortedEvents.forEach { (packageName, events) ->
-                //keep track of current event start time and end times
-                var eventStartTime = 0L
-                var eventEndTime = 0L
-                var totalTime = 0L
-                var appLaunchCount = 0
-
-                // all start times for a particular app
-                val eventStartTimeList = mutableListOf<ZonedDateTime>()
-
-                events.forEach { event ->
-                    // register time when first shown
-                    if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND && isScreenOn()) {
-
-
-                        eventStartTime = event.timeStamp
-                        appLaunchCount += 1
-                        eventStartTimeList.add(
-                            Instant.ofEpochMilli(eventStartTime).atZone(defaultZone)
-                                .withZoneSameInstant(defaultZone)
-                        )
-
-
-                    } else if (event.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND) {
-                        eventEndTime = event.timeStamp
-                    }
-
-                    /* if there's an end time and no start time
-                    then the app was started the previous day
-                    register midnight as the start time
-                     */
-                    if (eventStartTime == 0L && eventEndTime != 0L) {
-                        eventStartTime = start
-                    }
-
-                    /*
-                    Both start and end times are defined - this
-                    means we have a session
-                     */
-                    if (eventStartTime != 0L && eventEndTime != 0L) {
-                        // add session to total time
-                        totalTime += eventEndTime - eventStartTime
-                        allAppsUsageTime += totalTime
-                        // reset start and end times
-                        eventStartTime = 0L
-                        eventEndTime = 0L
-                        appLaunchCount = 0
-                    }
-                }
-
-                usageList.add(
-                    ApplicationInfoData(
-                        packageName = packageName,
-                        icon = context.packageManager.getApplicationIcon(packageName),
-                        colorSwatch = createPaletteAsync(
-                            context.packageManager.getApplicationIcon(packageName).toBitmap()
-                        ),
-                        usageDuration = totalTime,
-                        appLaunchCount = appLaunchCount
-                    )
-                )
-            }
-
-            usageList = usageList.asSequence()
-                .filter {
-                    isNonSystemApp(packageName = it.packageName) &&
-                            isInstalled(packageName = it.packageName)
-                }
-                .sortedByDescending {
-                    it.usageDuration
-                }
-                .toMutableList()
-
-            emit(DataUsageStats(appUsageList = usageList, unlockCount = unlockCount))
-        }.flowOn(Dispatchers.IO)
-    }
-
-    fun getTotalWeeklyUsage(date: LocalDate): Flow<Long> = flow {
+    suspend fun queryAndAggregateUsageStats(
+        startDate: LocalDate = LocalDate.now(),
+        endDate: LocalDate = LocalDate.now()
+    ): DataUsageStats {
         // set id to utc - api works with utc
         val utc = ZoneId.of("UTC")
         val defaultZone = ZoneId.systemDefault()
 
         // set the and end time to utc midnight time
-        val startTime = date.atStartOfDay(defaultZone).withZoneSameInstant(utc)
-        val start = startTime.toInstant().toEpochMilli()
-        val end = startTime.plusDays(6).toInstant().toEpochMilli()
+        val start = startDate.atStartOfDay(defaultZone).withZoneSameInstant(utc)
+            .toInstant().toEpochMilli()
+        val end = endDate.atStartOfDay(defaultZone).withZoneSameInstant(utc).plusDays(1).toInstant()
+            .toEpochMilli()
 
-        var allAppsUsageTime = 0L
+        var unlockCount = 0
 
-        // sorted events
-        val sortedEvents = mutableMapOf<String, MutableList<UsageEvents.Event>>()
+        //all events
+        val allEvents = mutableListOf<UsageEvents.Event>()
+
+        // key set to package name
+        val appUsageInfoMap = hashMapOf<String, ApplicationInfoData>()
 
 
         val keyguardManager =
@@ -197,65 +75,99 @@ class IntimoUsageStatsDataSource @Inject constructor(
             val event = UsageEvents.Event()
             systemEvents.getNextEvent(event)
 
+            if (event.eventType == UsageEvents.Event.ACTIVITY_RESUMED ||
+                event.eventType == UsageEvents.Event.ACTIVITY_PAUSED
+            ) {
+                allEvents.add(event)
 
-            // get event list - create one if none exists
-            val packageEvents = sortedEvents[event.packageName] ?: mutableListOf()
-            packageEvents.add(event)
-            sortedEvents[event.packageName] = packageEvents
+                try {
+                    // key set to package name
+                    val key = event.packageName
+                    if (appUsageInfoMap[key] == null) {
+                        appUsageInfoMap[key] = ApplicationInfoData(
+                            packageName = key,
+                            colorSwatch = createPaletteAsync(
+                                context.packageManager.getApplicationIcon(key).toBitmap()
+                            ),
+                            icon = context.packageManager.getApplicationIcon(key)
+                        )
+                    }
+                } catch (e: NameNotFoundException) {
+                    Log.e("app insertion error", e.message, e)
+                }
+            }
+
+            // get unlock count
+            if (event.eventType == UsageEvents.Event.KEYGUARD_HIDDEN) {
+                unlockCount++
+            }
+
         }
+        for (i in 0 until allEvents.lastIndex) {
+            val e0 = allEvents[i]
+            val e1 = allEvents[i + 1]
 
+            // generate checks
+            val currentTime = System.currentTimeMillis()
+            val eventsFromSameApp = e0.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND &&
+                    e1.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND &&
+                    e0.packageName == e1.packageName
+            val appIsActive = (1 + i == allEvents.lastIndex) &&
+                    (e0.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND) &&
+                    (start..end).contains(currentTime)
 
-        sortedEvents.forEach { (packageName, events) ->
-            //keep track of current event start time and end times
-            var eventStartTime = 0L
-            var eventEndTime = 0L
-            var totalTime = 0L
-
-
-            events.forEach { event ->
-                // register time when first shown
-                if (event.eventType == UsageEvents.Event.MOVE_TO_FOREGROUND && isScreenOn()) {
-                    eventStartTime = event.timeStamp
-
-                } else if (event.eventType == UsageEvents.Event.MOVE_TO_BACKGROUND) {
-                    eventEndTime = event.timeStamp
+            // app foreground usage
+            if (appUsageInfoMap[e1.packageName] != null) {
+                if (eventsFromSameApp || appIsActive) {
+                    UsageEvents.Event.USER_INTERACTION
+                    val diff = if (appIsActive) {
+                        currentTime - e1.timeStamp
+                    } else {
+                        e1.timeStamp - e0.timeStamp
+                    }
+                    appUsageInfoMap[e1.packageName]!!.usageDuration += diff
                 }
 
-                /* if there's an end time and no start time
-                then the app was started the previous day
-                register midnight as the start time
-                 */
-                if (eventStartTime == 0L && eventEndTime != 0L) {
-                    eventStartTime = start
-                }
-
-                /*
-                Both start and end times are defined - this
-                means we have a session
-                 */
-                if (eventStartTime != 0L && eventEndTime != 0L) {
-                    // add session to total time
-                    totalTime += eventEndTime - eventStartTime
-                    allAppsUsageTime += totalTime
-                    // reset start and end times
-                    eventStartTime = 0L
-                    eventEndTime = 0L
+                // app launch count
+                if (e0.packageName != e1.packageName && e1.eventType == UsageEvents.Event.ACTIVITY_RESUMED) {
+                    appUsageInfoMap[e1.packageName]!!.appLaunchCount++
                 }
             }
         }
-        emit(allAppsUsageTime)
+
+        val appInfoUsageList = appUsageInfoMap.values.asSequence()
+            .filter {
+                isNonSystemApp(packageName = it.packageName) &&
+                        isInstalled(packageName = it.packageName)
+            }
+            .sortedByDescending {
+                it.usageDuration
+            }.toMutableList()
+
+        return DataUsageStats(
+            appUsageList = appInfoUsageList.toImmutableList(),
+            unlockCount = unlockCount
+        )
     }
 
-    fun getIndividualAppUsage(
-        packageName: String
-    ): Flow<ApplicationInfoData> {
 
-        val appUsageList = queryAndAggregateUsageStats()
+    suspend fun getTotalWeeklyUsage(
+        startDate: LocalDate,
+        endDate: LocalDate = LocalDate.now()
+    ): Long {
+        val allStats = queryAndAggregateUsageStats(
+            startDate, endDate
+        )
+        return allStats.appUsageList.sumOf { it.usageDuration }
+    }
 
-        return appUsageList.map { usageStats ->
-            usageStats.appUsageList.firstOrNull { app -> app.packageName == packageName }
-                ?: ApplicationInfoData(packageName = packageName)
-        }
+    suspend fun getIndividualAppUsage(
+        packageName: String,
+        startDate: LocalDate,
+        endDate: LocalDate
+    ): ApplicationInfoData {
+        return queryAndAggregateUsageStats(startDate, endDate)
+            .appUsageList.first { it.packageName == packageName }
     }
 
     private fun isNonSystemApp(packageName: String): Boolean {

@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
@@ -45,7 +44,7 @@ class UsageStatsViewModel @Inject constructor(
         selectedDate: LocalDate,
     ): Long {
         val firstDayOfWeek = selectedDate.with(DayOfWeek.MONDAY)
-        val weeklyUsage =  usageStatsRepository.getTotalWeeklyUsage(firstDayOfWeek).buffer().first()
+        val weeklyUsage = usageStatsRepository.getTotalWeeklyUsage(firstDayOfWeek, selectedDate)
         Log.d("date weekly", weeklyUsage.toString())
         return weeklyUsage
     }
@@ -54,27 +53,34 @@ class UsageStatsViewModel @Inject constructor(
     private suspend fun calculateDailyUsageValues(
         totalWeeklyUsage: Long,
         dateList: List<LocalDate>,
-    ): List<Pair<LocalDate, Pair<Float, Long>>> {
-        return dateList.map { date ->
+    ): ChartState {
+        val chartValues: LinkedHashMap<LocalDate, Pair<Float, Long>> = linkedMapOf()
+        for (date in dateList) {
             val usageValueListByDate =
-                usageStatsRepository.queryAndAggregateUsageStats(date).buffer().first()
+                usageStatsRepository.queryAndAggregateUsageStats(
+                    date,
+                    date
+                )
             val totalByDay = usageValueListByDate.appUsageList.sumOf { it.usageDuration }
 
-            val usageValue = Pair(
-                date,
-                Pair(
-                    totalByDay.toFloat() / totalWeeklyUsage.toFloat(),
-                    totalByDay
-                )
+            chartValues[date] = Pair(
+                totalByDay.toFloat() / totalWeeklyUsage.toFloat(),
+                totalByDay
             )
-            Log.d("date list", usageValue.toString())
-            usageValue
+        }
+        return if (chartValues.isEmpty()) {
+            ChartState.Loading
+        } else {
+            ChartState.Loaded(
+                selectedDate = selectedDate.value,
+                data = chartValues
+            )
         }
     }
 
     // UsageByDay Flow
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val usageByDay: Flow<List<Pair<LocalDate, Pair<Float, Long>>>> =
+    private val usageByDay: Flow<ChartState> =
         selectedDate.mapLatest { selectedDate ->
             val firstDayOfWeek = selectedDate.with(DayOfWeek.MONDAY)
             val dateList = getDatesForWeek(firstDayOfWeek)
@@ -88,21 +94,20 @@ class UsageStatsViewModel @Inject constructor(
         appsUsageRepository.appsInFocusMode,
         usageByDay,
         userMessages,
-    ) { selectedDate, appsInFocusMode, dailyUsage, userMessages ->
+    ) { selectedDate, appsInFocusMode, chartState, userMessages ->
         val usageStats = usageStatsRepository.queryAndAggregateUsageStats(
-            date = selectedDate
-        ).buffer().first()
+            selectedDate,
+            selectedDate,
+        )
+
+        Log.d("chart stats", usageStats.toString())
+        Log.d("chart", (chartState as ChartState.Loaded).toString())
 
         UsageStatsUiState.Loaded(
             usageStats = usageStats,
             appsInFocusMode = appsInFocusMode,
             userMessages = userMessages,
-            chartState = ChartState(
-                selectedDate = selectedDate,
-                data = dailyUsage.associate {
-                    it.first to Pair(it.second.first, it.second.second)
-                }
-            )
+            chartState = chartState
         )
     }.stateIn(
         scope = viewModelScope,
