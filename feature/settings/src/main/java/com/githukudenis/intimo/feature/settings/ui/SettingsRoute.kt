@@ -1,5 +1,7 @@
 package com.githukudenis.intimo.feature.settings.ui
 
+import android.content.Context
+import android.util.TimeUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,12 +36,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.githukudenis.intimo.core.model.Theme
 import com.githukudenis.intimo.core.ui.components.IntimoAlertDialog
 import com.githukudenis.intimo.core.ui.components.MultipleClicksCutter
 import com.githukudenis.intimo.core.ui.components.clickableOnce
 import com.githukudenis.intimo.core.ui.components.get
 import com.githukudenis.intimo.feature.settings.R
+import com.githukudenis.intimo.feature.settings.work.HabitRemindersWorker
+import java.util.concurrent.TimeUnit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,7 +90,7 @@ fun SettingsRoute(
             )
         }
     ) { paddingValues ->
-
+        val context = LocalContext.current
         SettingsScreen(
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
@@ -91,12 +99,42 @@ fun SettingsRoute(
             theme = uiState.theme,
             onChangeTheme = { viewModel.onToggleTheme(it) },
             isDeviceUsageNotificationsAllowed = uiState.deviceUsageNotificationsAllowed,
-            onToggleDeviceUsageNotifications = { viewModel.setShouldAllowDeviceUsageNotifications(it) },
             isHabitRemindersAllowed = uiState.habitNotificationsAllowed,
-            onToggleHabitAlerts = { viewModel.setShouldAllowHabitsNotifications(it) },
+            onToggleHabitAlerts = { isEnabled ->
+                viewModel.setShouldAllowHabitsNotifications(isEnabled)
+
+                setupHabitReminders(isEnabled, context)
+
+            },
             onOpenLicenses = onOpenLicenses,
             onRequestInAppReview = onRequestInAppReview
         )
+    }
+}
+
+fun setupHabitReminders(enabled: Boolean, context: Context) {
+    val workManager = WorkManager.getInstance(context)
+    if (enabled) {
+        val constraints = Constraints.Builder()
+            .setRequiresBatteryNotLow(true)
+            .setRequiresStorageNotLow(true)
+            .setRequiresDeviceIdle(true)
+            .build()
+
+        val request = PeriodicWorkRequestBuilder<HabitRemindersWorker>(2, TimeUnit.DAYS)
+            .setConstraints(constraints)
+            .addTag("habit_reminders_work")
+            .build()
+
+        workManager
+            .enqueueUniquePeriodicWork(
+                "habit_reminders_work",
+                ExistingPeriodicWorkPolicy.UPDATE,
+                request
+            )
+
+    } else {
+        workManager.cancelAllWorkByTag("habit_reminders_work")
     }
 }
 
@@ -106,7 +144,6 @@ fun SettingsScreen(
     theme: Theme,
     onChangeTheme: (Theme) -> Unit,
     isDeviceUsageNotificationsAllowed: Boolean,
-    onToggleDeviceUsageNotifications: (Boolean) -> Unit,
     isHabitRemindersAllowed: Boolean,
     onToggleHabitAlerts: (Boolean) -> Unit,
     onOpenLicenses: () -> Unit,
@@ -217,34 +254,6 @@ fun SettingsScreen(
         }
         item {
             SettingsSectionTitle(text = stringResource(R.string.notifications_section_title))
-        }
-        item {
-            ToggleableSettingsListView(
-                isToggledOn = usageNotificationsAllowed,
-                title = {
-                    Text(
-                        text = stringResource(R.string.device_usage_title),
-                        style = MaterialTheme.typography.titleSmall
-                    )
-                },
-                description = {
-                    Text(
-                        text = stringResource(
-                            R.string.device_usage_description,
-                            if (!usageNotificationsAllowed) "Enable" else "Disable"
-                        ),
-                        color = MaterialTheme.colorScheme.onBackground.copy(
-                            alpha = 0.8f
-                        ),
-                        style = MaterialTheme.typography.labelMedium
-
-                    )
-                },
-                onToggle = { isAllowed ->
-                    usageNotificationsAllowed = isAllowed
-                    onToggleDeviceUsageNotifications(isAllowed)
-                }
-            )
         }
         item {
             ToggleableSettingsListView(

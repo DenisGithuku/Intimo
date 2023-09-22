@@ -17,11 +17,10 @@ sealed class UsageStatsUiState {
     data class Error(val userMessageList: List<UserMessage> = emptyList()) : UsageStatsUiState()
 }
 
-
 sealed class ChartState {
     data object Loading : ChartState()
     data class Loaded(
         val selectedDate: LocalDate = LocalDate.now(),
-        val data: HashMap<LocalDate, Pair<Float, Long>> = linkedMapOf()
+        val data: Map<LocalDate, Pair<Float, Long>> = linkedMapOf()
     ) : ChartState()
 }

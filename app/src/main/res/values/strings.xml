@@ -3,4 +3,5 @@
     <string name="app_logo">App logo</string>
     <string name="navigate_back">Back</string>
     <string name="intimo_alerts_description">Delivers notification on running habits\n</string>
+    <string name="periodic_habit_alerts_description">Delivers periodic notifications on habit progress</string>
 </resources>

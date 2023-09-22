@@ -14,4 +14,6 @@
     <string name="oss_licenses_activity_title">Intimo open source licenses</string>
     <string name="rate_app_description">Loving this app? Leave a rating</string>
     <string name="rate_app_title">Rate this app</string>
+    <string name="habits_not_completed_text">Hey. Are you still there? You haven\'t completed your habits for a minute</string>
+    <string name="habits_not_completed_title">Just checking you out</string>
 </resources>

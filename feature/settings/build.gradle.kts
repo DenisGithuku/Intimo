@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     implementation(libs.material.extended.icons)
     implementation(libs.work)
+    implementation(libs.hilt.work)
 
     // hilt
     implementation(libs.hilt.android)

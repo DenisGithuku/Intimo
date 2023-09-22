@@ -120,10 +120,11 @@ class SummaryViewModel @Inject constructor(
         )
     }
 
-    private val usageStats = queryDetails.mapLatest {
+    private val usageStats = combine(queryDetails, usageStatsRepository.dayAndNotificationList)
+        { queryDetails, notificationsByDay ->
         val usageStats = usageStatsRepository.queryAndAggregateUsageStats(
-            startDate = queryDetails.value.date ?: LocalDate.now(),
-            endDate = queryDetails.value.date ?: LocalDate.now()
+            startDate = queryDetails.date ?: LocalDate.now(),
+            endDate = queryDetails.date ?: LocalDate.now()
         )
 
         if (usageStats.appUsageList.isEmpty()) {
@@ -132,7 +133,7 @@ class SummaryViewModel @Inject constructor(
             UsageStatsState.Loaded(
                 usageStats = usageStats.appUsageList,
                 unlockCount = usageStats.unlockCount,
-                notificationCount = usageStats.notificationCount
+                notificationCount = notificationsByDay.filter { it.day.dayId == today }.flatMap { it.notifications }.size
             )
         }
     }

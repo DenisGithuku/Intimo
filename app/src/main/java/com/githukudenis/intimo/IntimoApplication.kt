@@ -6,14 +6,25 @@ import android.app.NotificationManager
 import android.content.Context
 import android.media.AudioAttributes
 import android.net.Uri
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
+import androidx.work.WorkerFactory
 import com.githukudenis.intimo.core.data.util.DataSyncManager
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
-const val notificationChannelId = "intimo_notifications"
-const val notificationChannelName = "App Alerts"
+const val activeHabitNotificationChannelId = "active_habit_notifs"
+const val activeHabitNotificationChannelName = "Active Habit"
+
+const val habitRemindersNotificationChannelId = "habit_reminders_notifs"
+const val habitRemindersNotificationChannelName = "Periodic Habit Alerts"
 
 @HiltAndroidApp
-class IntimoApplication : Application() {
+class IntimoApplication : Application(), Configuration.Provider {
+
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+
     override fun onCreate() {
         super.onCreate()
         setUpDataSyncManager()
@@ -38,9 +49,9 @@ class IntimoApplication : Application() {
             .setUsage(AudioAttributes.USAGE_NOTIFICATION)
             .build()
 
-        val notificationChannel = NotificationChannel(
-            notificationChannelId,
-            notificationChannelName,
+        val activeHabitChannel = NotificationChannel(
+            activeHabitNotificationChannelId,
+            activeHabitNotificationChannelName,
             NotificationManager.IMPORTANCE_HIGH
         ).apply {
             setSound(notificationSound, audioAttributes)
@@ -48,6 +59,21 @@ class IntimoApplication : Application() {
             description = getString(R.string.intimo_alerts_description)
         }
 
-        notificationManager.createNotificationChannel(notificationChannel)
+        val habitRemindersChannel = NotificationChannel(
+            habitRemindersNotificationChannelId,
+            habitRemindersNotificationChannelName,
+            NotificationManager.IMPORTANCE_DEFAULT
+        ).apply {
+            description = getString(R.string.periodic_habit_alerts_description)
+        }
+
+        notificationManager.createNotificationChannel(activeHabitChannel)
+        notificationManager.createNotificationChannel(habitRemindersChannel)
+    }
+
+    override fun getWorkManagerConfiguration(): Configuration {
+        return Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
     }
 }

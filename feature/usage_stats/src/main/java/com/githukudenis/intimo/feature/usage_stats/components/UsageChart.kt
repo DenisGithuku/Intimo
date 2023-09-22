@@ -139,6 +139,7 @@ fun UsageChart(
         ChartState.Loading -> {
             Box(
                 modifier = Modifier
+                    .padding(16.dp)
                     .fillMaxWidth()
                     .height(300.dp)
             ) {
@@ -332,7 +333,7 @@ fun UsageChart(
                                     listSize = chartState.data.size,
                                     itemWidth = barWidth
                                 )
-                                if (chosenBar >= 0) {
+                                if (chosenBar >= 0 && chartState.data.toList()[chosenBar].first <= LocalDate.now()) {
                                     onChangeDateListener(chartState.data.toList()[chosenBar].first)
                                     chosenBarKey =
                                         chartState.data.toList()[chosenBar].first.toString()

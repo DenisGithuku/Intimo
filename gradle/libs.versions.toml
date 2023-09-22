@@ -29,6 +29,7 @@ palette = "28.0.0"
 support = "28.0.0"
 about-libraries = "10.8.3"
 work = "2.8.1"
+hilt-work = "1.0.0"
 play-review = "2.0.1"
 immutable-collections = "0.3.5"
 
@@ -60,6 +61,7 @@ datastore-prefs = { group = "androidx.datastore", name = "datastore-preferences"
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt"}
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose"}
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hilt-work"}
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist"}
 accompanist-drawable-painter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "accompanist"}
 room-runtime = { group="androidx.room", name = "room-runtime", version.ref = "room" }

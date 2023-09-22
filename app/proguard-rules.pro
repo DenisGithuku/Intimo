@@ -22,3 +22,6 @@
 
 -dontwarn kotlinx.serialization.KSerializer
 -dontwarn kotlinx.serialization.Serializable
+-keepclasseswithmembernames class com.githukudenis.intimo.** {
+*;
+}

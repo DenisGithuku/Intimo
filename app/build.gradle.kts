@@ -86,7 +86,8 @@ dependencies {
     implementation(libs.material.extended.icons)
     implementation(libs.about.libraries)
     implementation(libs.play.inapp.review)
-    
+    implementation(libs.work)
+    implementation(libs.hilt.work)
 
     //hilt
     implementation(libs.hilt.android)

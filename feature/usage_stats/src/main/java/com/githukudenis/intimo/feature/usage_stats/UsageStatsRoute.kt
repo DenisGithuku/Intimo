@@ -542,26 +542,38 @@ fun LoadedScreen(
             items(
                 dataUsageStats.appUsageList,
                 key = { it.packageName }) { applicationInfoData ->
-                val usageLimit =
-                    appUsageLimits.find { it.packageName == applicationInfoData.packageName }?.limitDuration
-                        ?: 0L
-                UsageStatsCard(
-                    modifier = Modifier.animateItemPlacement(),
-                    applicationInfoData = applicationInfoData,
-                    usageLimit = usageLimit,
-                    onOpenLimitDialog = { isSystem ->
-                        if (isSystem) {
-                            infoDialogIsVisible.value = true
-                        } else {
-                            selectedApp.value = applicationInfoData
-                            if (usageLimit > 0) {
-                                hourlyLimit = usageLimit / 1000 / 60 / 60
-                                minutelyLimit = usageLimit / 1000 / 60 % 60
-                            }
-                            appLimitDialogIsVisible.value = true
-                        }
+
+                if (dataUsageStats.appUsageList.isEmpty()) {
+                    Row(
+                        modifier = Modifier.padding(32.dp, 16.dp).fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.empty_app_usage_stats),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
-                )
+                } else {
+                    val usageLimit =
+                        appUsageLimits.find { it.packageName == applicationInfoData.packageName }?.limitDuration
+                            ?: 0L
+                    UsageStatsCard(
+                        modifier = Modifier.animateItemPlacement(),
+                        applicationInfoData = applicationInfoData,
+                        usageLimit = usageLimit,
+                        onOpenLimitDialog = { isSystem ->
+                            if (isSystem) {
+                                infoDialogIsVisible.value = true
+                            } else {
+                                selectedApp.value = applicationInfoData
+                                if (usageLimit > 0) {
+                                    hourlyLimit = usageLimit / 1000 / 60 / 60
+                                    minutelyLimit = usageLimit / 1000 / 60 % 60
+                                }
+                                appLimitDialogIsVisible.value = true
+                            }
+                        }
+                    )
+                }
             }
         }
 
@@ -641,6 +653,7 @@ fun LoadingScreen(
         item {
             Box(
                 modifier = Modifier
+                    .padding(16.dp)
                     .fillMaxWidth()
                     .height(300.dp)
             ) {
