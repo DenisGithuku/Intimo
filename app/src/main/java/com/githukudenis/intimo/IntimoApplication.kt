@@ -8,10 +8,10 @@ import android.media.AudioAttributes
 import android.net.Uri
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import androidx.work.WorkerFactory
 import com.githukudenis.intimo.core.data.util.DataSyncManager
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
+
 
 const val activeHabitNotificationChannelId = "active_habit_notifs"
 const val activeHabitNotificationChannelName = "Active Habit"
@@ -64,6 +64,7 @@ class IntimoApplication : Application(), Configuration.Provider {
             habitRemindersNotificationChannelName,
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
+            setShowBadge(true)
             description = getString(R.string.periodic_habit_alerts_description)
         }
 

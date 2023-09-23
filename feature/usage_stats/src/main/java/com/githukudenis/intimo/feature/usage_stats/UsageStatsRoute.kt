@@ -41,8 +41,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
@@ -539,41 +539,51 @@ fun LoadedScreen(
                     onChangeDateListener = onChangeDateListener,
                 )
             }
-            items(
-                dataUsageStats.appUsageList,
-                key = { it.packageName }) { applicationInfoData ->
-
-                if (dataUsageStats.appUsageList.isEmpty()) {
+            item {
+                AnimatedVisibility(
+                    visible = dataUsageStats.appUsageList.sumOf { it.usageDuration } == 0L,
+                    enter = fadeIn() + slideInVertically(
+                        initialOffsetY = {
+                            it / 2
+                        }
+                    ),
+                    exit = fadeOut()
+                ) {
                     Row(
-                        modifier = Modifier.padding(32.dp, 16.dp).fillMaxWidth()
+                        modifier = Modifier
+                            .padding(36.dp, 16.dp)
+                            .fillMaxWidth()
                     ) {
                         Text(
                             text = stringResource(id = R.string.empty_app_usage_stats),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
-                } else {
-                    val usageLimit =
-                        appUsageLimits.find { it.packageName == applicationInfoData.packageName }?.limitDuration
-                            ?: 0L
-                    UsageStatsCard(
-                        modifier = Modifier.animateItemPlacement(),
-                        applicationInfoData = applicationInfoData,
-                        usageLimit = usageLimit,
-                        onOpenLimitDialog = { isSystem ->
-                            if (isSystem) {
-                                infoDialogIsVisible.value = true
-                            } else {
-                                selectedApp.value = applicationInfoData
-                                if (usageLimit > 0) {
-                                    hourlyLimit = usageLimit / 1000 / 60 / 60
-                                    minutelyLimit = usageLimit / 1000 / 60 % 60
-                                }
-                                appLimitDialogIsVisible.value = true
-                            }
-                        }
-                    )
                 }
+            }
+            items(
+                dataUsageStats.appUsageList,
+                key = { it.packageName }) { applicationInfoData ->
+                val usageLimit =
+                    appUsageLimits.find { it.packageName == applicationInfoData.packageName }?.limitDuration
+                        ?: 0L
+                UsageStatsCard(
+                    modifier = Modifier.animateItemPlacement(),
+                    applicationInfoData = applicationInfoData,
+                    usageLimit = usageLimit,
+                    onOpenLimitDialog = { isSystem ->
+                        if (isSystem) {
+                            infoDialogIsVisible.value = true
+                        } else {
+                            selectedApp.value = applicationInfoData
+                            if (usageLimit > 0) {
+                                hourlyLimit = usageLimit / 1000 / 60 / 60
+                                minutelyLimit = usageLimit / 1000 / 60 % 60
+                            }
+                            appLimitDialogIsVisible.value = true
+                        }
+                    }
+                )
             }
         }
 
@@ -589,6 +599,7 @@ fun LoadedScreen(
             }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { 10 })
         ) {
+
             FilledTonalButton(
                 onClick = {
                     scope.launch {
@@ -596,14 +607,11 @@ fun LoadedScreen(
                     }
                 },
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-                )
+                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                ),
             ) {
-                Text(
-                    text = stringResource(R.string.back_to_top_button_text)
-                )
                 Icon(
-                    imageVector = Icons.Outlined.KeyboardArrowUp,
+                    imageVector = Icons.Outlined.ArrowUpward,
                     contentDescription = stringResource(id = R.string.scroll_back_up_icon_text)
                 )
             }
@@ -664,9 +672,17 @@ fun LoadingScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(20.dp).fillMaxWidth(0.5f).clip(RoundedCornerShape(32.dp)).background(brush))
+                    Spacer(
+                        modifier = Modifier
+                            .height(20.dp)
+                            .fillMaxWidth(0.5f)
+                            .clip(RoundedCornerShape(32.dp))
+                            .background(brush)
+                    )
                     Row(
-                        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.75f),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight(0.75f),
                         verticalAlignment = Alignment.Bottom,
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
