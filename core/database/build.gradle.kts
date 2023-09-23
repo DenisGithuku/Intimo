@@ -13,7 +13,7 @@ android {
     defaultConfig {
         minSdk = 26
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.githukudenis.intimo.core.database.util.IntimoTestRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -48,8 +48,17 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.appcompat)
     implementation(libs.material)
+
     testImplementation(libs.junit)
     testImplementation(libs.room.testing)
+    testImplementation(libs.core.testing)
+    testImplementation(libs.truth)
+
+    androidTestImplementation(libs.coroutines.testing)
+    androidTestImplementation(libs.core.testing)
+    androidTestImplementation(libs.truth)
+    kaptAndroidTest(libs.hilt.compiler)
+    androidTestImplementation(libs.hilt.android.testing)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
