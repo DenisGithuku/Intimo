@@ -24,4 +24,5 @@
     <string name="app_limit_reached">%s\'s limit has been reached</string>
     <string name="prev_week_icon_text">Previous week</string>
     <string name="next_week_icon_text">Next week</string>
+    <string name="empty_app_usage_stats">There are no app usage statistics for this day. Select another day</string>
 </resources>

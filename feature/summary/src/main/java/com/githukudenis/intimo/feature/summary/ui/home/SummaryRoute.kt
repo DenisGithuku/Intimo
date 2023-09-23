@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.Keep
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
@@ -107,6 +108,7 @@ import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@Keep
 internal fun SummaryRoute(
     summaryViewModel: SummaryViewModel = hiltViewModel(),
     onOpenHabitDetails: (Long) -> Unit,
@@ -348,6 +350,34 @@ internal fun SummaryRoute(
             )
         }
 
+        val colors = remember {
+            listOf(
+                Color.LightGray.copy(alpha = 0.4f),
+                Color.LightGray.copy(alpha = 0.1f),
+                Color.LightGray.copy(alpha = 0.4f),
+            )
+        }
+
+        val infiniteTransition =
+            rememberInfiniteTransition(label = "infinite transition loading skeleton")
+        val transitionAnimation = infiniteTransition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1000f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(
+                    durationMillis = 1000,
+                    delayMillis = 500,
+                    easing = FastOutSlowInEasing
+                ),
+                repeatMode = RepeatMode.Restart
+            ), label = "loading skeleton"
+        )
+        val brush = Brush.linearGradient(
+            colors = colors,
+            start = Offset.Zero,
+            end = Offset(x = transitionAnimation.value, y = transitionAnimation.value)
+        )
+
         Crossfade(
             targetState = uiState.isLoading,
             label = "Screen animation"
@@ -355,6 +385,7 @@ internal fun SummaryRoute(
             when (it) {
                 true -> {
                     LoadingScreen(
+                        brush = brush,
                         modifier = Modifier.consumeWindowInsets(paddingValues),
                         contentPadding = PaddingValues(
                             top = paddingValues.calculateTopPadding(),
@@ -369,6 +400,7 @@ internal fun SummaryRoute(
                     SummaryScreen(
                         modifier = Modifier
                             .consumeWindowInsets(paddingValues),
+                        brush = brush,
                         contentPadding = PaddingValues(
                             top = paddingValues.calculateTopPadding(),
                             bottom = paddingValues.calculateBottomPadding(),
@@ -405,6 +437,7 @@ internal fun SummaryRoute(
 internal fun SummaryScreen(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(16.dp),
+    brush: Brush,
     usageStatsState: UsageStatsState,
     habitsState: HabitsState,
     onSelectDayOnHistory: (Date) -> Unit,
@@ -436,6 +469,7 @@ internal fun SummaryScreen(
             )
         }
         appUsageData(
+            brush = brush,
             usageStatsState = usageStatsState,
             multipleClicksCutter = multipleClicksCutter,
             onOpenUsageStats = onOpenUsageStats
@@ -513,6 +547,7 @@ internal fun SummaryScreen(
 fun LazyListScope.appUsageData(
     usageStatsState: UsageStatsState,
     multipleClicksCutter: MultipleClicksCutter,
+    brush: Brush,
     onOpenUsageStats: () -> Unit
 ) {
     item {
@@ -535,20 +570,7 @@ fun LazyListScope.appUsageData(
             ) { state ->
                 when (state) {
                     UsageStatsState.Loading -> {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator()
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Text(
-                                    text = "Fetching details..."
-                                )
-                            }
-                        }
+                        UsageStatsShimmerCard(brush = brush)
                     }
 
                     is UsageStatsState.Loaded -> {
@@ -655,8 +677,8 @@ fun LazyListScope.appUsageData(
 
                                                     drawArc(
                                                         color = Color(arcColor),
-                                                        startAngle = startAngle ,
-                                                        sweepAngle = angles[i]* animateArchValue.value,
+                                                        startAngle = startAngle,
+                                                        sweepAngle = angles[i] * animateArchValue.value,
                                                         useCenter = false,
                                                         style = Stroke(width = 12.dp.toPx()),
                                                     )
@@ -769,36 +791,9 @@ fun LazyListScope.appUsageData(
 @Composable
 fun LoadingScreen(
     modifier: Modifier = Modifier,
+    brush: Brush,
     contentPadding: PaddingValues = PaddingValues(16.dp)
 ) {
-
-    val colors = remember {
-        listOf(
-            Color.LightGray.copy(alpha = 0.4f),
-            Color.LightGray.copy(alpha = 0.1f),
-            Color.LightGray.copy(alpha = 0.4f),
-        )
-    }
-
-    val infiniteTransition =
-        rememberInfiniteTransition(label = "infinite transition loading skeleton")
-    val transitionAnimation = infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1000f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 1000,
-                delayMillis = 500,
-                easing = FastOutSlowInEasing
-            ),
-            repeatMode = RepeatMode.Restart
-        ), label = "loading skeleton"
-    )
-    val brush = Brush.linearGradient(
-        colors = colors,
-        start = Offset.Zero,
-        end = Offset(x = transitionAnimation.value, y = transitionAnimation.value)
-    )
     LazyColumn(
         contentPadding = contentPadding,
         modifier = modifier
@@ -1218,5 +1213,5 @@ private fun getTimeStatus(): String {
 @Preview
 @Composable
 fun LoadingScreenPrev() {
-    LoadingScreen()
+    LoadingScreen(brush = Brush.linearGradient(colors = listOf()))
 }

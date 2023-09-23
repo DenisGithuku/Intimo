@@ -1,6 +1,5 @@
 package com.githukudenis.intimo.feature.usage_stats
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.intimo.core.data.repository.AppsUsageRepository
@@ -8,14 +7,12 @@ import com.githukudenis.intimo.core.data.repository.UsageStatsRepository
 import com.githukudenis.intimo.core.model.AppInFocusMode
 import com.githukudenis.intimo.core.util.UserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -33,6 +30,19 @@ class UsageStatsViewModel @Inject constructor(
 
     private val selectedDate = MutableStateFlow(LocalDate.now())
 
+    private val chartValuesState: MutableStateFlow<LinkedHashMap<LocalDate, Pair<Float, Long>>> =
+        MutableStateFlow(linkedMapOf())
+
+    private val chartState: MutableStateFlow<ChartState> = MutableStateFlow(ChartState.Loading)
+
+    private var usageStatsJob: Job? = null
+
+
+    init {
+        calculateWeeklyUsage()
+    }
+
+
     // Create a helper function to calculate the list of dates for the selected week
     private fun getDatesForWeek(selectedDate: LocalDate): List<LocalDate> {
         val firstDayOfWeek = selectedDate.with(DayOfWeek.MONDAY)
@@ -40,20 +50,23 @@ class UsageStatsViewModel @Inject constructor(
     }
 
     // Create a helper function to calculate the total weekly usage
-    private suspend fun calculateWeeklyUsage(
-        selectedDate: LocalDate,
-    ): Long {
-        val firstDayOfWeek = selectedDate.with(DayOfWeek.MONDAY)
-        val weeklyUsage = usageStatsRepository.getTotalWeeklyUsage(firstDayOfWeek, selectedDate)
-        Log.d("date weekly", weeklyUsage.toString())
-        return weeklyUsage
+    private fun calculateWeeklyUsage() {
+        viewModelScope.launch {
+            val firstDayOfWeek = selectedDate.value.with(DayOfWeek.MONDAY)
+            val weeklyUsage =
+                usageStatsRepository.getTotalWeeklyUsage(firstDayOfWeek, selectedDate.value)
+            val dateList = getDatesForWeek(firstDayOfWeek)
+            calculateDailyUsageValues(weeklyUsage, dateList)
+        }
     }
 
     // Create a helper function to calculate daily usage values
     private suspend fun calculateDailyUsageValues(
         totalWeeklyUsage: Long,
         dateList: List<LocalDate>,
-    ): ChartState {
+    ) {
+        chartState.update { ChartState.Loading }
+
         val chartValues: LinkedHashMap<LocalDate, Pair<Float, Long>> = linkedMapOf()
         for (date in dateList) {
             val usageValueListByDate =
@@ -68,43 +81,28 @@ class UsageStatsViewModel @Inject constructor(
                 totalByDay
             )
         }
-        return if (chartValues.isEmpty()) {
-            ChartState.Loading
-        } else {
+
+        chartState.update {
             ChartState.Loaded(
                 selectedDate = selectedDate.value,
                 data = chartValues
             )
         }
+
+        chartValuesState.update { chartValues }
     }
 
-    // UsageByDay Flow
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val usageByDay: Flow<ChartState> =
-        selectedDate.mapLatest { selectedDate ->
-            val firstDayOfWeek = selectedDate.with(DayOfWeek.MONDAY)
-            val dateList = getDatesForWeek(firstDayOfWeek)
-            val totalWeeklyUsage = calculateWeeklyUsage(firstDayOfWeek)
-            calculateDailyUsageValues(totalWeeklyUsage, dateList)
-        }
-
-
     val uiState: StateFlow<UsageStatsUiState> = combine(
-        selectedDate,
         appsUsageRepository.appsInFocusMode,
-        usageByDay,
+        chartState,
         userMessages,
-    ) { selectedDate, appsInFocusMode, chartState, userMessages ->
-        val usageStats = usageStatsRepository.queryAndAggregateUsageStats(
-            selectedDate,
-            selectedDate,
+    ) { appsInFocusMode, chartState, userMessages ->
+        val stats = usageStatsRepository.queryAndAggregateUsageStats(
+            selectedDate.value,
+            selectedDate.value,
         )
-
-        Log.d("chart stats", usageStats.toString())
-        Log.d("chart", (chartState as ChartState.Loaded).toString())
-
         UsageStatsUiState.Loaded(
-            usageStats = usageStats,
+            usageStats = stats,
             appsInFocusMode = appsInFocusMode,
             userMessages = userMessages,
             chartState = chartState
@@ -138,6 +136,19 @@ class UsageStatsViewModel @Inject constructor(
 
             is UsageStatsUiEvent.ChangeDate -> {
                 selectedDate.update { event.selectedDate }
+
+                if (chartValuesState.value.containsKey(event.selectedDate)) {
+                    chartState.update {
+                        ChartState.Loaded(
+                            selectedDate = event.selectedDate,
+                            data = chartValuesState.value.takeIf {
+                                it.containsKey(event.selectedDate)
+                            } ?: return
+                        )
+                    }
+                } else {
+                    calculateWeeklyUsage()
+                }
             }
         }
     }
@@ -172,5 +183,10 @@ class UsageStatsViewModel @Inject constructor(
                 it.toMutableList().apply { add(UserMessage(message = message)) }
             }
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        usageStatsJob = null
     }
 }

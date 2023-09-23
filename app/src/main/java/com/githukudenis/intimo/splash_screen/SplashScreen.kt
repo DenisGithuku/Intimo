@@ -53,7 +53,8 @@ fun SplashScreenRoute(
     Box(
         modifier = Modifier
             .navigationBarsPadding()
-            .fillMaxSize(),
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
     ) {
 
         val scale = remember {
@@ -90,7 +91,8 @@ fun SplashScreenRoute(
             fontSize = 48.sp,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp)
+                .padding(bottom = 24.dp),
+            color = MaterialTheme.colorScheme.onBackground
         )
     }
 }

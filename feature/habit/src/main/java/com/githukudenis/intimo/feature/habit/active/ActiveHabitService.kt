@@ -130,7 +130,7 @@ class ActiveHabitService : Service() {
         }
 
 
-        return NotificationCompat.Builder(this, "intimo_notifications")
+        return NotificationCompat.Builder(this, "active_habit_notifs")
             .setContentTitle(notificationData.title)
             .setContentText(notificationData.content)
             .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
