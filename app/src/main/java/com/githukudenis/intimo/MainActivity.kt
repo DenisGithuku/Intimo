@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
 
         var uiState: MainActivityUiState by mutableStateOf(MainActivityUiState.Loading)
 
+//        val splashScreen = installSplashScreen()
 
         // update uiState
         lifecycleScope.launch {
