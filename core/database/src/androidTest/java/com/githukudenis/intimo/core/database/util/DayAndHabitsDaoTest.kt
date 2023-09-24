@@ -13,9 +13,11 @@ import com.githukudenis.intimo.core.model.DayAndHabits
 import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitData
 import com.githukudenis.intimo.core.model.HabitType
+import com.githukudenis.intimo.core.model.RunningHabit
 import com.google.common.truth.Truth.assertThat
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -26,6 +28,7 @@ import org.junit.runner.RunWith
 import javax.inject.Inject
 import javax.inject.Named
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltAndroidTest
 @RunWith(AndroidJUnit4::class)
 @SmallTest
@@ -84,4 +87,54 @@ class DayAndHabitsDaoTest {
         assertThat(habits).contains(dayAndHabit.dayId)
     }
 
+    @Test
+    fun insertRunningHabit() = runTest {
+        val runningHabit = RunningHabit(
+            habitId = 1,
+            isRunning = true,
+            habitType = HabitType.READING,
+            totalTime = 1700000L,
+            remainingTime = 10000L
+        )
+
+        habitDao.insertRunningHabit(runningHabit)
+        val runningHabits = habitDao.getRunningHabits().first()
+        assertThat(runningHabits).contains(runningHabit)
+    }
+
+    @Test
+    fun updateRunningHabit() = runTest {
+        val runningHabit = RunningHabit(
+            habitId = 1,
+            isRunning = true,
+            habitType = HabitType.READING,
+            totalTime = 1700000L,
+            remainingTime = 10000L
+        )
+
+        habitDao.insertRunningHabit(runningHabit)
+
+        val updatedRunning = runningHabit.copy(remainingTime = runningHabit.remainingTime - 1000L)
+        habitDao.updateRunningHabit(updatedRunning)
+
+        val runningHabits = habitDao.getRunningHabits().first()
+        assertThat(runningHabits.first().remainingTime).isEqualTo(runningHabit.remainingTime - 1000L)
+    }
+
+    @Test
+    fun deleteRunningHabit() = runTest {
+        val runningHabit = RunningHabit(
+            habitId = 1,
+            isRunning = true,
+            habitType = HabitType.READING,
+            totalTime = 1700000L,
+            remainingTime = 10000L
+        )
+
+        habitDao.insertRunningHabit(runningHabit)
+
+        habitDao.deleteRunningHabit(runningHabit)
+        val runningHabits = habitDao.getRunningHabits().first()
+        assertThat(runningHabits).isEmpty()
+    }
 }
