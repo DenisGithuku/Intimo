@@ -115,7 +115,7 @@ fun HabitCard(
                     InfoChip(
                         habitStatus = if (habitUiModel.completed.second) {
                             HabitStatus.COMPLETE
-                        } else if (isRunning) {
+                        } else if (isRunning && habitUiModel.remainingTime > 0L) {
                             HabitStatus.IN_PROGRESS
                         } else if (startTime.timeInMillis < now.timeInMillis && now.timeInMillis < (startTime.timeInMillis + habitUiModel.duration)) {
                             HabitStatus.DELAYED_START
@@ -201,7 +201,7 @@ fun HabitCard(
                 )
             ) {
                 Text(
-                    text = if (isRunning) "Progress details" else "Start",
+                    text = if (isRunning && habitUiModel.remainingTime > 0L) "Progress details" else "Start",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary.copy(
                         alpha = 0.8f
