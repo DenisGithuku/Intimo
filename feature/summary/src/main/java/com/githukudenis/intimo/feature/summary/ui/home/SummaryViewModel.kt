@@ -46,8 +46,6 @@ class SummaryViewModel @Inject constructor(
     private var userMessageList = MutableStateFlow(emptyList<UserMessage>())
 
 
-    private var usageStatsJob: Job? = null
-
     private val habitHistoryState = combine(
         habitsRepository.selectedHabitList,
         habitsRepository.completedHabitList,
@@ -65,6 +63,7 @@ class SummaryViewModel @Inject constructor(
             RunningHabitState()
         }
 
+        /* map day by completed habits as a value between 0f and 1f */
         val historyState = completed.associate { dayAndHabits ->
             Pair(
                 Date(
