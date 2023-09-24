@@ -32,9 +32,13 @@ work = "2.8.1"
 hilt-work = "1.0.0"
 play-review = "2.0.1"
 immutable-collections = "0.3.5"
+truth = "1.0.1"
+coroutines-test = "1.6.0"
+core-testing = "2.1.0"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
+core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "core-testing"}
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
@@ -60,6 +64,9 @@ material = { group = "com.google.android.material", name = "material", version.r
 datastore-prefs = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore-prefs" }
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt"}
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt"}
+truth = { group = "com.google.truth", name = "truth", version.ref = "truth"}
+coroutines-testing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines-test"}
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose"}
 hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hilt-work"}
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist"}
