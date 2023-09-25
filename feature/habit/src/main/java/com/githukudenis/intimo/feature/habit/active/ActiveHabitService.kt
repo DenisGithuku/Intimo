@@ -119,15 +119,12 @@ class ActiveHabitService : Service() {
         notificationData: NotificationData
     ): NotificationCompat.Builder {
 
-        val intent = TaskStackBuilder.create(this).run {
-            addNextIntentWithParentStack(
-                Intent(
-                    Intent.ACTION_VIEW,
-                    "intimo://active_habit/${notificationData.habit.habitId}".toUri()
-                )
-            )
-            getPendingIntent(pendingIntentId, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val ACTION_OPEN_MAIN_ACTIVITY = "com.githukudenis.intimo.ACTION_OPEN_MAIN_ACTIVITY"
+        val intent = Intent(ACTION_OPEN_MAIN_ACTIVITY).apply {
+            setPackage("com.githukudenis.intimo")
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
+        val mainIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
 
 
         return NotificationCompat.Builder(this, "active_habit_notifs")
@@ -135,7 +132,7 @@ class ActiveHabitService : Service() {
             .setContentText(notificationData.content)
             .setForegroundServiceBehavior(FOREGROUND_SERVICE_IMMEDIATE)
             .setSmallIcon(R.drawable.intimologo)
-            .setContentIntent(intent)
+            .setContentIntent(mainIntent)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
 

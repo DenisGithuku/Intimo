@@ -31,11 +31,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
+                <action android:name="com.githukudenis.intimo.ACTION_OPEN_MAIN_ACTIVITY" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data
-                    android:host="active_habit"
-                    android:scheme="intimo" />
             </intent-filter>
         </activity>
 
