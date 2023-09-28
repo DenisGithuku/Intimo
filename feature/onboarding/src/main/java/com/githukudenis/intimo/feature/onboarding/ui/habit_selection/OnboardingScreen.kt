@@ -1,4 +1,4 @@
-package com.githukudenis.intimo.feature.onboarding.ui
+package com.githukudenis.intimo.feature.onboarding.ui.habit_selection
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

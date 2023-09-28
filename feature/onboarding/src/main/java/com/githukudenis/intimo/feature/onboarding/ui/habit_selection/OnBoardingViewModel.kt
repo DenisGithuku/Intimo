@@ -1,4 +1,4 @@
-package com.githukudenis.intimo.feature.onboarding.ui
+package com.githukudenis.intimo.feature.onboarding.ui.habit_selection
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

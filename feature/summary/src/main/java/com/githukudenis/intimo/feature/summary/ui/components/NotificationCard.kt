@@ -37,6 +37,7 @@ fun NotificationCard(
     }
     Card(
         modifier = Modifier
+            .padding(horizontal = 16.dp)
             .fillMaxWidth(),
         border = BorderStroke(
             width = 1.5.dp,

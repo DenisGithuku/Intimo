@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="get_started_btn_txt">Get started</string>
     <string name="onboarding_header">Choose Habit</string>
     <string name="onboarding_description">Choose your daily habits. You can choose more than one.</string>
-
+    <string name="phone_use" tools:ignore="ExtraTranslation">See your phone habits: get insights into how you use your phone - from screen time to app usage.</string>
+    <string name="mindfulness">Experience the calm that comes with mindful phone usage leading to a more balanced life.</string>
+    <string name="habit_tracking">Keep tabs on your daily routines and behaviours effortlessly.</string>
 </resources>

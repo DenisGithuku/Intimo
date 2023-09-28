@@ -1,5 +1,6 @@
 package com.githukudenis.intimo.core.data.repository
 
+import android.content.pm.PackageManager
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import com.githukudenis.intimo.core.model.NotificationPosted
@@ -36,7 +37,9 @@ class IntimoNotificationsListener : NotificationListenerService() {
                     .flatMap { it.notifications }
                     .map { it.notificationId }
 
-                if (statusBarNotification.id in notificationsPosted && statusBarNotification.isOngoing) {
+                if (statusBarNotification.id in notificationsPosted && statusBarNotification.isOngoing ||
+                    !isInstalledApp(statusBarNotification.packageName)
+                ) {
                     return@launch
                 }
 
@@ -54,5 +57,10 @@ class IntimoNotificationsListener : NotificationListenerService() {
                 )
             }
         }
+    }
+
+    private fun isInstalledApp(packageName: String): Boolean {
+        val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
+        return installedApps.map { it.packageName }.contains(packageName)
     }
 }

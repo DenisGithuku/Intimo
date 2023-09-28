@@ -9,6 +9,8 @@ import com.githukudenis.intimo.feature.habit.navigation.detailScreen
 import com.githukudenis.intimo.feature.habit.navigation.habitDetailRoute
 import com.githukudenis.intimo.feature.onboarding.navigation.onBoardingNavigationRoute
 import com.githukudenis.intimo.feature.onboarding.navigation.onBoardingScreen
+import com.githukudenis.intimo.feature.onboarding.navigation.pagerRoute
+import com.githukudenis.intimo.feature.onboarding.navigation.pagerScreen
 import com.githukudenis.intimo.feature.settings.navigation.settingsRoute
 import com.githukudenis.intimo.feature.settings.navigation.settingsScreen
 import com.githukudenis.intimo.feature.summary.navigation.summaryNavigationRoute
@@ -32,6 +34,11 @@ fun IntimoNavHost(
         splashScreen(onTimeout = {
             appState.navigate(startDestination, splashScreenRoute)
         })
+        pagerScreen(
+            onGetStarted = {
+                appState.navigate(onBoardingNavigationRoute, pagerRoute)
+            }
+        )
         onBoardingScreen(
             onFinishedOnBoarding = {
                 appState.navigate(summaryNavigationRoute, onBoardingNavigationRoute)
