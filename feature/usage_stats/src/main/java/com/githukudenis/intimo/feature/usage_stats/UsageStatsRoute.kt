@@ -235,9 +235,13 @@ internal fun UsageStatsScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
+                ),
                 title = {
                     Text(
-                        text = "Usage"
+                        text = "Usage statistics"
                     )
                 },
                 scrollBehavior = scrollBehavior,
