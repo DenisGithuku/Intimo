@@ -2,7 +2,7 @@ package com.githukudenis.intimo.feature.habit.detail
 
 import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitData
-import com.githukudenis.intimo.core.model.HabitType
+import com.githukudenis.intimo.core.model.HabitFrequency
 import java.time.LocalDate
 
 data class HabitDetailUiState(
@@ -18,10 +18,13 @@ data class HabitUiModel(
     val running: Boolean = false,
     val habitId: Long = 0,
     val habitIcon: String,
-    val habitType: HabitType,
+    val habitName: String,
     val startTime: Long = 0,
     val duration: Long = 0,
-    val durationType: DurationType
+    val durationType: DurationType,
+    val frequency: HabitFrequency = HabitFrequency.DAILY,
+    val selectedDays: List<LocalDate> = getDaysInAWeek(),
+    val remindBefore: Long = 0L,
 )
 
 fun HabitData.toHabitUiModel(completed: Boolean): HabitUiModel {
@@ -29,10 +32,13 @@ fun HabitData.toHabitUiModel(completed: Boolean): HabitUiModel {
         completed = completed,
         habitId = habitId,
         habitIcon = habitIcon,
-        habitType = habitType,
+        habitName = habitName,
         startTime = startTime,
         duration = duration,
-        durationType = durationType
+        durationType = durationType,
+        frequency = habitFrequency,
+        selectedDays = habitDays,
+        remindBefore = remindTime
     )
 }
 
@@ -40,9 +46,12 @@ fun HabitUiModel.toHabitData(): HabitData {
     return HabitData(
         habitId = habitId,
         habitIcon = habitIcon,
-        habitType = habitType,
+        habitName = habitName,
         startTime = startTime,
         duration = duration,
-        durationType = durationType
+        durationType = durationType,
+        habitFrequency = frequency,
+        habitDays = selectedDays,
+        remindTime = remindBefore
     )
 }

@@ -87,11 +87,11 @@ fun ActiveHabitRoute(
                     viewModel.onStartHabit()
                     startTimerService(
                         context,
-                        habitData.habitType.nameToString(),
+                        habitData.habitName,
                         content = context.getString(R.string.habit_notification_description),
                         duration = state.timerState.currentTime,
                         habitId = habitData.habitId,
-                        habitType = habitData.habitType
+                        habitName = habitData.habitName
                     )
                 },
                 onPauseTimer = {
@@ -100,11 +100,11 @@ fun ActiveHabitRoute(
                 onResumeTimer = {
                     startTimerService(
                         context,
-                        habitData.habitType.nameToString(),
+                        habitData.habitName,
                         content = context.getString(R.string.habit_notification_description),
                         duration = state.timerState.currentTime,
                         habitId = habitData.habitId,
-                        habitType = habitData.habitType
+                        habitName = habitData.habitName
                     )
                 },
                 onRestartHabit = {
@@ -112,11 +112,11 @@ fun ActiveHabitRoute(
                     stopTimerService(context)
                     startTimerService(
                         context,
-                        habitData.habitType.nameToString(),
+                        habitData.habitName,
                         content = context.getString(R.string.habit_notification_description),
                         duration = habitData.duration,
                         habitId = habitData.habitId,
-                        habitType = habitData.habitType
+                        habitName = habitData.habitName
                     )
 
                 },
@@ -164,7 +164,7 @@ internal fun ActiveHabitScreen(
             CountDownTimer(
                 modifier = Modifier.size(200.dp),
                 totalTime = totalTime,
-                habitName = habit.habitType.nameToString(),
+                habitName = habit.habitName,
                 currentTime = currentTime,
                 isTimerRunning = activeHabitUiState.timerState.isRunning,
                 onStartTimer = onStartTimer,
@@ -190,7 +190,7 @@ fun startTimerService(
     context: Context,
     title: String,
     content: String,
-    habitType: HabitType,
+    habitName: String,
     duration: Long,
     habitId: Long
 ) {
@@ -199,7 +199,7 @@ fun startTimerService(
         putExtra("content", content)
         putExtra("duration", duration)
         putExtra("habitId", habitId)
-        putExtra("habitType", habitType.name)
+        putExtra("habitType", habitName)
         action = ActiveHabitService.NotificationAction.START.toString()
     }
     context.startService(intent)

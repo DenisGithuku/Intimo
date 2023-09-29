@@ -6,10 +6,13 @@ import com.githukudenis.intimo.core.model.DayAndHabits
 import com.githukudenis.intimo.core.model.DefaultHabit
 import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitData
+import com.githukudenis.intimo.core.model.HabitFrequency
 import com.githukudenis.intimo.core.model.HabitType
 import com.githukudenis.intimo.core.model.RunningHabit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import java.time.DayOfWeek
+import java.time.LocalDate
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -58,64 +61,76 @@ class IntimoHabitsDataSource @Inject constructor(
         emit(listOf(
             DefaultHabit(
                 icon = "\uD83D\uDCDA",
-                habitType = HabitType.READING,
+                habitName = "Read a book",
                 startTime = generateHabitTime(hour = 20),
                 duration = generateDuration(1, DurationType.HOUR),
-                durationType = DurationType.HOUR
+                durationType = DurationType.HOUR,
+                habitFrequency = HabitFrequency.DAILY,
+                habitDays = generateHabitDays()
             ),
             DefaultHabit(
                 icon = "\uD83E\uDDD8",
-                habitType = HabitType.MEDITATION,
+                habitName = "Meditate",
                 startTime = generateHabitTime(7),
                 duration = generateDuration(15, DurationType.MINUTE),
-                durationType = DurationType.MINUTE
-
+                durationType = DurationType.MINUTE,
+                habitFrequency = HabitFrequency.DAILY,
+                habitDays = generateHabitDays()
             ),
             DefaultHabit(
                 icon = "\uD83E\uDEA5",
-                habitType = HabitType.FLOSSING,
+                habitName = "Flossing",
                 startTime = generateHabitTime(hour = 20, minute = 45),
                 duration = generateDuration(3, DurationType.MINUTE),
-                durationType = DurationType.MINUTE
-
+                durationType = DurationType.MINUTE,
+                        habitFrequency = HabitFrequency.DAILY,
+                habitDays = generateHabitDays()
             ),
             DefaultHabit(
                 icon = "✍️",
-                habitType = HabitType.JOURNALING,
+                habitName = "Journal your thoughts",
                 startTime = generateHabitTime(19),
                 duration = generateDuration(30, DurationType.MINUTE),
-                durationType = DurationType.MINUTE
+                durationType = DurationType.MINUTE,
+                habitFrequency = HabitFrequency.DAILY,
+                habitDays = generateHabitDays()
 
             ),
             DefaultHabit(
                 icon = "\uD83C\uDFC3",
-                habitType = HabitType.EXERCISE,
+                habitName = "Go for a run",
                 startTime = generateHabitTime(6),
                 duration = generateDuration(1, DurationType.HOUR),
-                durationType = DurationType.HOUR
+                durationType = DurationType.HOUR,
+                habitFrequency = HabitFrequency.DAILY,
+                habitDays = generateHabitDays()
             ),
             DefaultHabit(
                 icon = "\uD83E\uDD14",
-                habitType = HabitType.REFLECTION,
+                habitName = "Reflect",
                 startTime = generateHabitTime(14),
                 duration = generateDuration(15, DurationType.MINUTE),
-                durationType = DurationType.MINUTE
-
+                durationType = DurationType.MINUTE,
+                habitFrequency = HabitFrequency.DAILY,
+                habitDays = generateHabitDays()
             ),
             DefaultHabit(
                 icon = "\uD83D\uDE34",
                 startTime = generateHabitTime(hour = 13, minute = 40),
                 duration = generateDuration(20, DurationType.MINUTE),
-                habitType = HabitType.NAP,
-                durationType = DurationType.MINUTE
+                habitName = "Take a nap",
+                durationType = DurationType.MINUTE,
+                habitFrequency = HabitFrequency.DAILY,
+                habitDays = generateHabitDays()
             ),
             DefaultHabit(
                 icon = "\uD83E\uDD38",
-                habitType = HabitType.STRETCHING,
+                habitName = "Stretch",
                 startTime = generateHabitTime(11),
                 duration = generateDuration(10, DurationType.MINUTE),
-                durationType = DurationType.MINUTE
-
+                durationType = DurationType.MINUTE,
+                habitFrequency = HabitFrequency.DAILY,
+                habitDays = generateHabitDays()
             )
         ))
     }
@@ -153,5 +168,11 @@ class IntimoHabitsDataSource @Inject constructor(
 
     fun deleteRunningHabit(habit: RunningHabit) {
         habitDao.deleteRunningHabit(habit)
+    }
+
+    fun generateHabitDays(): List<LocalDate> {
+        return (0..6).map { day ->
+            LocalDate.now().with(DayOfWeek.MONDAY).plusDays(day.toLong())
+        }
     }
 }

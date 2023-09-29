@@ -259,7 +259,7 @@ fun CountDownTimerPrev() {
     CountDownTimer(
         modifier = Modifier.size(200.dp),
         totalTime = 1000L * 60,
-        habitName = "Sleeping",
+        habitName = "Take a nap",
         currentTime = 9000L * 60,
         isTimerRunning = false,
         onStartTimer = {},

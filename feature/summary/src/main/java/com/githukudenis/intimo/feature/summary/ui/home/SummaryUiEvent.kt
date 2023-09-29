@@ -9,4 +9,6 @@ sealed interface SummaryUiEvent {
     data class DismissMessage(val messageId: Long) : SummaryUiEvent
     data class SelectDayOnHistory(val date: Date) : SummaryUiEvent
 
+    data class PermissionChange(val permissionState: PermissionState): SummaryUiEvent
+
 }

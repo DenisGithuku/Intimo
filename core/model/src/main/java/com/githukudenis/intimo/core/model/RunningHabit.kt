@@ -8,7 +8,7 @@ data class RunningHabit(
     @PrimaryKey
     val habitId: Long,
     val isRunning: Boolean = false,
-    val habitType: HabitType,
+    val habitName: String,
     val totalTime: Long = 0L,
     val remainingTime: Long = 0L
 )

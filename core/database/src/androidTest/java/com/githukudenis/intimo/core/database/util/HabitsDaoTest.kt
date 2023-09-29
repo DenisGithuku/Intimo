@@ -56,7 +56,7 @@ class HabitsDaoTest {
         val habit = HabitData(
             habitId = 1,
             habitIcon = "",
-            habitType = HabitType.READING,
+            habitName = "Reading",
             startTime = 18000000L,
             duration = 30000L,
             durationType = DurationType.MINUTE
@@ -72,16 +72,16 @@ class HabitsDaoTest {
         val habit = HabitData(
             habitId = 1,
             habitIcon = "",
-            habitType = HabitType.READING,
+            habitName = "Reading",
             startTime = 18000000L,
             duration = 30000L,
             durationType = DurationType.MINUTE
         )
         habitDao.insertHabit(habit)
-        val updatedHabit = habit.copy(habitType = HabitType.EXERCISE)
+        val updatedHabit = habit.copy(habitName = "Reading")
         habitDao.updateHabit(updatedHabit)
         val insertedHabit = habitDao.getHabitList().first().first { it.habitId == 1L }
-        assertThat(insertedHabit.habitType).isEqualTo(HabitType.EXERCISE)
+        assertThat(insertedHabit.habitName).isEqualTo("Reading")
     }
 
     @Test
@@ -91,21 +91,21 @@ class HabitsDaoTest {
                 HabitData(
                     habitId = 1,
                     habitIcon = "",
-                    habitType = HabitType.READING,
+                    habitName = "Reading",
                     startTime = 18000000L,
                     duration = 30000L,
                     durationType = DurationType.MINUTE
                 ),HabitData(
                     habitId = 2,
                     habitIcon = "",
-                    habitType = HabitType.EXERCISE,
+                    habitName = "Reading",
                     startTime = 18000000L,
                     duration = 30000L,
                     durationType = DurationType.MINUTE
                 ),HabitData(
                     habitId = 3,
                     habitIcon = "",
-                    habitType = HabitType.STRETCHING,
+                    habitName = "Reading",
                     startTime = 18000000L,
                     duration = 30000L,
                     durationType = DurationType.MINUTE

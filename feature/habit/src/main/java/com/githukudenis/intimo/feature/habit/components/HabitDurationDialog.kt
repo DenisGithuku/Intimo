@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Divider
@@ -29,27 +30,25 @@ import com.githukudenis.intimo.feature.habit.detail.formatDurationMillis
 
 @Composable
 fun HabitDurationDialog(
+    title: String,
     durationValue: Long,
+    durationList: List<Long> = listOf(
+        3000L * 60,
+        5000L * 60,
+        10000L * 60,
+        15000L * 60,
+        20000L * 60,
+        25000L * 60,
+        30000L * 60,
+        45000L * 60,
+        1000L * 60 * 60,
+        2000L * 60 * 60,
+        3000L * 60 * 60,
+    ),
     onDismissRequest: (Long) -> Unit
 ) {
 
     var selectedDuration by remember { mutableLongStateOf(durationValue) }
-
-    val durationList = remember {
-        listOf(
-            3000L * 60,
-            5000L * 60,
-            10000L * 60,
-            15000L * 60,
-            20000L * 60,
-            25000L * 60,
-            30000L * 60,
-            45000L * 60,
-            1000L * 60 * 60,
-            2000L * 60 * 60,
-            3000L * 60 * 60,
-        )
-    }
 
 
     Dialog(
@@ -59,7 +58,8 @@ fun HabitDurationDialog(
     ) {
         Box(
             modifier = Modifier
-                .fillMaxSize(0.9f)
+                .fillMaxWidth(0.9f)
+                .wrapContentHeight()
                 .background(
                     color = MaterialTheme.colorScheme.surface,
                     shape = MaterialTheme.shapes.large
@@ -77,14 +77,10 @@ fun HabitDurationDialog(
                 ) {
                     Text(
                         modifier = Modifier.padding(8.dp),
-                        text = "Habit duration",
-                        style = MaterialTheme.typography.bodyLarge
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium
                     )
                 }
-                Divider(
-                    thickness = 0.7.dp,
-                    modifier = Modifier.fillMaxWidth()
-                )
                 LazyColumn(
                     modifier = Modifier.weight(1f, false)
                 ) {
@@ -107,15 +103,11 @@ fun HabitDurationDialog(
                                 })
                             Text(
                                 text = formatDurationMillis(duration),
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
                 }
-                Divider(
-                    thickness = 0.7.dp,
-                    modifier = Modifier.fillMaxWidth()
-                )
                 Row(
                     modifier = Modifier
                         .padding(8.dp)

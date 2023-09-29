@@ -8,12 +8,10 @@ import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
 import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.Instant
@@ -39,6 +37,8 @@ class SummaryViewModel @Inject constructor(
 
     private val usageStatsState: MutableStateFlow<UsageStatsState>
         get() = MutableStateFlow(UsageStatsState.Loading)
+
+    private var permissionsState = MutableStateFlow(PermissionState())
 
     private var queryDetails =
         MutableStateFlow(QueryTime(date = LocalDate.now()))
@@ -107,7 +107,7 @@ class SummaryViewModel @Inject constructor(
                                 .flatMap { it.habits }.map { it.habitId }),
                         habitId = habit.habitId,
                         habitIcon = habit.habitIcon,
-                        habitType = habit.habitType,
+                        habitName = habit.habitName,
                         startTime = habit.startTime,
                         duration = habit.duration,
                         durationType = habit.durationType,
@@ -142,13 +142,15 @@ class SummaryViewModel @Inject constructor(
         usageStats,
         habitHistoryState,
         userMessageList,
-    ) { usageStats, habitsState, userMessageList ->
+        permissionsState,
+    ) { usageStats, habitsState, userMessageList, permissionState ->
 
         SummaryUiState(
             isLoading = false,
             usageStatsState = usageStats,
             habitsState = habitsState,
             userMessageList = userMessageList,
+            permissionsState = permissionState
         )
     }
         .stateIn(
@@ -161,6 +163,10 @@ class SummaryViewModel @Inject constructor(
         when (event) {
             SummaryUiEvent.Refresh -> {
 
+            }
+
+            is SummaryUiEvent.PermissionChange -> {
+                permissionsState.update { event.permissionState }
             }
 
             is SummaryUiEvent.ShowMessage -> {

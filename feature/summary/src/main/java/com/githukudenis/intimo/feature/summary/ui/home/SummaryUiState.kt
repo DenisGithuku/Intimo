@@ -2,7 +2,6 @@ package com.githukudenis.intimo.feature.summary.ui.home
 
 import com.githukudenis.intimo.core.model.ApplicationInfoData
 import com.githukudenis.intimo.core.model.DurationType
-import com.githukudenis.intimo.core.model.HabitType
 import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
 import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
@@ -13,6 +12,12 @@ data class SummaryUiState(
     val usageStatsState: UsageStatsState = UsageStatsState.Loading,
     val habitsState: HabitsState = HabitsState.Loading,
     val userMessageList: List<UserMessage> = emptyList(),
+    val permissionsState: PermissionState = PermissionState()
+)
+
+data class PermissionState(
+    val usagePermissionsAllowed: Boolean = false,
+    val notificationsPermissionsAllowed: Boolean = false,
 )
 
 sealed class UsageStatsState {
@@ -44,7 +49,7 @@ data class HabitUiModel(
     val remainingTime: Long = 0L,
     val habitId: Long = 0,
     val habitIcon: String,
-    val habitType: HabitType,
+    val habitName: String,
     val startTime: Long = 0,
     val duration: Long = 0,
     val durationType: DurationType

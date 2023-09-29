@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -29,11 +32,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.githukudenis.intimo.core.model.DurationType
-import com.githukudenis.intimo.core.model.HabitType
-import com.githukudenis.intimo.core.model.nameToString
 import com.githukudenis.intimo.core.ui.components.MultipleClicksCutter
 import com.githukudenis.intimo.core.ui.components.clickableOnce
 import com.githukudenis.intimo.core.ui.components.get
@@ -72,45 +74,38 @@ fun HabitCard(
     }
 
 
-    Box(
-        modifier = modifier
-            .wrapContentWidth()
-            .clip(MaterialTheme.shapes.large)
-            .border(
-                shape = MaterialTheme.shapes.large,
-                border = BorderStroke(
-                    width = 1.dp,
-                    color = if (habitUiModel.completed.second) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                    } else {
-                        MaterialTheme.colorScheme.onBackground.copy(
-                            alpha = 0.1f
-                        )
-                    }
-                )
+    Box(modifier = modifier
+        .wrapContentWidth()
+        .clip(MaterialTheme.shapes.large)
+        .border(
+            shape = MaterialTheme.shapes.large, border = BorderStroke(
+                width = 1.dp, color = if (habitUiModel.completed.second) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                } else {
+                    MaterialTheme.colorScheme.onBackground.copy(
+                        alpha = 0.1f
+                    )
+                }
             )
-            .background(
-                MaterialTheme.colorScheme.surface,
-            )
+        )
+        .background(
+            MaterialTheme.colorScheme.surface,
+        )
 
-            .clickableOnce {
-                onOpenHabitDetails(habitUiModel.habitId)
-            }
-            .animateContentSize()
-    )
-    {
+        .clickableOnce {
+            onOpenHabitDetails(habitUiModel.habitId)
+        }
+        .animateContentSize()) {
         Column(
             modifier = Modifier
                 .padding(12.dp)
                 .fillMaxWidth(),
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(
                     horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     InfoChip(
                         habitStatus = if (habitUiModel.completed.second) {
@@ -125,12 +120,17 @@ fun HabitCard(
                             HabitStatus.PENDING
                         }
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = habitUiModel.habitIcon,
                         style = MaterialTheme.typography.headlineLarge
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = habitUiModel.habitType.nameToString(),
+                        text = habitUiModel.habitName,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 120.dp),
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                         )
@@ -139,8 +139,7 @@ fun HabitCard(
                         text = buildString {
                             append(
                                 getTimeString(
-                                    context = context,
-                                    timeInMillis = startTime.timeInMillis
+                                    context = context, timeInMillis = startTime.timeInMillis
                                 )
                             )
                             append(" for ")
@@ -151,8 +150,7 @@ fun HabitCard(
 //                                    timeInMillis = startTime.timeInMillis + habitUiModel.duration
 //                                )
                             )
-                        },
-                        style = MaterialTheme.typography.labelSmall.copy(
+                        }, style = MaterialTheme.typography.labelSmall.copy(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     )
@@ -182,14 +180,13 @@ fun HabitCard(
                             sweepAngle = animatedArcValue.value,
                             useCenter = false,
                             style = Stroke(
-                                width = 4.dp.toPx(),
-                                cap = StrokeCap.Round
+                                width = 4.dp.toPx(), cap = StrokeCap.Round
                             )
                         )
                     }
                 }
             }
-
+            Spacer(modifier = Modifier.height(12.dp))
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !habitUiModel.completed.second && startTime.get(Calendar.DAY_OF_YEAR) >= now.get(
@@ -197,15 +194,13 @@ fun HabitCard(
                 ),
                 onClick = { multipleClicksCutter.processEvent { onStart(habitUiModel.habitId) } },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Text(
                     text = if (isRunning && habitUiModel.remainingTime > 0L) "Progress details" else "Start",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary.copy(
-                        alpha = 0.8f
-                    )
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -220,8 +215,7 @@ private fun getTimeString(context: Context, timeInMillis: Long): String {
         DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault())
     }
     val parsedTime = LocalDateTime.ofInstant(
-        Instant.ofEpochMilli(timeInMillis),
-        ZoneId.systemDefault()
+        Instant.ofEpochMilli(timeInMillis), ZoneId.systemDefault()
     )
     return parsedTime.format(formatter)
 }
@@ -229,32 +223,26 @@ private fun getTimeString(context: Context, timeInMillis: Long): String {
 @Preview()
 @Composable
 fun HabitCardPreview() {
-    HabitCard(
-        isRunning = true,
-        habitUiModel = HabitUiModel(
-            completed = Pair(0L, false),
-            habitIcon = "\uD83E\uDD38",
-            habitType = HabitType.EXERCISE,
-            startTime = 169023000000,
-            duration = 1800000,
-            remainingTime = 700000L,
-            durationType = DurationType.MINUTE
-        ), onOpenHabitDetails = {}, onStart = {}
-    )
+    HabitCard(isRunning = true, habitUiModel = HabitUiModel(
+        completed = Pair(0L, false),
+        habitIcon = "\uD83E\uDD38",
+        habitName = "Go for a run",
+        startTime = 169023000000,
+        duration = 1800000,
+        remainingTime = 700000L,
+        durationType = DurationType.MINUTE
+    ), onOpenHabitDetails = {}, onStart = {})
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
 @Composable
 fun HabitCardNightPreview() {
-    HabitCard(
-        isRunning = false,
-        habitUiModel = HabitUiModel(
-            completed = Pair(0L, false),
-            habitIcon = "\uD83E\uDD38",
-            habitType = HabitType.EXERCISE,
-            startTime = 169023000000,
-            duration = 1800000,
-            durationType = DurationType.MINUTE
-        ), onOpenHabitDetails = {}, onStart = {}
-    )
+    HabitCard(isRunning = false, habitUiModel = HabitUiModel(
+        completed = Pair(0L, false),
+        habitIcon = "\uD83E\uDD38",
+        habitName = "Go for a run",
+        startTime = 169023000000,
+        duration = 1800000,
+        durationType = DurationType.MINUTE
+    ), onOpenHabitDetails = {}, onStart = {})
 }
