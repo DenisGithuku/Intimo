@@ -9,8 +9,6 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE
-import androidx.core.app.TaskStackBuilder
-import androidx.core.net.toUri
 import com.githukudenis.intimo.core.data.repository.HabitsRepository
 import com.githukudenis.intimo.core.designsystem.R
 import com.githukudenis.intimo.feature.habit.components.formatCountdownTime
@@ -60,7 +58,7 @@ class ActiveHabitService : Service() {
                         totalTime = extras.getLong("duration"),
                         isRunning = true,
                         remainingTime = extras.getLong("duration"),
-                        habitType = HabitType.valueOf(extras.getString("habitType") ?: return@innerLet )
+                        habitName = extras.getString("habitName") ?: return@innerLet
                     )
                 )
 

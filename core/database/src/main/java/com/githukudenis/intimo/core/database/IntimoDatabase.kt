@@ -8,6 +8,8 @@ import com.githukudenis.intimo.core.model.Day
 import com.githukudenis.intimo.core.model.DayAndHabitCrossRef
 import com.githukudenis.intimo.core.model.DayAndNotificationsPostedCrossRef
 import com.githukudenis.intimo.core.model.HabitData
+import com.githukudenis.intimo.core.model.HabitFrequencyConverter
+import com.githukudenis.intimo.core.model.HabitDayListConverter
 import com.githukudenis.intimo.core.model.NotificationPosted
 import com.githukudenis.intimo.core.model.RunningHabit
 
@@ -24,7 +26,7 @@ import com.githukudenis.intimo.core.model.RunningHabit
     version = 1,
     exportSchema = false
 )
-@TypeConverters(value = [HabitTypeConverter::class, DurationTypeConverter::class])
+@TypeConverters(value = [DurationTypeConverter::class, HabitDayListConverter::class, HabitFrequencyConverter::class])
 abstract class IntimoDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
 

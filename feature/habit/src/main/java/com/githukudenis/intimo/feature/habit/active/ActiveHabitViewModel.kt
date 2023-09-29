@@ -81,7 +81,7 @@ class HabitActiveViewModel @Inject constructor(
                     RunningHabit(
                         habitId = habitData.habitId,
                         isRunning = true,
-                        habitType = habitData.habitType,
+                        habitName = habitData.habitName,
                         totalTime = habitData.duration,
                         remainingTime = habitData.duration
                     )
@@ -106,7 +106,7 @@ class HabitActiveViewModel @Inject constructor(
                     RunningHabit(
                         habitId = habit.habitId,
                         isRunning = false,
-                        habitType = habit.habitType,
+                        habitName = habit.habitName,
                         totalTime = habit.duration,
                         remainingTime = habit.duration
                     )

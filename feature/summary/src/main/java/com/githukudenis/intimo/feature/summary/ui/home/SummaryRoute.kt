@@ -154,20 +154,21 @@ internal fun SummaryRoute(
         }) { paddingValues ->
 
         val context = LocalContext.current
-        val uiState by summaryViewModel.uiState.collectAsStateWithLifecycle()
+
+        val state by summaryViewModel.uiState.collectAsStateWithLifecycle()
 
 
-        var shouldShowUsagePermissionsDialog by rememberSaveable {
-            mutableStateOf(false)
-        }
+//        var shouldShowUsagePermissionsDialog by rememberSaveable {
+//            mutableStateOf(false)
+//        }
+//
+//        var shouldShowNotificationPermissionsDialog by rememberSaveable {
+//            mutableStateOf(false)
+//        }
 
-        var shouldShowNotificationPermissionsDialog by rememberSaveable {
-            mutableStateOf(false)
-        }
-
-        LaunchedEffect(uiState.userMessageList, snackbarHostState) {
-            if (uiState.userMessageList.isNotEmpty()) {
-                val userMessage = uiState.userMessageList.first()
+        LaunchedEffect(state.userMessageList, snackbarHostState) {
+            if (state.userMessageList.isNotEmpty()) {
+                val userMessage = state.userMessageList.first()
                 snackbarHostState.showSnackbar(
                     message = userMessage.message ?: "An error occurred",
                     duration = when (val messageType = userMessage.messageType) {
@@ -190,11 +191,11 @@ internal fun SummaryRoute(
         val usageAccessPermissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult(),
             onResult = {
-                if (shouldShowNotificationPermissionsDialog || shouldShowNotificationPermissionsDialog) {
+                if (!state.permissionsState.usagePermissionsAllowed || !state.permissionsState.notificationsPermissionsAllowed) {
                     return@rememberLauncherForActivityResult
                 }
                 if (context.hasUsageAccessPermissions()) {
-                    summaryViewModel.onEvent(SummaryUiEvent.Refresh)
+                    summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(usagePermissionsAllowed = true)))
                 } else {
                     val userMessage = UserMessage(
                         message = "Usage access permissions required",
@@ -213,10 +214,14 @@ internal fun SummaryRoute(
             val observer = LifecycleEventObserver { _, event ->
                 when (event) {
                     Lifecycle.Event.ON_START -> {
-                        shouldShowUsagePermissionsDialog =
-                            !context.hasUsageAccessPermissions() && shouldShowNotificationPermissionsDialog == false
-                        shouldShowNotificationPermissionsDialog =
-                            !context.hasNotificationAccessPermissions()
+                        summaryViewModel.onEvent(
+                            SummaryUiEvent.PermissionChange(
+                                PermissionState(
+                                    usagePermissionsAllowed = context.hasUsageAccessPermissions(),
+                                    notificationsPermissionsAllowed = context.hasNotificationAccessPermissions()
+                                )
+                            )
+                        )
                     }
 
                     else -> Unit
@@ -230,7 +235,7 @@ internal fun SummaryRoute(
             }
         }
 
-        if (shouldShowUsagePermissionsDialog) {
+        if (!usagePermissionsAllowed) {
             AlertDialog(properties = DialogProperties(
                 dismissOnBackPress = false, dismissOnClickOutside = false
             ),
@@ -251,7 +256,7 @@ internal fun SummaryRoute(
                 },
                 dismissButton = {
                     TextButton(onClick = {
-                        shouldShowUsagePermissionsDialog = false
+                        summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(usagePermissionsAllowed = false)))
                         val userMessage = UserMessage(
                             message = "Usage access permissions required",
                             messageType = MessageType.ERROR(dismissable = false)
@@ -272,7 +277,7 @@ internal fun SummaryRoute(
                 shape = MaterialTheme.shapes.extraLarge,
                 tonalElevation = LocalTonalElevation.current.large,
                 onDismissRequest = {
-                    shouldShowUsagePermissionsDialog = false
+                    summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(usagePermissionsAllowed = false)))
                     val userMessage = UserMessage(
                         message = "Usage access permissions required",
                         messageType = MessageType.ERROR(dismissable = false)
@@ -281,7 +286,7 @@ internal fun SummaryRoute(
                     onNavigateUp()
                 })
         }
-        if (shouldShowNotificationPermissionsDialog) {
+        if (!notificationAccessPermissionsAllowed) {
             AlertDialog(properties = DialogProperties(
                 dismissOnBackPress = false, dismissOnClickOutside = false
             ),
@@ -303,7 +308,8 @@ internal fun SummaryRoute(
                 },
                 dismissButton = {
                     TextButton(onClick = {
-                        shouldShowNotificationPermissionsDialog = false
+                        summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(notificationsPermissionsAllowed = false)))
+
                         val userMessage = UserMessage(
                             message = "Notification access permissions required",
                             messageType = MessageType.ERROR(dismissable = false)
@@ -324,7 +330,8 @@ internal fun SummaryRoute(
                 shape = MaterialTheme.shapes.extraLarge,
                 tonalElevation = LocalTonalElevation.current.large,
                 onDismissRequest = {
-                    shouldShowNotificationPermissionsDialog = false
+                    summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(notificationsPermissionsAllowed = false)))
+
                     val userMessage = UserMessage(
                         message = "Notification access permissions required",
                         messageType = MessageType.ERROR(dismissable = false)
@@ -358,7 +365,7 @@ internal fun SummaryRoute(
         )
 
         Crossfade(
-            targetState = uiState.isLoading, label = "Screen animation"
+            targetState = state.isLoading, label = "Screen animation"
         ) {
             when (it) {
                 true -> {
@@ -381,8 +388,8 @@ internal fun SummaryRoute(
                             top = paddingValues.calculateTopPadding(),
                             bottom = paddingValues.calculateBottomPadding()
                         ),
-                        usageStatsState = uiState.usageStatsState,
-                        habitsState = uiState.habitsState,
+                        usageStatsState = state.usageStatsState,
+                        habitsState = state.habitsState,
                         onSelectDayOnHistory = { date ->
                             summaryViewModel.onEvent(SummaryUiEvent.SelectDayOnHistory(date))
                         },
@@ -435,7 +442,6 @@ internal fun SummaryScreen(
     LazyColumn(
         state = listState,
         contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
             .fillMaxSize()
             .animateContentSize()
@@ -446,6 +452,9 @@ internal fun SummaryScreen(
             multipleClicksCutter = multipleClicksCutter,
             onOpenUsageStats = onOpenUsageStats
         )
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         item {
             Row(
                 modifier = Modifier
@@ -470,6 +479,9 @@ internal fun SummaryScreen(
             }
         }
         item {
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        item {
             when (habitsState) {
                 HabitsState.Empty -> {}
                 HabitsState.Loading -> {
@@ -483,7 +495,9 @@ internal fun SummaryScreen(
                     )
                 }
             }
-
+        }
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
         }
         item {
             when (habitsState) {
@@ -500,7 +514,9 @@ internal fun SummaryScreen(
                         })
                 }
             }
-
+        }
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
         }
         item {
             Row(
@@ -528,6 +544,9 @@ internal fun SummaryScreen(
                     )
                 }
             }
+        }
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
         }
         item {
             LazyRow(
@@ -577,7 +596,8 @@ fun LazyListScope.appUsageData(
                     is UsageStatsState.Loaded -> {
                         val context = LocalContext.current
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
                                 text = stringResource(R.string.screen_time),

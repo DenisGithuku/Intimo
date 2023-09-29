@@ -9,7 +9,6 @@ import com.githukudenis.intimo.core.database.HabitDao
 import com.githukudenis.intimo.core.database.IntimoDatabase
 import com.githukudenis.intimo.core.model.Day
 import com.githukudenis.intimo.core.model.DayAndHabitCrossRef
-import com.githukudenis.intimo.core.model.DayAndHabits
 import com.githukudenis.intimo.core.model.DurationType
 import com.githukudenis.intimo.core.model.HabitData
 import com.githukudenis.intimo.core.model.HabitType
@@ -69,7 +68,7 @@ class DayAndHabitsDaoTest {
         val habit = HabitData(
             habitId = 1,
             habitIcon = "",
-            habitType = HabitType.READING,
+            habitName = "Read a book",
             startTime = 18000000L,
             duration = 30000L,
             durationType = DurationType.MINUTE
@@ -92,7 +91,7 @@ class DayAndHabitsDaoTest {
         val runningHabit = RunningHabit(
             habitId = 1,
             isRunning = true,
-            habitType = HabitType.READING,
+            habitName = "Read a book",
             totalTime = 1700000L,
             remainingTime = 10000L
         )
@@ -107,7 +106,7 @@ class DayAndHabitsDaoTest {
         val runningHabit = RunningHabit(
             habitId = 1,
             isRunning = true,
-            habitType = HabitType.READING,
+            habitName = "Read a book",
             totalTime = 1700000L,
             remainingTime = 10000L
         )
@@ -126,7 +125,7 @@ class DayAndHabitsDaoTest {
         val runningHabit = RunningHabit(
             habitId = 1,
             isRunning = true,
-            habitType = HabitType.READING,
+            habitName = "Read a book",
             totalTime = 1700000L,
             remainingTime = 10000L
         )

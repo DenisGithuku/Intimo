@@ -2,17 +2,14 @@ package com.githukudenis.intimo.feature.onboarding.ui.habit_selection
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyGridScope
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -22,8 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.intimo.core.model.DefaultHabit
 import com.githukudenis.intimo.core.model.DurationType
-import com.githukudenis.intimo.core.model.HabitType
-import com.githukudenis.intimo.core.model.nameToString
+import com.githukudenis.intimo.core.model.HabitFrequency
 import com.githukudenis.intimo.feature.onboarding.ui.components.GetStartedBtn
 import com.githukudenis.intimo.feature.onboarding.ui.components.HabitItem
 import com.githukudenis.intimo.feature.onboarding.ui.components.OnBoardingTitle
@@ -31,14 +27,12 @@ import com.githukudenis.intimo.feature.onboarding.ui.components.OnBoardingTitle
 
 @Composable
 fun OnBoardingRoute(
-    onFinishedOnBoarding: () -> Unit,
-    onBoardingViewModel: OnBoardingViewModel = hiltViewModel()
+    onFinishedOnBoarding: () -> Unit, onBoardingViewModel: OnBoardingViewModel = hiltViewModel()
 ) {
 
     val uiState by onBoardingViewModel.onBoardingUiState.collectAsStateWithLifecycle()
 
-    OnBoardingContent(
-        isLoading = uiState.isLoading,
+    OnBoardingContent(isLoading = uiState.isLoading,
         defaultHabitList = uiState.availableDefaultHabits,
         selectedDefaultHabits = uiState.selectedDefaultHabits,
         uiIsValid = uiState.uiIsValid,
@@ -61,90 +55,108 @@ private fun OnBoardingContent(
     onGetStarted: () -> Unit
 ) {
     Box(modifier = Modifier.safeDrawingPadding()) {
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize()
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalItemSpacing = 14.dp,
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+            )
         ) {
-            OnBoardingTitle()
-            if (isLoading) {
-                LinearProgressIndicator()
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+            item(
+                span = StaggeredGridItemSpan.FullLine
             ) {
-                habitItemList(
-                    defaultHabitList = defaultHabitList,
-                    selectedDefaultHabits = selectedDefaultHabits,
-                    onToggleHabit = onToggleHabit
-                )
+                OnBoardingTitle()
             }
-            Spacer(modifier = Modifier.height(64.dp))
-            GetStartedBtn(uiIsValid = uiIsValid, onGetStarted = onGetStarted)
+            habitItemList(
+                defaultHabitList = defaultHabitList,
+                selectedDefaultHabits = selectedDefaultHabits,
+                onToggleHabit = onToggleHabit
+            )
+            item(span = StaggeredGridItemSpan.FullLine
+            ) {
+                GetStartedBtn(uiIsValid = uiIsValid, onGetStarted = onGetStarted)
+            }
         }
     }
 }
 
-private fun LazyGridScope.habitItemList(
+private fun LazyStaggeredGridScope.habitItemList(
     defaultHabitList: List<DefaultHabit>,
     selectedDefaultHabits: List<DefaultHabit>,
     onToggleHabit: (DefaultHabit) -> Unit
 ) {
-    items(items = defaultHabitList) { habit ->
-        HabitItem(
-            emoji = habit.icon,
-            description = habit.habitType.nameToString(),
+    items(items = defaultHabitList, key = { it.habitName }) { habit ->
+        HabitItem(emoji = habit.icon,
+            description = habit.habitName,
             selected = habit in selectedDefaultHabits,
             onToggle = {
                 onToggleHabit(habit)
-            }
-        )
+            })
     }
 }
 
 @Preview
 @Composable
 fun OnBoardingRoutePrev() {
-    OnBoardingContent(
-        isLoading = false,
-        defaultHabitList = listOf(
-            DefaultHabit(
-                icon = "\uD83D\uDE0E",
-                habitType = HabitType.NAP,
-                selected = true,
-                durationType = DurationType.MINUTE
+    OnBoardingContent(isLoading = false, defaultHabitList = listOf(
+        DefaultHabit(
+            icon = "\uD83D\uDE0E",
+            habitName = "Take a nap",
+            selected = true,
+            durationType = DurationType.MINUTE,
+            habitFrequency = HabitFrequency.DAILY,
+            habitDays = listOf()
 
-            ),
-            DefaultHabit(
-                icon = "\uD83E\uDD14", habitType = HabitType.FLOSSING, selected = false,
-                durationType = DurationType.MINUTE
+        ),
+        DefaultHabit(
+            icon = "\uD83D\uDE0E",
+            habitName = "Read a book",
+            selected = true,
+            durationType = DurationType.MINUTE,
+            habitFrequency = HabitFrequency.DAILY,
+            habitDays = listOf()
 
-            ),
-            DefaultHabit(
-                icon = "\uD83D\uDE0E", habitType = HabitType.JOURNALING, selected = false,
-                durationType = DurationType.MINUTE
-            ),
-            DefaultHabit(
-                icon = "✍️", habitType = HabitType.REFLECTION, selected = true,
-                durationType = DurationType.MINUTE
-            )
         ),
-        selectedDefaultHabits = listOf(
-            DefaultHabit(
-                icon = "\uD83D\uDE0E", habitType = HabitType.JOURNALING, selected = false,
-                durationType = DurationType.MINUTE
-            ),
-            DefaultHabit(
-                icon = "✍️", habitType = HabitType.REFLECTION, selected = true,
-                durationType = DurationType.MINUTE
-            )
+        DefaultHabit(
+            icon = "\uD83D\uDE0E",
+            habitName = "Floss",
+            selected = true,
+            durationType = DurationType.MINUTE,
+            habitFrequency = HabitFrequency.DAILY,
+            habitDays = listOf()
+
         ),
-        uiIsValid = true,
-        onToggleHabit = {}
-    ) {
+        DefaultHabit(
+            icon = "\uD83D\uDE0E",
+            habitName = "Journal your thoughts",
+            selected = true,
+            durationType = DurationType.MINUTE,
+            habitFrequency = HabitFrequency.DAILY,
+            habitDays = listOf()
+
+        ),
+    ), selectedDefaultHabits = listOf(
+        DefaultHabit(
+            icon = "\uD83D\uDE0E",
+            habitName = "Read a book",
+            selected = true,
+            durationType = DurationType.MINUTE,
+            habitFrequency = HabitFrequency.DAILY,
+            habitDays = listOf()
+
+        ),
+        DefaultHabit(
+            icon = "\uD83D\uDE0E",
+            habitName = "Floss",
+            selected = true,
+            durationType = DurationType.MINUTE,
+            habitFrequency = HabitFrequency.DAILY,
+            habitDays = listOf()
+
+        ),
+    ), uiIsValid = true, onToggleHabit = {}) {
 
     }
 }

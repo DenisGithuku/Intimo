@@ -97,10 +97,12 @@ class OnBoardingViewModel @Inject constructor(
                 .map { habit ->
                     HabitData(
                         habitIcon = habit.icon,
-                        habitType = habit.habitType,
+                        habitName = habit.habitName,
                         startTime = habit.startTime,
                         duration = habit.duration,
-                        durationType = habit.durationType
+                        durationType = habit.durationType,
+                        habitFrequency = habit.habitFrequency,
+                        habitDays = habit.habitDays
                     )
                 }
             habitsRepository.insertHabit(*habits.toTypedArray())
