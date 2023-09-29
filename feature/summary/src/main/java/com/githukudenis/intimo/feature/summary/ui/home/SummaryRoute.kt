@@ -128,33 +128,30 @@ internal fun SummaryRoute(
         MultipleClicksCutter.get()
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    scrolledContainerColor = MaterialTheme.colorScheme.background
+                ),
                 title = {
-                    Text(
-                        text = getTimeStatus(),
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-                },
-                actions = {
-                    IconButton(
-                        onClick = { multipleClicksCutter.processEvent(onOpenSettings) }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = stringResource(
-                                id = R.string.settings
-                            )
+                Text(
+                    text = getTimeStatus(), style = MaterialTheme.typography.headlineSmall
+                )
+            }, actions = {
+                IconButton(onClick = { multipleClicksCutter.processEvent(onOpenSettings) }) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = stringResource(
+                            id = R.string.settings
                         )
-                    }
-                },
-                scrollBehavior = scrollBehavior
+                    )
+                }
+            }, scrollBehavior = scrollBehavior
             )
-        }
-    ) { paddingValues ->
+        }) { paddingValues ->
 
         val context = LocalContext.current
         val uiState by summaryViewModel.uiState.collectAsStateWithLifecycle()
@@ -205,8 +202,7 @@ internal fun SummaryRoute(
                     )
                     summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
                 }
-            }
-        )
+            })
 
         val usagePermissionsAllowed = context.hasUsageAccessPermissions()
         val notificationAccessPermissionsAllowed = context.hasNotificationAccessPermissions()
@@ -235,39 +231,34 @@ internal fun SummaryRoute(
         }
 
         if (shouldShowUsagePermissionsDialog) {
-            AlertDialog(
-                properties = DialogProperties(
-                    dismissOnBackPress = false, dismissOnClickOutside = false
-                ),
+            AlertDialog(properties = DialogProperties(
+                dismissOnBackPress = false, dismissOnClickOutside = false
+            ),
                 title = {
                     Text(
                         text = context.getString(R.string.usage_permission_dialog_title)
                     )
                 },
                 confirmButton = {
-                    TextButton(
-                        onClick = {
-                            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                            usageAccessPermissionLauncher.launch(intent)
-                        }
-                    ) {
+                    TextButton(onClick = {
+                        val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                        usageAccessPermissionLauncher.launch(intent)
+                    }) {
                         Text(
                             text = context.getString(R.string.permission_dialog_positive_button)
                         )
                     }
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = {
-                            shouldShowUsagePermissionsDialog = false
-                            val userMessage = UserMessage(
-                                message = "Usage access permissions required",
-                                messageType = MessageType.ERROR(dismissable = false)
-                            )
-                            summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                            onNavigateUp()
-                        }
-                    ) {
+                    TextButton(onClick = {
+                        shouldShowUsagePermissionsDialog = false
+                        val userMessage = UserMessage(
+                            message = "Usage access permissions required",
+                            messageType = MessageType.ERROR(dismissable = false)
+                        )
+                        summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
+                        onNavigateUp()
+                    }) {
                         Text(
                             text = context.getString(R.string.permission_dialog_negative_button)
                         )
@@ -288,44 +279,38 @@ internal fun SummaryRoute(
                     )
                     summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
                     onNavigateUp()
-                }
-            )
+                })
         }
         if (shouldShowNotificationPermissionsDialog) {
-            AlertDialog(
-                properties = DialogProperties(
-                    dismissOnBackPress = false, dismissOnClickOutside = false
-                ),
+            AlertDialog(properties = DialogProperties(
+                dismissOnBackPress = false, dismissOnClickOutside = false
+            ),
                 title = {
                     Text(
                         text = context.getString(R.string.notification_access_permission_dialog_title)
                     )
                 },
                 confirmButton = {
-                    TextButton(
-                        onClick = {
-                            val intent =
-                                Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-                            usageAccessPermissionLauncher.launch(intent)
-                        }
-                    ) {
+                    TextButton(onClick = {
+                        val intent =
+                            Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+                        usageAccessPermissionLauncher.launch(intent)
+                    }) {
                         Text(
                             text = context.getString(R.string.permission_dialog_positive_button)
                         )
                     }
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = {
-                            shouldShowNotificationPermissionsDialog = false
-                            val userMessage = UserMessage(
-                                message = "Notification access permissions required",
-                                messageType = MessageType.ERROR(dismissable = false)
-                            )
-                            summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                            onNavigateUp()
-                        }
-                    ) {
+                    TextButton(onClick = {
+                        shouldShowNotificationPermissionsDialog = false
+                        val userMessage = UserMessage(
+                            message = "Notification access permissions required",
+                            messageType = MessageType.ERROR(dismissable = false)
+                        )
+                        summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
+                        onNavigateUp()
+                    }) {
                         Text(
                             text = context.getString(R.string.permission_dialog_negative_button)
                         )
@@ -346,8 +331,7 @@ internal fun SummaryRoute(
                     )
                     summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
                     onNavigateUp()
-                }
-            )
+                })
         }
 
         val colors = remember {
@@ -361,15 +345,10 @@ internal fun SummaryRoute(
         val infiniteTransition =
             rememberInfiniteTransition(label = "infinite transition loading skeleton")
         val transitionAnimation = infiniteTransition.animateFloat(
-            initialValue = 0f,
-            targetValue = 1000f,
-            animationSpec = infiniteRepeatable(
+            initialValue = 0f, targetValue = 1000f, animationSpec = infiniteRepeatable(
                 animation = tween(
-                    durationMillis = 1000,
-                    delayMillis = 500,
-                    easing = FastOutSlowInEasing
-                ),
-                repeatMode = RepeatMode.Restart
+                    durationMillis = 1000, delayMillis = 500, easing = FastOutSlowInEasing
+                ), repeatMode = RepeatMode.Restart
             ), label = "loading skeleton"
         )
         val brush = Brush.linearGradient(
@@ -379,8 +358,7 @@ internal fun SummaryRoute(
         )
 
         Crossfade(
-            targetState = uiState.isLoading,
-            label = "Screen animation"
+            targetState = uiState.isLoading, label = "Screen animation"
         ) {
             when (it) {
                 true -> {
@@ -397,15 +375,11 @@ internal fun SummaryRoute(
                 }
 
                 false -> {
-                    SummaryScreen(
-                        modifier = Modifier
-                            .consumeWindowInsets(paddingValues),
+                    SummaryScreen(modifier = Modifier.consumeWindowInsets(paddingValues),
                         brush = brush,
                         contentPadding = PaddingValues(
                             top = paddingValues.calculateTopPadding(),
-                            bottom = paddingValues.calculateBottomPadding(),
-                            start = 16.dp,
-                            end = 16.dp
+                            bottom = paddingValues.calculateBottomPadding()
                         ),
                         usageStatsState = uiState.usageStatsState,
                         habitsState = uiState.habitsState,
@@ -424,8 +398,13 @@ internal fun SummaryRoute(
                                     message
                                 )
                             )
-                        }
-                    )
+                        },
+                        onOpenHabitStatistics = {
+
+                        },
+                        onAddCustomHabit = {
+
+                        })
                 }
             }
         }
@@ -445,6 +424,8 @@ internal fun SummaryScreen(
     onStart: (Long) -> Unit,
     onOpenUsageStats: () -> Unit,
     multipleClicksCutter: MultipleClicksCutter,
+    onOpenHabitStatistics: () -> Unit,
+    onAddCustomHabit: () -> Unit,
     onShowMessage: (UserMessage) -> Unit
 ) {
 
@@ -454,20 +435,11 @@ internal fun SummaryScreen(
     LazyColumn(
         state = listState,
         contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
             .fillMaxSize()
             .animateContentSize()
     ) {
-        item {
-            Text(
-                text = stringResource(R.string.screen_time),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onBackground.copy(
-                    alpha = 0.7f
-                )
-            )
-        }
         appUsageData(
             brush = brush,
             usageStatsState = usageStatsState,
@@ -475,13 +447,27 @@ internal fun SummaryScreen(
             onOpenUsageStats = onOpenUsageStats
         )
         item {
-            Text(
-                text = stringResource(R.string.habit_history_title),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onBackground.copy(
-                    alpha = 0.7f
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.habit_history_title),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(
+                        alpha = 0.7f
+                    )
                 )
-            )
+                TextButton(onClick = { multipleClicksCutter.processEvent(onOpenHabitStatistics) }) {
+                    Text(
+                        text = "See all stats",
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            }
         }
         item {
             when (habitsState) {
@@ -507,28 +493,45 @@ internal fun SummaryScreen(
                 }
 
                 is HabitsState.Success -> {
-                    NotificationCard(
-                        habitPerformance = habitsState.habitPerformance,
+                    NotificationCard(habitPerformance = habitsState.habitPerformance,
                         notificationButtonVisible = habitsState.habitDataList.isNotEmpty(),
                         onTakeAction = {
                             onOpenHabit(habitsState.habitDataList.first().habitId)
-                        }
-                    )
+                        })
                 }
             }
 
         }
         item {
-            Text(
-                text = stringResource(R.string.active_habits_section_title),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onBackground.copy(
-                    alpha = 0.7f
+            Row(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(R.string.active_habits_section_title),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onBackground.copy(
+                        alpha = 0.7f
+                    )
                 )
-            )
+                TextButton(onClick = {
+                    multipleClicksCutter.processEvent(
+                        onAddCustomHabit
+                    )
+                }) {
+                    Text(
+                        text = "Add custom habit",
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            }
         }
         item {
             LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 habitList(
@@ -555,17 +558,15 @@ fun LazyListScope.appUsageData(
             onClick = { multipleClicksCutter.processEvent(onOpenUsageStats) },
             shape = MaterialTheme.shapes.large,
             border = BorderStroke(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.onBackground.copy(
+                width = 1.dp, color = MaterialTheme.colorScheme.onBackground.copy(
                     alpha = 0.1f
                 )
-            )
+            ),
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             Crossfade(
-                targetState = usageStatsState, label = "usage_stats",
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
+                targetState = usageStatsState, label = "usage_stats", animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow
                 )
             ) { state ->
                 when (state) {
@@ -578,6 +579,14 @@ fun LazyListScope.appUsageData(
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+                            Text(
+                                text = stringResource(R.string.screen_time),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onBackground.copy(
+                                    alpha = 0.7f
+                                ),
+                                modifier = Modifier.align(Alignment.Start).padding(8.dp)
+                            )
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -596,18 +605,15 @@ fun LazyListScope.appUsageData(
                                 /*
                                     splice most four used apps
                                      */
-                                val fourMostUsedAppDurations =
-                                    state.usageStats.take(4)
-                                        .map { app -> app.usageDuration.toFloat() }
-                                        .toMutableList()
+                                val fourMostUsedAppDurations = state.usageStats.take(4)
+                                    .map { app -> app.usageDuration.toFloat() }.toMutableList()
 
 
                                 /*
                                     get sum of remaining values
                                      */
-                                val remainingTotalUsage =
-                                    state.usageStats.drop(4)
-                                        .sumOf { usage -> usage.usageDuration.toInt() }.toFloat()
+                                val remainingTotalUsage = state.usageStats.drop(4)
+                                    .sumOf { usage -> usage.usageDuration.toInt() }.toFloat()
 
 
                                 /*
@@ -618,10 +624,9 @@ fun LazyListScope.appUsageData(
                                 /*
                                     values to be plotted on canvas
                                      */
-                                val plotValues =
-                                    fourMostUsedAppDurations.map { duration ->
-                                        duration * 100 / totalAppUsage
-                                    }
+                                val plotValues = fourMostUsedAppDurations.map { duration ->
+                                    duration * 100 / totalAppUsage
+                                }
 
 
                                 val animateArchValue = remember {
@@ -630,10 +635,8 @@ fun LazyListScope.appUsageData(
 
                                 LaunchedEffect(key1 = plotValues) {
                                     animateArchValue.animateTo(
-                                        targetValue = 1f,
-                                        animationSpec = tween(
-                                            durationMillis = 1000,
-                                            easing = EaseOut
+                                        targetValue = 1f, animationSpec = tween(
+                                            durationMillis = 1000, easing = EaseOut
                                         )
                                     )
                                 }
@@ -641,10 +644,9 @@ fun LazyListScope.appUsageData(
                                 /*
                                     derive plot angles
                                      */
-                                val angles =
-                                    plotValues.map { value ->
-                                        value * 360f / 100
-                                    }
+                                val angles = plotValues.map { value ->
+                                    value * 360f / 100
+                                }
 
 
                                 val textMeasurer = rememberTextMeasurer()
@@ -659,54 +661,50 @@ fun LazyListScope.appUsageData(
                                 val labelMedium = MaterialTheme.typography.labelMedium.copy(
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                                 )
-                                Spacer(
-                                    modifier = Modifier
-                                        .size(120.dp)
-                                        .drawWithCache {
-                                            var startAngle = -90f
+                                Spacer(modifier = Modifier
+                                    .size(120.dp)
+                                    .drawWithCache {
+                                        var startAngle = -90f
 
-                                            onDrawBehind {
-                                                for (i in angles.indices) {
-                                                    /*
+                                        onDrawBehind {
+                                            for (i in angles.indices) {/*
                                                         Retrieve color generated from icon or use secondary app color
                                                         */
-                                                    val arcColor =
-                                                        fourMostUsedAppDurations.map { duration ->
-                                                            state.usageStats.find { usageStat -> usageStat.usageDuration.toFloat() == duration }
-                                                        }[i]?.colorSwatch ?: (0xFF3A5BAB).toInt()
+                                                val arcColor =
+                                                    fourMostUsedAppDurations.map { duration ->
+                                                        state.usageStats.find { usageStat -> usageStat.usageDuration.toFloat() == duration }
+                                                    }[i]?.colorSwatch ?: (0xFF3A5BAB).toInt()
 
-                                                    drawArc(
-                                                        color = Color(arcColor),
-                                                        startAngle = startAngle,
-                                                        sweepAngle = angles[i] * animateArchValue.value,
-                                                        useCenter = false,
-                                                        style = Stroke(width = 12.dp.toPx()),
-                                                    )
-                                                    startAngle += angles[i]
-                                                }
-
-                                                drawText(
-                                                    style = labelMedium,
-                                                    textMeasurer = textMeasurer,
-                                                    text = totalAppTimeText,
-                                                    topLeft = Offset(
-                                                        x = center.x - textLayoutResult.size.width / 2,
-                                                        y = center.y - textLayoutResult.size.height / 2
-                                                    )
+                                                drawArc(
+                                                    color = Color(arcColor),
+                                                    startAngle = startAngle,
+                                                    sweepAngle = angles[i] * animateArchValue.value,
+                                                    useCenter = false,
+                                                    style = Stroke(width = 12.dp.toPx()),
                                                 )
+                                                startAngle += angles[i]
                                             }
-                                        })
+
+                                            drawText(
+                                                style = labelMedium,
+                                                textMeasurer = textMeasurer,
+                                                text = totalAppTimeText,
+                                                topLeft = Offset(
+                                                    x = center.x - textLayoutResult.size.width / 2,
+                                                    y = center.y - textLayoutResult.size.height / 2
+                                                )
+                                            )
+                                        }
+                                    })
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     fourMostUsedAppDurations.forEach { usage ->
                                         val appName =
-                                            state.usageStats
-                                                .find { app -> app.usageDuration.toFloat() == usage }?.packageName?.let { packageName ->
-                                                    getApplicationLabel(
-                                                        packageName,
-                                                        context
-                                                    )
-                                                } ?: "Other"
+                                            state.usageStats.find { app -> app.usageDuration.toFloat() == usage }?.packageName?.let { packageName ->
+                                                getApplicationLabel(
+                                                    packageName, context
+                                                )
+                                            } ?: "Other"
 
                                         /*
                                         Generate total use time for each
@@ -757,8 +755,7 @@ fun LazyListScope.appUsageData(
                                 }
                             }
                             Divider(
-                                modifier = Modifier
-                                    .height(1.dp),
+                                modifier = Modifier.height(1.dp),
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
                             )
 
@@ -769,12 +766,10 @@ fun LazyListScope.appUsageData(
                                 horizontalArrangement = Arrangement.SpaceAround
                             ) {
                                 CardInfo(
-                                    title = "Unlocks",
-                                    value = "${state.unlockCount}"
+                                    title = "Unlocks", value = "${state.unlockCount}"
                                 )
                                 CardInfo(
-                                    title = "Notifications",
-                                    value = "${state.notificationCount}"
+                                    title = "Notifications", value = "${state.notificationCount}"
                                 )
                             }
                         }
@@ -838,10 +833,8 @@ fun LoadingScreen(
             Box(
                 modifier = Modifier
                     .border(
-                        shape = MaterialTheme.shapes.medium,
-                        border = BorderStroke(
-                            width = 1.dp,
-                            brush = brush
+                        shape = MaterialTheme.shapes.medium, border = BorderStroke(
+                            width = 1.dp, brush = brush
                         )
                     )
                     .padding(12.dp)
@@ -1052,12 +1045,10 @@ fun LoadingShimmerListView(brush: Brush) {
         modifier = Modifier
             .border(brush = brush, shape = MaterialTheme.shapes.medium, width = 1.dp)
             .padding(12.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
         ) {
 
         }
@@ -1102,8 +1093,7 @@ fun LazyListScope.habitList(
         HabitsState.Loading -> {
             item {
                 Box(
-                    modifier = Modifier.height(120.dp),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.height(120.dp), contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
                 }
@@ -1112,12 +1102,12 @@ fun LazyListScope.habitList(
 
         is HabitsState.Success -> {
             items(items = habitsState.habitDataList, key = { it.habitId }) { habitUiModel ->
-                HabitCard(
-                    habitUiModel = habitUiModel,
+                HabitCard(habitUiModel = habitUiModel,
                     isRunning = habitsState.runningHabitState.habitId == habitUiModel.habitId,
                     onOpenHabitDetails = { habitId ->
                         onOpenHabit(habitId)
-                    }, onStart = { habitId ->
+                    },
+                    onStart = { habitId ->
                         if (habitsState.runningHabitState.habitId != null && habitsState.runningHabitState.habitId != habitId) {
                             onShowMessage(
                                 UserMessage(
@@ -1129,8 +1119,7 @@ fun LazyListScope.habitList(
                             return@HabitCard
                         }
                         onStart(habitId)
-                    }
-                )
+                    })
             }
         }
     }

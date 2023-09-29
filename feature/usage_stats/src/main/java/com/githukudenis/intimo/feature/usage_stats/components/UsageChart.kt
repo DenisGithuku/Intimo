@@ -12,6 +12,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -298,7 +299,9 @@ fun UsageChart(
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth()
-                    .clip(shape = shape)
+                    .border(width =1.dp, color = MaterialTheme.colorScheme.background.copy(
+                        alpha = 0.1f
+                    ), shape = MaterialTheme.shapes.medium)
                     .animateContentSize()
             ) {
                 
@@ -362,7 +365,7 @@ fun UsageChart(
                                 //--------------------(draw bars)--------------------//
                                 drawRoundRect(
                                     color = if (item.key == chartState.selectedDate) barColor else barColor.copy(
-                                        alpha = 0.5f
+                                        alpha = 0.1f
                                     ),
                                     topLeft = topLeft,
                                     size = Size(
