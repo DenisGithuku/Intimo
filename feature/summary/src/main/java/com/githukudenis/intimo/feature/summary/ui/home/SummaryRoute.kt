@@ -115,7 +115,8 @@ internal fun SummaryRoute(
     onNavigateUp: () -> Unit,
     onOpenSettings: () -> Unit,
     onStartHabit: (Long) -> Unit,
-    onOpenUsageStats: () -> Unit
+    onOpenUsageStats: () -> Unit,
+    onAddCustomHabit: () -> Unit
 ) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
@@ -409,9 +410,7 @@ internal fun SummaryRoute(
                         onOpenHabitStatistics = {
 
                         },
-                        onAddCustomHabit = {
-
-                        })
+                        onAddCustomHabit = onAddCustomHabit)
                 }
             }
         }

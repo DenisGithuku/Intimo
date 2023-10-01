@@ -18,7 +18,8 @@ fun NavGraphBuilder.summaryScreen(
     onNavigateUp: () -> Unit,
     onOpenSettings: () -> Unit,
     onStartHabit: (Long) -> Unit,
-    onOpenUsageStats: () -> Unit
+    onOpenUsageStats: () -> Unit,
+    onAddCustomHabit: () -> Unit
 ) {
     composable(
         route = summaryNavigationRoute,
@@ -44,7 +45,8 @@ fun NavGraphBuilder.summaryScreen(
             onNavigateUp = onNavigateUp,
             onOpenSettings = onOpenSettings,
             onStartHabit = onStartHabit,
-            onOpenUsageStats = onOpenUsageStats
+            onOpenUsageStats = onOpenUsageStats,
+            onAddCustomHabit = onAddCustomHabit
         )
     }
 }
