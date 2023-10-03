@@ -2,9 +2,12 @@ package com.githukudenis.intimo.feature.summary.ui.home
 
 import com.githukudenis.intimo.core.model.ApplicationInfoData
 import com.githukudenis.intimo.core.model.DurationType
+import com.githukudenis.intimo.core.model.HabitFrequency
 import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
+import com.githukudenis.intimo.feature.habit.detail.getDaysInAWeek
 import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
+import java.time.LocalDate
 
 
 data class SummaryUiState(
@@ -12,7 +15,19 @@ data class SummaryUiState(
     val usageStatsState: UsageStatsState = UsageStatsState.Loading,
     val habitsState: HabitsState = HabitsState.Loading,
     val userMessageList: List<UserMessage> = emptyList(),
-    val permissionsState: PermissionState = PermissionState()
+    val permissionsState: PermissionState = PermissionState(),
+    val customHabitState: CustomHabitState = CustomHabitState()
+)
+
+data class CustomHabitState(
+    val habitName: String = "",
+    val habitIcon: String = "😊",
+    val startTime: Long = 0L,
+    val habitDuration: Long = 0L,
+    val habitDurationType: DurationType = DurationType.MINUTE,
+    val habitFrequency: HabitFrequency = HabitFrequency.DAILY,
+    val days: List<LocalDate> = getDaysInAWeek(),
+    val remindTime: Long = 0L,
 )
 
 data class PermissionState(

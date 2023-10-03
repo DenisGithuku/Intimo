@@ -1,5 +1,6 @@
 package com.githukudenis.intimo.feature.settings.ui
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,12 +22,13 @@ import com.githukudenis.intimo.core.ui.components.clickableOnce
 fun ToggleableSettingsListView(
     title: @Composable () -> Unit,
     description: (@Composable () -> Unit)? = null,
-    isToggledOn: Boolean = false,
+    isToggledOn: Boolean,
     onToggle: (Boolean) -> Unit,
 ) {
-    var isToggleOn by remember {
+    var isToggleOn by remember(isToggledOn) {
         mutableStateOf(isToggledOn)
     }
+
     Row(
         modifier = Modifier
             .clickableOnce {

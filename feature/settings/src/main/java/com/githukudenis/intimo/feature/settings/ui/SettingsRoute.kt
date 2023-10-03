@@ -1,6 +1,7 @@
 package com.githukudenis.intimo.feature.settings.ui
 
 import android.content.Context
+import android.util.Log
 import android.util.TimeUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -169,7 +170,7 @@ fun SettingsScreen(
         mutableStateOf(isDeviceUsageNotificationsAllowed)
     }
 
-    var habitNotificationsAllowed by remember {
+    var habitNotificationsAllowed by remember(isHabitRemindersAllowed) {
         mutableStateOf(isHabitRemindersAllowed)
     }
 
@@ -275,7 +276,6 @@ fun SettingsScreen(
                         ),
                         style = MaterialTheme.typography.labelMedium
                     )
-
                 },
                 onToggle = { isAllowed ->
                     habitNotificationsAllowed = isAllowed

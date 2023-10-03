@@ -62,9 +62,6 @@ fun IntimoNavHost(
             },
             onOpenUsageStats = {
                 appState.navigate(usageStatsRoute)
-            },
-            onAddCustomHabit = {
-                appState.navigate(addHabitRoute)
             }
         )
 
@@ -86,10 +83,6 @@ fun IntimoNavHost(
                 appState.navigate(summaryNavigationRoute)
             }
         })
-
-        addHabitScreen(
-            onNavigateUp = { appState.navController.navigateUp() }
-        )
 
         usageStatsScreen(onNavigateUp = { appState.navController.navigateUp() })
 

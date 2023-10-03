@@ -20,6 +20,4 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keepclasseswithmembers class **.R$* {
-public static final int define_*;
-}
+-dontwarn com.githukudenis.intimo.feature.habit.R$string

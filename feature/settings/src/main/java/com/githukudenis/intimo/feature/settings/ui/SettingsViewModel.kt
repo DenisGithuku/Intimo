@@ -1,13 +1,16 @@
 package com.githukudenis.intimo.feature.settings.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.githukudenis.intimo.core.data.repository.UserDataRepository
 import com.githukudenis.intimo.core.model.Theme
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -17,7 +20,8 @@ class SettingsViewModel @Inject constructor(
     private val userDataRepository: UserDataRepository
 ): ViewModel(){
 
-    val uiState: StateFlow<SettingsUiState> = userDataRepository.userData.map { userData ->
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val uiState: StateFlow<SettingsUiState> = userDataRepository.userData.mapLatest { userData ->
         SettingsUiState(
             theme = userData.theme,
             deviceUsageNotificationsAllowed = userData.deviceUsageNotificationsAllowed,
