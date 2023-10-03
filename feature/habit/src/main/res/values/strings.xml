@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <string name="prev_week">Previous week\n</string>
     <string name="next_week">Next Week\n</string>
@@ -14,4 +14,5 @@
     <string name="start_habit">Start</string>
     <string name="frequency">Frequency</string>
     <string name="habit_reminder">Habit reminder</string>
+    <string name="invalid_details" tools:ignore="ExtraTranslation">Please check your details</string>
 </resources>

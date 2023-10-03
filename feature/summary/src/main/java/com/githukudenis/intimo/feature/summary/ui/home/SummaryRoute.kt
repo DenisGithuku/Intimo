@@ -7,7 +7,9 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.Keep
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseOut
@@ -41,10 +43,13 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -52,6 +57,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -59,7 +66,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -82,6 +91,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -90,20 +100,32 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.githukudenis.intimo.core.designsystem.theme.LocalTonalElevation
+import com.githukudenis.intimo.core.model.HabitFrequency
 import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.ui.components.MultipleClicksCutter
+import com.githukudenis.intimo.core.ui.components.TimePickerDialog
+import com.githukudenis.intimo.core.ui.components.clickableOnce
 import com.githukudenis.intimo.core.ui.components.get
 import com.githukudenis.intimo.core.util.MessageType
 import com.githukudenis.intimo.core.util.TimeFormatter
 import com.githukudenis.intimo.core.util.UserMessage
+import com.githukudenis.intimo.feature.habit.components.HabitDurationDialog
+import com.githukudenis.intimo.feature.habit.detail.formatDurationMillis
+import com.githukudenis.intimo.feature.habit.detail.getDaysInAWeek
+import com.githukudenis.intimo.feature.habit.detail.getTimeFromMillis
 import com.githukudenis.intimo.feature.summary.R
 import com.githukudenis.intimo.feature.summary.ui.components.CardInfo
 import com.githukudenis.intimo.feature.summary.ui.components.HabitCard
 import com.githukudenis.intimo.feature.summary.ui.components.HabitHistoryComponent
 import com.githukudenis.intimo.feature.summary.ui.components.NotificationCard
+import com.githukudenis.intimo.feature.summary.ui.components.SummaryBottomSheet
 import com.githukudenis.intimo.feature.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.intimo.feature.summary.util.hasUsageAccessPermissions
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
+import java.util.Locale
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,12 +153,10 @@ internal fun SummaryRoute(
     Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background
-                ),
-                title = {
+            CenterAlignedTopAppBar(colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+                scrolledContainerColor = MaterialTheme.colorScheme.background
+            ), title = {
                 Text(
                     text = getTimeStatus(), style = MaterialTheme.typography.headlineSmall
                 )
@@ -156,15 +176,6 @@ internal fun SummaryRoute(
         val context = LocalContext.current
 
         val state by summaryViewModel.uiState.collectAsStateWithLifecycle()
-
-
-//        var shouldShowUsagePermissionsDialog by rememberSaveable {
-//            mutableStateOf(false)
-//        }
-//
-//        var shouldShowNotificationPermissionsDialog by rememberSaveable {
-//            mutableStateOf(false)
-//        }
 
         LaunchedEffect(state.userMessageList, snackbarHostState) {
             if (state.userMessageList.isNotEmpty()) {
@@ -191,11 +202,18 @@ internal fun SummaryRoute(
         val usageAccessPermissionLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult(),
             onResult = {
-                if (!state.permissionsState.usagePermissionsAllowed || !state.permissionsState.notificationsPermissionsAllowed) {
-                    return@rememberLauncherForActivityResult
+                if (!context.hasUsageAccessPermissions() || !context.hasNotificationAccessPermissions()) {
+                    onNavigateUp()
                 }
                 if (context.hasUsageAccessPermissions()) {
-                    summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(usagePermissionsAllowed = true)))
+                    summaryViewModel.onEvent(
+                        SummaryUiEvent.PermissionChange(
+                            PermissionState(
+                                usagePermissionsAllowed = true
+                            )
+                        )
+                    )
+                    summaryViewModel.onEvent(SummaryUiEvent.Refresh)
                 } else {
                     val userMessage = UserMessage(
                         message = "Usage access permissions required",
@@ -256,7 +274,13 @@ internal fun SummaryRoute(
                 },
                 dismissButton = {
                     TextButton(onClick = {
-                        summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(usagePermissionsAllowed = false)))
+                        summaryViewModel.onEvent(
+                            SummaryUiEvent.PermissionChange(
+                                PermissionState(
+                                    usagePermissionsAllowed = false
+                                )
+                            )
+                        )
                         val userMessage = UserMessage(
                             message = "Usage access permissions required",
                             messageType = MessageType.ERROR(dismissable = false)
@@ -277,7 +301,13 @@ internal fun SummaryRoute(
                 shape = MaterialTheme.shapes.extraLarge,
                 tonalElevation = LocalTonalElevation.current.large,
                 onDismissRequest = {
-                    summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(usagePermissionsAllowed = false)))
+                    summaryViewModel.onEvent(
+                        SummaryUiEvent.PermissionChange(
+                            PermissionState(
+                                usagePermissionsAllowed = false
+                            )
+                        )
+                    )
                     val userMessage = UserMessage(
                         message = "Usage access permissions required",
                         messageType = MessageType.ERROR(dismissable = false)
@@ -308,7 +338,13 @@ internal fun SummaryRoute(
                 },
                 dismissButton = {
                     TextButton(onClick = {
-                        summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(notificationsPermissionsAllowed = false)))
+                        summaryViewModel.onEvent(
+                            SummaryUiEvent.PermissionChange(
+                                PermissionState(
+                                    notificationsPermissionsAllowed = false
+                                )
+                            )
+                        )
 
                         val userMessage = UserMessage(
                             message = "Notification access permissions required",
@@ -330,7 +366,13 @@ internal fun SummaryRoute(
                 shape = MaterialTheme.shapes.extraLarge,
                 tonalElevation = LocalTonalElevation.current.large,
                 onDismissRequest = {
-                    summaryViewModel.onEvent(SummaryUiEvent.PermissionChange(PermissionState(notificationsPermissionsAllowed = false)))
+                    summaryViewModel.onEvent(
+                        SummaryUiEvent.PermissionChange(
+                            PermissionState(
+                                notificationsPermissionsAllowed = false
+                            )
+                        )
+                    )
 
                     val userMessage = UserMessage(
                         message = "Notification access permissions required",
@@ -383,12 +425,13 @@ internal fun SummaryRoute(
 
                 false -> {
                     SummaryScreen(modifier = Modifier.consumeWindowInsets(paddingValues),
-                        brush = brush,
                         contentPadding = PaddingValues(
                             top = paddingValues.calculateTopPadding(),
                             bottom = paddingValues.calculateBottomPadding()
                         ),
+                        brush = brush,
                         usageStatsState = state.usageStatsState,
+                        customHabitState = state.customHabitState,
                         habitsState = state.habitsState,
                         onSelectDayOnHistory = { date ->
                             summaryViewModel.onEvent(SummaryUiEvent.SelectDayOnHistory(date))
@@ -399,6 +442,10 @@ internal fun SummaryRoute(
                         },
                         onOpenUsageStats = onOpenUsageStats,
                         multipleClicksCutter = multipleClicksCutter,
+                        onOpenHabitStatistics = {
+
+                        },
+                        onSave = { summaryViewModel.onEvent(SummaryUiEvent.SaveHabit) },
                         onShowMessage = { message ->
                             summaryViewModel.onEvent(
                                 SummaryUiEvent.ShowMessage(
@@ -406,10 +453,28 @@ internal fun SummaryRoute(
                                 )
                             )
                         },
-                        onOpenHabitStatistics = {
+                        onChangeHabitDays = { days ->
+                            summaryViewModel.onEvent(SummaryUiEvent.ChangeHabitDays(days))
+                        },
+                        onChangeHabitFrequency = { frequency ->
+                            summaryViewModel.onEvent(SummaryUiEvent.ChangeHabitFrequency(frequency))
+                        },
+                        onChangeHabitIcon = { icon ->
+                            summaryViewModel.onEvent(SummaryUiEvent.ChangeHabitIcon(icon))
 
                         },
-                        onAddCustomHabit = {
+                        onChangeHabitName = { name ->
+                            summaryViewModel.onEvent(SummaryUiEvent.ChangeHabitName(name))
+                        },
+                        onChangeHabitDuration = { duration ->
+                            summaryViewModel.onEvent(SummaryUiEvent.ChangeHabitDuration(duration))
+                        },
+                        onChangeHabitRemindTime = { time ->
+                            summaryViewModel.onEvent(SummaryUiEvent.ChangeRemindTime(time))
+
+                        },
+                        onChangeHabitStartTime = { time ->
+                            summaryViewModel.onEvent(SummaryUiEvent.ChangeHabitStartTime(time))
 
                         })
                 }
@@ -419,12 +484,14 @@ internal fun SummaryRoute(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SummaryScreen(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(16.dp),
     brush: Brush,
     usageStatsState: UsageStatsState,
+    customHabitState: CustomHabitState,
     habitsState: HabitsState,
     onSelectDayOnHistory: (Date) -> Unit,
     onOpenHabit: (Long) -> Unit,
@@ -432,12 +499,63 @@ internal fun SummaryScreen(
     onOpenUsageStats: () -> Unit,
     multipleClicksCutter: MultipleClicksCutter,
     onOpenHabitStatistics: () -> Unit,
-    onAddCustomHabit: () -> Unit,
-    onShowMessage: (UserMessage) -> Unit
+    onSave: () -> Unit,
+    onShowMessage: (UserMessage) -> Unit,
+    onChangeHabitName: (String) -> Unit,
+    onChangeHabitIcon: (String) -> Unit,
+    onChangeHabitFrequency: (HabitFrequency) -> Unit,
+    onChangeHabitDays: (List<LocalDate>) -> Unit,
+    onChangeHabitStartTime: (Long) -> Unit,
+    onChangeHabitDuration: (Long) -> Unit,
+    onChangeHabitRemindTime: (Long) -> Unit,
 ) {
 
     val context = LocalContext.current
+
     val listState = rememberLazyListState()
+
+    var bottomSheetIsVisble by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    val habitFrequency = remember {
+        listOf(
+            HabitFrequency.DAILY, HabitFrequency.WEEKLY
+        )
+    }
+
+    val initialTime = remember {
+        mutableStateOf(Calendar.getInstance().apply {
+            timeInMillis = customHabitState.startTime
+        })
+    }
+
+
+    var habitReminderTimeDialogIsVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var showPicker by rememberSaveable { mutableStateOf(false) }
+
+    var habitDurationDialogVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+    val pickerState = rememberTimePickerState(
+        initialHour = if (initialTime.value.get(Calendar.HOUR_OF_DAY) <= 0L) {
+            Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        } else {
+            initialTime.value.get(Calendar.HOUR_OF_DAY)
+        }, initialMinute = if (initialTime.value.get(Calendar.MINUTE) <= 0L) {
+            Calendar.getInstance().get(Calendar.MINUTE)
+        } else {
+            initialTime.value.get(Calendar.MINUTE)
+        }
+
+    )
+
+    val timeFormatter = DateTimeFormatter.ofPattern(
+        if (pickerState.is24hour) "hh:mm" else "hh:mm a", Locale.getDefault()
+    )
 
     LazyColumn(
         state = listState,
@@ -470,12 +588,12 @@ internal fun SummaryScreen(
                         alpha = 0.7f
                     )
                 )
-                TextButton(onClick = { multipleClicksCutter.processEvent(onOpenHabitStatistics) }) {
-                    Text(
-                        text = "See all stats",
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                }
+//                TextButton(onClick = { multipleClicksCutter.processEvent(onOpenHabitStatistics) }) {
+//                    Text(
+//                        text = "See all stats",
+//                        style = MaterialTheme.typography.labelSmall,
+//                    )
+//                }
             }
         }
         item {
@@ -534,9 +652,7 @@ internal fun SummaryScreen(
                     )
                 )
                 TextButton(onClick = {
-                    multipleClicksCutter.processEvent(
-                        onAddCustomHabit
-                    )
+                    bottomSheetIsVisble = true
                 }) {
                     Text(
                         text = "Add custom habit",
@@ -563,6 +679,349 @@ internal fun SummaryScreen(
             }
         }
 
+    }
+    if (bottomSheetIsVisble) {
+        SummaryBottomSheet(onDismiss = { bottomSheetIsVisble = false }) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        bottom = 16.dp,
+                        ),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Add new habit",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    OutlinedTextField(
+                        value = customHabitState.habitName,
+                        onValueChange = onChangeHabitName,
+                        label = {
+                            Text(
+                                text = "Name"
+                            )
+                        },
+                        placeholder = {
+                            Text(
+                                text = "Ex. Take a glass of water",
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.labelSmall
+
+                            )
+                        },
+                        singleLine = true,
+                        modifier = Modifier.weight(2f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            disabledTextColor = MaterialTheme.colorScheme.onBackground
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    OutlinedTextField(
+                        value = customHabitState.habitIcon,
+                        onValueChange = onChangeHabitIcon,
+                        label = {
+                            Text(
+                                text = "Icon", style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        singleLine = true, modifier = Modifier.weight(1f),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            disabledTextColor = MaterialTheme.colorScheme.onBackground
+                        )
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    OutlinedTextField(value = initialTime.value.toInstant()
+                        .atZone(ZoneId.systemDefault()).format(timeFormatter),
+                        onValueChange = { },
+                        label = {
+                            Text(
+                                text = "Start time", style = MaterialTheme.typography.labelSmall
+
+                            )
+                        },
+                        placeholder = {
+                            Text(
+                                text = "Ex. 08:30", style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        singleLine = true,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickableOnce {
+                                showPicker = true
+                            },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                            )
+                        },
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            disabledTextColor = MaterialTheme.colorScheme.onBackground
+                        )
+                        )
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    OutlinedTextField(
+                        value = getTimeFromMillis(customHabitState.habitDuration),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickableOnce { habitDurationDialogVisible = true },
+                        onValueChange = { },
+                        label = {
+                            Text(
+                                text = "Duration",
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                        },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                            )
+                        },
+                        singleLine = true,
+                        enabled = false,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                                alpha = 0.2f
+                            ),
+                            disabledTextColor = MaterialTheme.colorScheme.onBackground
+                        )
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        for (frequency in habitFrequency) {
+                            val animatedBg =
+                                animateColorAsState(targetValue = if (customHabitState.habitFrequency == frequency) MaterialTheme.colorScheme.primary else Color.Transparent)
+
+                            val boxShape = if (habitFrequency.indexOf(frequency) == 0) {
+                                RoundedCornerShape(
+                                    topStart = 4.dp,
+                                    bottomStart = 4.dp,
+                                    topEnd = 0.dp,
+                                    bottomEnd = 0.dp
+                                )
+                            } else {
+                                RoundedCornerShape(
+                                    topEnd = 4.dp,
+                                    bottomEnd = 4.dp,
+                                    topStart = 0.dp,
+                                    bottomStart = 0.dp
+                                )
+                            }
+                            Box(modifier = Modifier
+                                .weight(1f)
+                                .clip(
+                                    boxShape
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    shape = boxShape
+                                )
+                                .background(
+                                    color = animatedBg.value, shape = boxShape
+                                )
+                                .clickableOnce {
+                                    onChangeHabitFrequency(frequency)
+                                }) {
+                                Text(
+                                    modifier = Modifier.padding(
+                                        vertical = 12.dp, horizontal = 16.dp
+                                    ),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    text = frequency.name.lowercase()
+                                        .replaceFirstChar { it.uppercase() },
+                                    color = if (customHabitState.habitFrequency == frequency) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground.copy(
+                                        alpha = 0.7f
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    AnimatedVisibility(visible = customHabitState.habitFrequency == HabitFrequency.DAILY) {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(items = getDaysInAWeek()) { day ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .border(
+                                            width = 1.dp,
+                                            color = if (customHabitState.days.any { it == day }) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(
+                                                alpha = 0.1f
+                                            ),
+                                            shape = CircleShape
+                                        )
+                                        .background(
+                                            color = if (customHabitState.days.any { it == day }) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                            shape = CircleShape
+                                        )
+                                        .clickableOnce {
+                                            val newList = customHabitState.days.toMutableList()
+                                            if (customHabitState.days.any { it == day }) {
+                                                newList.remove(day)
+                                            } else {
+                                                newList.add(day)
+                                            }
+                                            onChangeHabitDays(newList)
+                                        }, contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        style = MaterialTheme.typography.labelMedium,
+                                        text = day.dayOfWeek.name.first().uppercase(),
+                                        color = if (day in customHabitState.days) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                OutlinedTextField(value = formatDurationMillis(customHabitState.remindTime),
+                    onValueChange = {},
+                    enabled = false,
+                    readOnly = true,
+                    label = {
+                        Text(
+                            text = "Remind", style = MaterialTheme.typography.labelSmall
+                        )
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDropDown,
+                            contentDescription = null,
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            alpha = 0.2f
+                        ),
+                        unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            alpha = 0.2f
+                        ),
+                        disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            alpha = 0.2f
+                        ),
+                        disabledTextColor = MaterialTheme.colorScheme.onBackground
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickableOnce { habitReminderTimeDialogIsVisible = true })
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.small,
+                    onClick = {
+                        if (customHabitState.habitName.isEmpty() || customHabitState.startTime == 0L || customHabitState.habitDuration == 0L) {
+                            onShowMessage(UserMessage(message = context.getString(com.githukudenis.intimo.feature.habit.R.string.invalid_details)))
+                            return@Button
+                        }
+                        onSave()
+                        bottomSheetIsVisble = false
+                    }) {
+                    Text(
+                        text = "Save",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(6.dp)
+                    )
+                }
+            }
+            if (habitReminderTimeDialogIsVisible) {
+                HabitDurationDialog(title = "Remind in", durationList = listOf(
+                    0L,
+                    5000L * 60,
+                    10000L * 60,
+                    15000L * 60,
+                    30000L * 60,
+                ), durationValue = customHabitState.remindTime, onDismissRequest = { duration ->
+                    onChangeHabitRemindTime(duration)
+                    habitReminderTimeDialogIsVisible = false
+                })
+            }
+            if (habitDurationDialogVisible) {
+                HabitDurationDialog(title = "Habit duration",
+                    durationValue = customHabitState.habitDuration,
+                    onDismissRequest = { duration ->
+                        onChangeHabitDuration(duration)
+                        habitDurationDialogVisible = false
+                    })
+            }
+            if (showPicker) {
+                TimePickerDialog(onCancel = {
+                    showPicker = false
+                }, onConfirm = {
+                    if (pickerState.hour == initialTime.value.get(Calendar.HOUR_OF_DAY) && pickerState.minute == initialTime.value.get(
+                            Calendar.MINUTE
+                        )
+                    ) {
+                        return@TimePickerDialog
+                    }
+                    val habitTime = initialTime.value.apply {
+                        set(Calendar.HOUR_OF_DAY, pickerState.hour)
+                        set(Calendar.MINUTE, pickerState.minute)
+                    }
+                    onChangeHabitStartTime(habitTime.timeInMillis)
+                    showPicker = false
+                }) {
+                    TimePicker(state = pickerState)
+                }
+            }
+
+        }
     }
 }
 
@@ -605,7 +1064,9 @@ fun LazyListScope.appUsageData(
                                 color = MaterialTheme.colorScheme.onBackground.copy(
                                     alpha = 0.7f
                                 ),
-                                modifier = Modifier.align(Alignment.Start).padding(8.dp)
+                                modifier = Modifier
+                                    .align(Alignment.Start)
+                                    .padding(8.dp)
                             )
                             Row(
                                 modifier = Modifier

@@ -616,7 +616,8 @@ fun LoadedScreen(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.ArrowUpward,
-                    contentDescription = stringResource(id = R.string.scroll_back_up_icon_text)
+                    contentDescription = stringResource(id = R.string.scroll_back_up_icon_text),
+                    tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }

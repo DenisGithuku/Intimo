@@ -44,7 +44,7 @@ fun NavGraphBuilder.summaryScreen(
             onNavigateUp = onNavigateUp,
             onOpenSettings = onOpenSettings,
             onStartHabit = onStartHabit,
-            onOpenUsageStats = onOpenUsageStats
+            onOpenUsageStats = onOpenUsageStats,
         )
     }
 }
