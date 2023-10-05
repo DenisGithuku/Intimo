@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.Keep
@@ -75,6 +76,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -121,6 +124,7 @@ import com.githukudenis.intimo.feature.summary.ui.components.NotificationCard
 import com.githukudenis.intimo.feature.summary.ui.components.SummaryBottomSheet
 import com.githukudenis.intimo.feature.summary.util.hasNotificationAccessPermissions
 import com.githukudenis.intimo.feature.summary.util.hasUsageAccessPermissions
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -177,6 +181,8 @@ internal fun SummaryRoute(
 
         val state by summaryViewModel.uiState.collectAsStateWithLifecycle()
 
+        val scope = rememberCoroutineScope()
+
         LaunchedEffect(state.userMessageList, snackbarHostState) {
             if (state.userMessageList.isNotEmpty()) {
                 val userMessage = state.userMessageList.first()
@@ -199,32 +205,59 @@ internal fun SummaryRoute(
             }
         }
 
-        val usageAccessPermissionLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.StartActivityForResult(),
-            onResult = {
-                if (!context.hasUsageAccessPermissions() || !context.hasNotificationAccessPermissions()) {
-                    onNavigateUp()
-                }
-                if (context.hasUsageAccessPermissions()) {
-                    summaryViewModel.onEvent(
-                        SummaryUiEvent.PermissionChange(
-                            PermissionState(
-                                usagePermissionsAllowed = true
+        val usageAccessPermissionLauncher =
+            rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult(),
+                onResult = {
+                    if (context.hasUsageAccessPermissions()) {
+                        summaryViewModel.onEvent(
+                            SummaryUiEvent.PermissionChange(
+                                PermissionState(
+                                    usagePermissionsAllowed = true
+                                )
                             )
                         )
-                    )
-                    summaryViewModel.onEvent(SummaryUiEvent.Refresh)
-                } else {
-                    val userMessage = UserMessage(
-                        message = "Usage access permissions required",
-                        messageType = MessageType.ERROR(dismissable = false)
-                    )
-                    summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
-                }
-            })
+                        summaryViewModel.onEvent(SummaryUiEvent.Refresh)
+                    } else {
+                        scope.launch {
+                            val userMessage = UserMessage(
+                                message = "Usage access permissions required",
+                                messageType = MessageType.ERROR(dismissable = false)
+                            )
+                            summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
+                        }
+                    }
+                })
 
-        val usagePermissionsAllowed = context.hasUsageAccessPermissions()
-        val notificationAccessPermissionsAllowed = context.hasNotificationAccessPermissions()
+        val permissionListenerPermissionLauncher =
+            rememberLauncherForActivityResult(contract = ActivityResultContracts.StartActivityForResult(),
+                onResult = {
+                    if (context.hasNotificationAccessPermissions()) {
+                        summaryViewModel.onEvent(
+                            SummaryUiEvent.PermissionChange(
+                                PermissionState(
+                                    notificationsPermissionsAllowed = true
+                                )
+                            )
+                        )
+                        summaryViewModel.onEvent(SummaryUiEvent.Refresh)
+                    } else {
+                        scope.launch {
+                            val userMessage = UserMessage(
+                                message = "Notification access permissions required",
+                                messageType = MessageType.ERROR(dismissable = false)
+                            )
+                            summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
+                        }
+                    }
+                })
+
+        val usagePermissionsAllowed by rememberUpdatedState(newValue = context.hasUsageAccessPermissions())
+        val notificationAccessPermissionsAllowed by rememberUpdatedState(newValue = context.hasNotificationAccessPermissions())
+
+        Log.d(
+            "perms",
+            "usage: $usagePermissionsAllowed, notifs $notificationAccessPermissionsAllowed"
+        )
 
         val lifecycle = LocalLifecycleOwner.current.lifecycle
 
@@ -235,8 +268,8 @@ internal fun SummaryRoute(
                         summaryViewModel.onEvent(
                             SummaryUiEvent.PermissionChange(
                                 PermissionState(
-                                    usagePermissionsAllowed = context.hasUsageAccessPermissions(),
-                                    notificationsPermissionsAllowed = context.hasNotificationAccessPermissions()
+                                    usagePermissionsAllowed = usagePermissionsAllowed,
+                                    notificationsPermissionsAllowed = notificationAccessPermissionsAllowed
                                 )
                             )
                         )
@@ -329,7 +362,7 @@ internal fun SummaryRoute(
                     TextButton(onClick = {
                         val intent =
                             Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
-                        usageAccessPermissionLauncher.launch(intent)
+                        permissionListenerPermissionLauncher.launch(intent)
                     }) {
                         Text(
                             text = context.getString(R.string.permission_dialog_positive_button)
@@ -689,12 +722,10 @@ internal fun SummaryScreen(
                         start = 16.dp,
                         end = 16.dp,
                         bottom = 16.dp,
-                        ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ), verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Add new habit",
-                    style = MaterialTheme.typography.headlineSmall
+                    text = "Add new habit", style = MaterialTheme.typography.headlineSmall
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -722,14 +753,11 @@ internal fun SummaryScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            ), unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            ), disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            disabledTextColor = MaterialTheme.colorScheme.onBackground
+                            ), disabledTextColor = MaterialTheme.colorScheme.onBackground
                         )
                     )
                     Spacer(modifier = Modifier.width(12.dp))
@@ -741,18 +769,16 @@ internal fun SummaryScreen(
                                 text = "Icon", style = MaterialTheme.typography.labelSmall
                             )
                         },
-                        singleLine = true, modifier = Modifier.weight(1f),
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            ), unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            ), disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            disabledTextColor = MaterialTheme.colorScheme.onBackground
+                            ), disabledTextColor = MaterialTheme.colorScheme.onBackground
                         )
                     )
                 }
@@ -760,8 +786,9 @@ internal fun SummaryScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    OutlinedTextField(value = initialTime.value.toInstant()
-                        .atZone(ZoneId.systemDefault()).format(timeFormatter),
+                    OutlinedTextField(
+                        value = initialTime.value.toInstant()
+                            .atZone(ZoneId.systemDefault()).format(timeFormatter),
                         onValueChange = { },
                         label = {
                             Text(
@@ -790,16 +817,13 @@ internal fun SummaryScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            ), unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            ), disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            disabledTextColor = MaterialTheme.colorScheme.onBackground
+                            ), disabledTextColor = MaterialTheme.colorScheme.onBackground
                         )
-                        )
+                    )
                     Spacer(modifier = Modifier.width(12.dp))
 
                     OutlinedTextField(
@@ -810,8 +834,7 @@ internal fun SummaryScreen(
                         onValueChange = { },
                         label = {
                             Text(
-                                text = "Duration",
-                                style = MaterialTheme.typography.labelSmall
+                                text = "Duration", style = MaterialTheme.typography.labelSmall
                             )
                         },
                         trailingIcon = {
@@ -825,14 +848,11 @@ internal fun SummaryScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            ), unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                            ), disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
                                 alpha = 0.2f
-                            ),
-                            disabledTextColor = MaterialTheme.colorScheme.onBackground
+                            ), disabledTextColor = MaterialTheme.colorScheme.onBackground
                         )
                     )
                 }
@@ -950,20 +970,16 @@ internal fun SummaryScreen(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                             alpha = 0.2f
-                        ),
-                        unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
+                        ), unfocusedBorderColor = MaterialTheme.colorScheme.primary.copy(
                             alpha = 0.2f
-                        ),
-                        disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
+                        ), disabledBorderColor = MaterialTheme.colorScheme.primary.copy(
                             alpha = 0.2f
-                        ),
-                        disabledTextColor = MaterialTheme.colorScheme.onBackground
+                        ), disabledTextColor = MaterialTheme.colorScheme.onBackground
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickableOnce { habitReminderTimeDialogIsVisible = true })
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
+                Button(modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.small,
                     onClick = {
                         if (customHabitState.habitName.isEmpty() || customHabitState.startTime == 0L || customHabitState.habitDuration == 0L) {

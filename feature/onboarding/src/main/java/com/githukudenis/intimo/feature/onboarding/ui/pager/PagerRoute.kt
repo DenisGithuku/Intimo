@@ -12,13 +12,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,9 +30,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,7 +42,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -132,7 +127,8 @@ internal fun PagerRoute(
             verticalAlignment = Alignment.CenterVertically
         ) {
             pageItems.forEachIndexed { index, _ ->
-                val scale = animateFloatAsState(targetValue = if (index == pagerState.currentPage) 1.2f else 1f)
+                val scale =
+                    animateFloatAsState(targetValue = if (index == pagerState.currentPage) 1.2f else 1f)
                 Box(
                     modifier = Modifier
                         .size(14.dp)
@@ -201,11 +197,11 @@ internal fun PagerRoute(
             AnimatedContent(targetState = pagerState.currentPage == pageItems.size - 1) { state ->
                 when (state) {
                     true -> {
-                        OutlinedButton(onClick = onGetStarted) {
+                        Button(onClick = onGetStarted) {
                             Text(
                                 text = "Start",
                                 style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
