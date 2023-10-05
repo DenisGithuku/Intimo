@@ -5,8 +5,6 @@ import androidx.navigation.compose.NavHost
 import com.githukudenis.intimo.IntimoAppState
 import com.githukudenis.intimo.feature.habit.navigation.activeHabitRoute
 import com.githukudenis.intimo.feature.habit.navigation.activeHabitScreen
-import com.githukudenis.intimo.feature.habit.navigation.addHabitRoute
-import com.githukudenis.intimo.feature.habit.navigation.addHabitScreen
 import com.githukudenis.intimo.feature.habit.navigation.detailScreen
 import com.githukudenis.intimo.feature.habit.navigation.habitDetailRoute
 import com.githukudenis.intimo.feature.onboarding.navigation.onBoardingNavigationRoute

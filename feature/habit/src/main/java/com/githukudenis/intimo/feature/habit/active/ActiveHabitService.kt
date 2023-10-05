@@ -54,11 +54,11 @@ class ActiveHabitService : Service() {
                     title = extras.getString("title"),
                     content = extras.getString("content"),
                     habit = RunningHabit(
-                        habitId = extras.getLong("habitId"),
+                        habitId = extras.getLong("id"),
                         totalTime = extras.getLong("duration"),
                         isRunning = true,
                         remainingTime = extras.getLong("duration"),
-                        habitName = extras.getString("habitName") ?: return@innerLet
+                        habitName = extras.getString("name") ?: return@innerLet
                     )
                 )
 

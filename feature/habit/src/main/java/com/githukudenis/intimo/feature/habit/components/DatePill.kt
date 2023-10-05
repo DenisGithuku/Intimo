@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -46,19 +47,19 @@ fun DatePill(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Box(modifier = Modifier
+            .size(40.dp)
             .clip(CircleShape)
             .border(
                 border = BorderStroke(
                     width = if (dateItem.isToday) 1.dp else 0.dp,
-                    color = if (dateItem.isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.onPrimary
+                    color = if (dateItem.isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onPrimary
                 ), shape = CircleShape
             )
             .background(
                 color = animatedBackground.value, shape = CircleShape
             )
-            .clickableOnce { onChangeDate(dateItem.date) }) {
+            .clickableOnce { onChangeDate(dateItem.date) }, contentAlignment = Alignment.Center) {
             Text(
-                modifier = Modifier.padding(12.dp),
                 text = "${dateItem.date.dayOfMonth}",
                 style = MaterialTheme.typography.labelMedium,
                 color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
