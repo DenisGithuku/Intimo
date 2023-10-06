@@ -10,12 +10,11 @@ import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
 import com.githukudenis.intimo.feature.summary.ui.components.HabitPerformance
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -42,8 +41,8 @@ class SummaryViewModel @Inject constructor(
 
     val customHabitState: MutableStateFlow<CustomHabitState> = MutableStateFlow(CustomHabitState())
 
-    private val usageStatsState: MutableStateFlow<UsageStatsState>
-        get() = MutableStateFlow(UsageStatsState.Loading)
+    private var usageStatsState: MutableStateFlow<UsageStatsState> =
+        MutableStateFlow(UsageStatsState.Loading)
 
     private var permissionsState = MutableStateFlow(PermissionState())
 
@@ -119,28 +118,8 @@ class SummaryViewModel @Inject constructor(
         )
     }
 
-    private var usageStats = combine(
-        queryDetails, usageStatsRepository.dayAndNotificationList
-    ) { queryDetails, notificationsByDay ->
-        val usageStats = usageStatsRepository.queryAndAggregateUsageStats(
-            startDate = queryDetails.date ?: LocalDate.now(),
-            endDate = queryDetails.date ?: LocalDate.now()
-        )
-
-        if (usageStats.appUsageList.isEmpty()) {
-            UsageStatsState.Empty
-        } else {
-            UsageStatsState.Loaded(usageStats = usageStats.appUsageList,
-                unlockCount = usageStats.unlockCount,
-                notificationCount = notificationsByDay.filter { it.day.dayId == today }
-                    .flatMap { it.notifications }.size
-            )
-        }
-    }
-
-
     var uiState: StateFlow<SummaryUiState> = combine(
-        usageStats,
+        usageStatsState,
         habitHistoryState,
         userMessageList,
         permissionsState,
@@ -160,6 +139,10 @@ class SummaryViewModel @Inject constructor(
         started = SharingStarted.Lazily,
         initialValue = SummaryUiState(isLoading = true)
     )
+
+    init {
+        getUsageStats()
+    }
 
     fun onEvent(event: SummaryUiEvent) {
         when (event) {
@@ -239,21 +222,28 @@ class SummaryViewModel @Inject constructor(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun getUsageStats() {
         viewModelScope.launch {
-            val stats = usageStatsRepository.queryAndAggregateUsageStats(
+
+            val notificationsByDay = usageStatsRepository.dayAndNotificationList.first()
+
+            val usageStats = usageStatsRepository.queryAndAggregateUsageStats(
                 startDate = queryDetails.value.date ?: LocalDate.now(),
                 endDate = queryDetails.value.date ?: LocalDate.now()
             )
-            usageStats = usageStats.mapLatest {
-                when(it) {
-                    UsageStatsState.Empty -> TODO()
-                    is UsageStatsState.Loaded -> {
-                        it.copy(usageStats = stats.appUsageList)
-                    }
-                    UsageStatsState.Loading -> TODO()
-                }
+
+            val stats = if (usageStats.appUsageList.isEmpty()) {
+                UsageStatsState.Empty
+            } else {
+                UsageStatsState.Loaded(usageStats = usageStats.appUsageList,
+                    unlockCount = usageStats.unlockCount,
+                    notificationCount = notificationsByDay.filter { it.day.dayId == today }
+                        .flatMap { it.notifications }.size
+                )
+            }
+
+            usageStatsState.update {
+                stats
             }
         }
     }

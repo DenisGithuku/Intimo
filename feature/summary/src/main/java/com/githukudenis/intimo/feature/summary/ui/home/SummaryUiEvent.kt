@@ -3,7 +3,6 @@ package com.githukudenis.intimo.feature.summary.ui.home
 import com.githukudenis.intimo.core.model.HabitFrequency
 import com.githukudenis.intimo.core.ui.components.Date
 import com.githukudenis.intimo.core.util.UserMessage
-import com.githukudenis.intimo.feature.habit.add_habit.AddHabitUiEvent
 import java.time.LocalDate
 
 sealed interface SummaryUiEvent {

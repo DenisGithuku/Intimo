@@ -1,8 +1,8 @@
 package com.githukudenis.intimo.feature.settings.ui
 
 import android.content.Context
-import android.util.Log
-import android.util.TimeUtils
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -12,8 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,12 +31,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,10 +61,12 @@ fun SettingsRoute(
     viewModel: SettingsViewModel = hiltViewModel(),
     onNavigateUp: () -> Unit,
     onOpenLicenses: () -> Unit,
-    onRequestInAppReview: () -> Unit
+    onRequestInAppReview: () -> Unit,
 ) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val context = LocalContext.current
 
     val snackbarHostState = remember {
         SnackbarHostState()
@@ -69,6 +76,14 @@ fun SettingsRoute(
 
     val multipleClicksCutter = remember {
         MultipleClicksCutter.get()
+    }
+
+    var optionsMenuIsVisible by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var optionsMenuOffset by remember {
+        mutableStateOf(DpOffset.Zero)
     }
 
     Scaffold(
@@ -87,11 +102,49 @@ fun SettingsRoute(
                             contentDescription = stringResource(id = R.string.navigate_up_icon)
                         )
                     }
-                }, scrollBehavior = scrollBehaviour
+                },
+                scrollBehavior = scrollBehaviour,
+                actions = {
+                    IconButton(
+                        onClick = {
+                            optionsMenuIsVisible = true
+                        }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More"
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = optionsMenuIsVisible,
+                        onDismissRequest = { optionsMenuIsVisible = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = "Privacy policy",
+                                )
+                            }, onClick = {
+                                optionsMenuIsVisible = false
+                                val policyUrl =
+                                    "https://sites.google.com/view/gitsoftapps-intimo/home"
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    data = Uri.parse(policyUrl)
+                                }
+                                context.startActivity(intent)
+                            })
+                        DropdownMenuItem(
+                            text = { Text(text=  "Open source licenses") },
+                            onClick = {
+                                optionsMenuIsVisible = false
+                                onOpenLicenses()
+                            })
+                    }
+
+                }
             )
         }
     ) { paddingValues ->
-        val context = LocalContext.current
+
         SettingsScreen(
             contentPadding = PaddingValues(
                 top = paddingValues.calculateTopPadding(),
@@ -333,18 +386,6 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onBackground.copy(
                             alpha = 0.8f
                         )
-                    )
-                }
-            )
-        }
-        item {
-            SettingsListView(
-                clickable = true,
-                onClick = onOpenLicenses,
-                title = {
-                    Text(
-                        text = "Licenses",
-                        style = MaterialTheme.typography.titleSmall
                     )
                 }
             )

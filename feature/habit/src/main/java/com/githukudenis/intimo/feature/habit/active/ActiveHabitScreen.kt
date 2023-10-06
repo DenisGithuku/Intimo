@@ -90,8 +90,8 @@ fun ActiveHabitRoute(
                         habitData.habitName,
                         content = context.getString(R.string.habit_notification_description),
                         duration = state.timerState.currentTime,
-                        habitId = habitData.habitId,
-                        habitName = habitData.habitName
+                        id = habitData.habitId,
+                        name = habitData.habitName
                     )
                 },
                 onPauseTimer = {
@@ -103,8 +103,8 @@ fun ActiveHabitRoute(
                         habitData.habitName,
                         content = context.getString(R.string.habit_notification_description),
                         duration = state.timerState.currentTime,
-                        habitId = habitData.habitId,
-                        habitName = habitData.habitName
+                        id = habitData.habitId,
+                        name = habitData.habitName
                     )
                 },
                 onRestartHabit = {
@@ -115,8 +115,8 @@ fun ActiveHabitRoute(
                         habitData.habitName,
                         content = context.getString(R.string.habit_notification_description),
                         duration = habitData.duration,
-                        habitId = habitData.habitId,
-                        habitName = habitData.habitName
+                        id = habitData.habitId,
+                        name = habitData.habitName
                     )
 
                 },
@@ -190,16 +190,16 @@ fun startTimerService(
     context: Context,
     title: String,
     content: String,
-    habitName: String,
+    name: String,
     duration: Long,
-    habitId: Long
+    id: Long
 ) {
     val intent = Intent(context, ActiveHabitService::class.java).apply {
         putExtra("title", title)
         putExtra("content", content)
         putExtra("duration", duration)
-        putExtra("habitId", habitId)
-        putExtra("habitType", habitName)
+        putExtra("id", id)
+        putExtra("name", name)
         action = ActiveHabitService.NotificationAction.START.toString()
     }
     context.startService(intent)
