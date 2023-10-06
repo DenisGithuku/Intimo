@@ -91,7 +91,7 @@ fun IntimoNavHost(
             onOpenLicenses = {
                 appState.navigate(licensesRoute)
             },
-            onRequestInAppReview = onRequestInAppReview
+            onRequestInAppReview = onRequestInAppReview,
         )
         licensesScreen(onNavigateUp = {
             appState.popBackStack()

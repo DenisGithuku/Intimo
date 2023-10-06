@@ -8,8 +8,8 @@
     <string name="device_usage_title">Device usage</string>
     <string name="device_usage_description">%s app usage monitoring</string>
     <string name="other_settings_section_tittle">Other</string>
-    <string name="app_version_description">Version %s</string>
-    <string name="app_version_title">App version</string>
+    <string name="app_version_description">%s</string>
+    <string name="app_version_title">Current version</string>
     <string name="open_source_licenses_settings_list_item">Open source licenses</string>
     <string name="oss_licenses_activity_title">Intimo open source licenses</string>
     <string name="rate_app_description">Loving this app? Leave a rating</string>

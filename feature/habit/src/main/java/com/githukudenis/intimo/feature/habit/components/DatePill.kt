@@ -33,7 +33,7 @@ fun DatePill(
 ) {
 
     val animatedBackground =
-        animateColorAsState(targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary)
+        animateColorAsState(targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.background)
 
 
     Column(
@@ -52,7 +52,7 @@ fun DatePill(
             .border(
                 border = BorderStroke(
                     width = if (dateItem.isToday) 1.dp else 0.dp,
-                    color = if (dateItem.isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.onPrimary
+                    color = if (dateItem.isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else MaterialTheme.colorScheme.background
                 ), shape = CircleShape
             )
             .background(
