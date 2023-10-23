@@ -40,6 +40,7 @@ The app is separated into the following layers:-
 
 <img src = "https://github.com/DenisGithuku/Intimo/assets/47632042/5a2dfdb6-250a-4570-baca-32010972f8f5" height = "80%"  width = "80%"/>
 
+### Modules
 <table>
 <thead>
 <tr>
