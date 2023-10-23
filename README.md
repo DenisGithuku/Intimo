@@ -1,7 +1,7 @@
 <p align = "center">
 <img src = "https://github.com/DenisGithuku/Intimo/assets/47632042/4f0e2d5b-126e-46a4-9dd5-99d2b128f440" />
 </p>
-https://img.shields.io/badge/any_text
+
 ### About
 Intimo (spanish for Personal) serves as a personal Android client for intentional device management and productivity. Employing modern features and practices it provides a fluid and intuitive interface that feels great to use.
 
