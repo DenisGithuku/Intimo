@@ -220,7 +220,7 @@ internal fun SummaryRoute(
                     } else {
                         scope.launch {
                             val userMessage = UserMessage(
-                                message = "Usage access permissions required",
+                                message = context.getString(R.string.usage_access_permissions_message),
                                 messageType = MessageType.ERROR(dismissable = false)
                             )
                             summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
@@ -243,7 +243,7 @@ internal fun SummaryRoute(
                     } else {
                         scope.launch {
                             val userMessage = UserMessage(
-                                message = "Notification access permissions required",
+                                message = context.getString(R.string.notification_access_permissions_message),
                                 messageType = MessageType.ERROR(dismissable = false)
                             )
                             summaryViewModel.onEvent(SummaryUiEvent.ShowMessage(userMessage))
@@ -301,7 +301,7 @@ internal fun SummaryRoute(
                         usageAccessPermissionLauncher.launch(intent)
                     }) {
                         Text(
-                            text = context.getString(R.string.permission_dialog_positive_button)
+                            text = context.getString(R.string.setting_permission_dialog_positive_button)
                         )
                     }
                 },
@@ -322,7 +322,7 @@ internal fun SummaryRoute(
                         onNavigateUp()
                     }) {
                         Text(
-                            text = context.getString(R.string.permission_dialog_negative_button)
+                            text = context.getString(R.string.setting_permission_dialog_negative_button)
                         )
                     }
                 },
@@ -365,7 +365,7 @@ internal fun SummaryRoute(
                         permissionListenerPermissionLauncher.launch(intent)
                     }) {
                         Text(
-                            text = context.getString(R.string.permission_dialog_positive_button)
+                            text = context.getString(R.string.setting_permission_dialog_positive_button)
                         )
                     }
                 },
@@ -387,7 +387,7 @@ internal fun SummaryRoute(
                         onNavigateUp()
                     }) {
                         Text(
-                            text = context.getString(R.string.permission_dialog_negative_button)
+                            text = context.getString(R.string.setting_permission_dialog_negative_button)
                         )
                     }
                 },
