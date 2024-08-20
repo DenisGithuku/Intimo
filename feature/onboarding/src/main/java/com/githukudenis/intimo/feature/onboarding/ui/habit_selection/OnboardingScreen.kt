@@ -3,7 +3,8 @@ package com.githukudenis.intimo.feature.onboarding.ui.habit_selection
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
@@ -12,6 +13,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -54,7 +56,11 @@ private fun OnBoardingContent(
     onToggleHabit: (DefaultHabit) -> Unit,
     onGetStarted: () -> Unit
 ) {
-    Box(modifier = Modifier.safeDrawingPadding()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .safeDrawingPadding()
+    ) {
         LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(2),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -74,11 +80,18 @@ private fun OnBoardingContent(
                 selectedDefaultHabits = selectedDefaultHabits,
                 onToggleHabit = onToggleHabit
             )
-            item(span = StaggeredGridItemSpan.FullLine
-            ) {
-                GetStartedBtn(uiIsValid = uiIsValid, onGetStarted = onGetStarted)
-            }
+
         }
+        GetStartedBtn(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(
+                    bottom = 16.dp,
+                    start = 16.dp,
+                    end = 16.dp
+                ),
+            uiIsValid = uiIsValid, onGetStarted = onGetStarted
+        )
     }
 }
 

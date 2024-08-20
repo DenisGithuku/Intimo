@@ -21,7 +21,8 @@
 #-renamesourcefileattribute SourceFile
 
 -dontwarn com.githukudenis.intimo.feature.habit.R$string
-#-keep class com.githukudenis.intimo.feature.summary.** { *; }
--keep class com.githukudenis.intimo.feature.summary.ui.home.HabitsState { *; }
+-keep class com.githukudenis.intimo.feature.summary.**
+# -keep class com.githukudenis.intimo.feature.summary.ui.home.HabitsState { *; }
 -dontwarn java.lang.invoke.StringConcatFactory
+-dontwarn kotlinx.serialization.KSerializer
 

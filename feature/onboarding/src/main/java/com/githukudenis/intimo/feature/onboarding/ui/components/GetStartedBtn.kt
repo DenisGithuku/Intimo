@@ -16,12 +16,13 @@ import com.githukudenis.intimo.feature.onboarding.R
 
 @Composable
 fun GetStartedBtn(
+    modifier: Modifier = Modifier,
     uiIsValid: Boolean,
     multipleClicksCutter: MultipleClicksCutter = remember { MultipleClicksCutter.get() },
     onGetStarted: () -> Unit,
 ) {
     Button(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth(),
         onClick = { multipleClicksCutter.processEvent(onGetStarted) },
         shape = MaterialTheme.shapes.small,
