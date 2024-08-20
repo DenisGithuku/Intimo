@@ -1,5 +1,5 @@
 [versions]
-agp = "8.1.4"
+agp = "8.2.2"
 kotlin = "1.9.0"
 crashlytics = "2.9.7"
 google-services = "4.3.15"
@@ -24,7 +24,7 @@ hilt-navigation-compose = "1.0.0"
 accompanist = "0.31.5-beta"
 room = "2.5.2"
 kotlinx-time = "0.4.0"
-compose-material="1.6.0-alpha04"
+compose-material = "1.6.0-alpha04"
 palette = "28.0.0"
 support = "28.0.0"
 about-libraries = "10.8.3"
@@ -38,13 +38,13 @@ core-testing = "2.1.0"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
-core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "core-testing"}
+core-testing = { group = "androidx.arch.core", name = "core-testing", version.ref = "core-testing" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
 espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
 lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime-ktx" }
-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle-viewmodel-compose"}
-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle-runtime-compose"}
+lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle-viewmodel-compose" }
+lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle-runtime-compose" }
 activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
 ui = { group = "androidx.compose.ui", name = "ui" }
@@ -55,34 +55,34 @@ ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview
 ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 material3 = { group = "androidx.compose.material3", name = "material3" }
-material-extended-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "material-extended-icons"}
-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom"}
+material-extended-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "material-extended-icons" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 datastore-prefs = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore-prefs" }
-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt"}
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
-hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt"}
-truth = { group = "com.google.truth", name = "truth", version.ref = "truth"}
-coroutines-testing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines-test"}
-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose"}
-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hilt-work"}
-accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist"}
-accompanist-drawable-painter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "accompanist"}
-room-runtime = { group="androidx.room", name = "room-runtime", version.ref = "room" }
-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room"}
+hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
+truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
+coroutines-testing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines-test" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hilt-work" }
+accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
+accompanist-drawable-painter = { group = "com.google.accompanist", name = "accompanist-drawablepainter", version.ref = "accompanist" }
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
-room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room"}
-kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-time"}
-palette = { group = "com.android.support", name = "palette-v7", version.ref = "palette"}
+room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinx-time" }
+palette = { group = "com.android.support", name = "palette-v7", version.ref = "palette" }
 support-core = { group = "com.android.support", name = "support-core-utils", version.ref = "support" }
-about-libraries = { group = "com.mikepenz", name = "aboutlibraries-compose", version.ref = "about-libraries"}
-work = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work"}
-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "work"}
-play-inapp-review = { group = "com.google.android.play", name = "review-ktx", version.ref = "play-review"}
-immutable-collections = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "immutable-collections"}
+about-libraries = { group = "com.mikepenz", name = "aboutlibraries-compose", version.ref = "about-libraries" }
+work = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+work-testing = { group = "androidx.work", name = "work-testing", version.ref = "work" }
+play-inapp-review = { group = "com.google.android.play", name = "review-ktx", version.ref = "play-review" }
+immutable-collections = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "immutable-collections" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -90,8 +90,8 @@ kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "google-services" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
-daggerHilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt"}
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
-kotlinKapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin"}
-aboutLibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "about-libraries"}
+daggerHilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+kotlinKapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+aboutLibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "about-libraries" }
 
